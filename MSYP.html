@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>課輔導師【學期間帶班津貼】計算器</title>
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      padding: 20px;
+      line-height: 1.5;
+    }
+    input[type="number"], input[type="text"] {
+      width: 120px;
+      margin-right: 10px;
+      padding: 4px;
+    }
+    label {
+      margin-top: 10px;
+      display: inline-block;
+    }
+    .block {
+      border: 1px solid #aaa;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+    .student-row {
+      margin-bottom: 8px;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    pre {
+      background: #eee;
+      padding: 10px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<h2>📊 導師津貼計算器-永平</h2>
+
+<div class="block">
+  <label>👩‍🏫 導師姓名（可不填）：</label>
+  <input type="text" id="teacherName" placeholder="例如 王老師">
+  <br>
+  <label>🔢 全月人數：</label>
+  <input type="number" id="fullMonthCount" placeholder="例如 21">
+  <br>
+  <label>全月津貼比例（學期間天數 / 該月工作天數）：</label>
+  <input type="number" id="stipendRatio" value="1" step="0.01">
+  <p>說明：學期間天數 / 該月工作天數。預設比例為 1。</p>
+</div>
+
+<div class="block">
+  <h3>👶 非全月學生資訊（最多五位）</h3>
+  <div id="students">
+    <div class="student-row"><input type="text" id="name0" placeholder="姓名1"><input type="number" id="days0" placeholder="實上天數"><input type="number" id="totalDays0" placeholder="應上天數"></div>
+    <div class="student-row"><input type="text" id="name1" placeholder="姓名2"><input type="number" id="days1" placeholder="實上天數"><input type="number" id="totalDays1" placeholder="應上天數"></div>
+    <div class="student-row"><input type="text" id="name2" placeholder="姓名3"><input type="number" id="days2" placeholder="實上天數"><input type="number" id="totalDays2" placeholder="應上天數"></div>
+    <div class="student-row"><input type="text" id="name3" placeholder="姓名4"><input type="number" id="days3" placeholder="實上天數"><input type="number" id="totalDays3" placeholder="應上天數"></div>
+    <div class="student-row"><input type="text" id="name4" placeholder="姓名5"><input type="number" id="days4" placeholder="實上天數"><input type="number" id="totalDays4" placeholder="應上天數"></div>
+  </div>
+</div>
+
+<div class="block">
+  <h3>扣除請人代課的津貼</h3>
+  <label>📅 本月工作天數：</label>
+  <input type="number" id="workDays" placeholder="例如 22">
+  <br>
+  <label>🕒 代課天數：</label>
+  <input type="number" id="leaveDays" placeholder="例如 1">
+  <label>⏰ 代課小時數：</label>
+  <input type="number" id="leaveHours" placeholder="例如 3">
+</div>
+
+<button onclick="calculate()">✅ 計算津貼</button>
+<button onclick="copyResult()">📋 複製結果</button>
+
+<h3>結果：</h3>
+<pre id="result"></pre>
+
+<script>
+  function getStipendByCount(count) {
+    if (count >= 35) return 16000;
+    const table = {
+      16: 600, 17: 1200, 18: 1800, 19: 2400, 20: 3000,
+      21: 4200, 22: 4900, 23: 5600, 24: 6300, 25: 7000,
+      26: 8800, 27: 9600, 28: 10400, 29: 11200, 30: 12000,
+      31: 12800, 32: 13600, 33: 14400, 34: 15200, 35: 16000
+    };
+    return table[count] || 0;
+  }
+
+  function getPerStudentByCount(count) {
+    if (count >= 16 && count <= 20) return 600;
+    if (count >= 21 && count <= 25) return 700;
+    if (count >= 26) return 800;
+    return 0;
+  }
+
+  function calculate() {
+    const count = parseInt(document.getElementById("fullMonthCount").value);
+    const teacher = document.getElementById("teacherName").value.trim();
+    const workDays = parseInt(document.getElementById("workDays").value);
+    const leaveDays = parseInt(document.getElementById("leaveDays").value) || 0;
+    const leaveHours = parseInt(document.getElementById("leaveHours").value) || 0;
+    const stipendRatio = parseFloat(document.getElementById("stipendRatio").value);
+
+    if (isNaN(count) || count <= 0) {
+      alert("⚠️ 請輸入正確的【全月人數】！");
+      return;
+    }
+
+    const baseStipend = getStipendByCount(count);
+    const perStudentStipend = getPerStudentByCount(count);
+
+    let total = baseStipend * stipendRatio;
+    let output = ` +全月人數：${count}人 ➜ 津貼：${(baseStipend * stipendRatio).toFixed(2)} 元（比例：${stipendRatio}）`;
+
+    let nonFullCount = 0;
+    let nonFullTotal = 0;
+
+    for (let i = 0; i < 5; i++) {
+      const name = document.getElementById(`name${i}`).value.trim();
+      const days = parseInt(document.getElementById(`days${i}`).value);
+      const totalDays = parseInt(document.getElementById(`totalDays${i}`).value);
+
+      if (name && !isNaN(days) && !isNaN(totalDays) && days > 0 && totalDays > 0) {
+        const partial = Math.ceil(perStudentStipend / totalDays * days);
+        total += partial;
+        nonFullCount++;
+        nonFullTotal += partial;
+        output += `\n +${name}：(${perStudentStipend} ÷ ${totalDays} × ${days}) = ${partial} 元`;
+      }
+    }
+
+    if (total > 16000) {
+      output += `\n🔒 計算總額超過上限，已調整為 16000 元`;
+      total = 16000;
+    }
+
+    output += `\n\n 小計：${Math.round(total)} 元`;
+
+    if (workDays && (leaveDays > 0 || leaveHours > 0)) {
+      const daily = total / workDays;
+      const hourly = daily / 8;
+      const leaveDeduction = Math.round(daily * leaveDays + hourly * leaveHours);
+
+      output += `\n\n -代課扣除部份計算（${leaveDays} 天 ${leaveHours} 小時）：`;
+      output += `\n　 扣除計算：(${total} ÷ ${workDays} × ${leaveDays}) + (${total} ÷ ${workDays} ÷ 8 × ${leaveHours}) = ${leaveDeduction} 元`;
+
+      total -= leaveDeduction;
+    }
+
+    output += `\n\n${teacher ? ` ${teacher}本月帶班津貼合計` : "💰 帶班津貼總額"}：${Math.round(total)} 元`;
+
+    document.getElementById("result").innerText = output;
+  }
+
+  function copyResult() {
+    const text = document.getElementById("result").innerText;
+    if (text.trim() === "") {
+      alert("⚠️ 請先計算後再複製！");
+      return;
+    }
+    navigator.clipboard.writeText(text).then(() => {
+      alert("✅ 結果已複製！");
+    });
+  }
+</script>
+
+</body>
+</html>
