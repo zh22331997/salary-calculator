@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>薪資計算小工具首頁</title>
+  <style>
+    body {
+      font-family: "Segoe UI", "Noto Sans TC", sans-serif;
+      background: #f5f9ff;
+      margin: 0;
+      padding: 40px;
+      text-align: center;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    .tool-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+      max-width: 500px;
+      margin: auto;
+    }
+
+    .tool-card {
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      padding: 20px 30px;
+      width: 100%;
+      text-align: left;
+      transition: transform 0.2s;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .tool-card a {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2980b9;
+      text-decoration: none;
+    }
+
+    .tool-card p {
+      font-size: 14px;
+      color: #666;
+      margin-top: 6px;
+    }
+
+    footer {
+      margin-top: 60px;
+      font-size: 13px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📊 薪資計算小工具首頁</h1>
+
+  <div class="tool-container">
+    <div class="tool-card">
+      <a href="課輔寒暑帶班津貼計算.html">🧮 課輔寒暑帶班津貼計算工具</a>
+      <p>輸入帶班點數與責任額天數，快速計算寒暑帶班津貼</p>
+    </div>
+
+    <div class="tool-card">
+      <a href="事病假遲到不計薪計算.html">📉 事病假遲到不計薪計算器</a>
+      <p>快速根據各項假別與遲到分鐘數扣除不計薪後所得</p>
+    </div>
+  </div>
+
+  <footer>Designed by CN ｜ Powered by GitHub Pages</footer>
+
+</body>
+</html>
