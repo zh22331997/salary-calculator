@@ -45,19 +45,24 @@
   <input type="number" id="salary" placeholder="例如：36000"><br>
 
   <label>事假（天）：</label>
-  <input type="number" id="leaveDays" placeholder="例如：1"><br>
+  <input type="number" id="leaveDays" placeholder="例如：1">
+  <input type="text" id="leaveDaysNote" placeholder="加註日期 (選填)"><br>
 
   <label>事假（小時）：</label>
-  <input type="number" id="leaveHours" placeholder="例如：2"><br>
+  <input type="number" id="leaveHours" placeholder="例如：2">
+  <input type="text" id="leaveHoursNote" placeholder="加註日期 (選填)"><br>
 
   <label>病假（天）：</label>
-  <input type="number" id="sickDays" placeholder="例如：0.5"><br>
+  <input type="number" id="sickDays" placeholder="例如：0.5">
+  <input type="text" id="sickDaysNote" placeholder="加註日期 (選填)"><br>
 
   <label>病假（小時）：</label>
-  <input type="number" id="sickHours" placeholder="例如：1"><br>
+  <input type="number" id="sickHours" placeholder="例如：1">
+  <input type="text" id="sickHoursNote" placeholder="加註日期 (選填)"><br>
 
   <label>超過三次5分鐘的遲到（分鐘）：</label>
-  <input type="number" id="lateMinutes" placeholder="例如：15"><br>
+  <input type="number" id="lateMinutes" placeholder="例如：15">
+  <input type="text" id="lateNote" placeholder="加註日期 (選填)"><br>
 
   <button onclick="calculate()">計算</button>
   <div id="result"></div>
@@ -69,6 +74,11 @@
       return isNaN(val) ? 0 : val;
     }
 
+    function getNote(id) {
+      const note = document.getElementById(id).value.trim();
+      return note ? `（${note}）` : '';
+    }
+
     function calculate() {
       const name = document.getElementById("name").value.trim();
       const salary = getValue("salary");
@@ -77,6 +87,13 @@
       const sickDays = getValue("sickDays");
       const sickHours = getValue("sickHours");
       const lateMinutes = getValue("lateMinutes");
+
+      // Notes
+      const leaveDaysNote = getNote("leaveDaysNote");
+      const leaveHoursNote = getNote("leaveHoursNote");
+      const sickDaysNote = getNote("sickDaysNote");
+      const sickHoursNote = getNote("sickHoursNote");
+      const lateNote = getNote("lateNote");
 
       if (salary <= 0) {
         document.getElementById("result").innerText = "⚠️ 請填入原始月薪";
@@ -94,11 +111,11 @@
 
       let formula = `${name ? name + "：" : ""}原始月薪 ${salary}元\n`;
 
-      if (leaveDays) formula += `－ 事假 ${leaveDays}天 × ${salary}/30 = ${leaveDayDeduct}元\n`;
-      if (leaveHours) formula += `－ 事假 ${leaveHours}小時 × ${salary}/30/8 = ${leaveHourDeduct}元\n`;
-      if (sickDays) formula += `－ 病假 ${sickDays}天 × ${salary}/30/2 = ${sickDayDeduct}元\n`;
-      if (sickHours) formula += `－ 病假 ${sickHours}小時 × ${salary}/30/8/2 = ${sickHourDeduct}元\n`;
-      if (lateMinutes) formula += `－ 遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${lateDeduct}元\n`;
+      if (leaveDays) formula += `－ 事假 ${leaveDays}天 × ${salary}/30 = ${leaveDayDeduct}元 ${leaveDaysNote}\n`;
+      if (leaveHours) formula += `－ 事假 ${leaveHours}小時 × ${salary}/30/8 = ${leaveHourDeduct}元 ${leaveHoursNote}\n`;
+      if (sickDays) formula += `－ 病假 ${sickDays}天 × ${salary}/30/2 = ${sickDayDeduct}元 ${sickDaysNote}\n`;
+      if (sickHours) formula += `－ 病假 ${sickHours}小時 × ${salary}/30/8/2 = ${sickHourDeduct}元 ${sickHoursNote}\n`;
+      if (lateMinutes) formula += `－ 遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${lateDeduct}元 ${lateNote}\n`;
 
       formula += `＝ 本次所得：${finalPay}元`;
 
