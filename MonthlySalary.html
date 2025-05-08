@@ -94,11 +94,11 @@
 
       let formula = `${name ? name + "：" : ""}原始月薪 ${salary}元\n`;
 
-      if (leaveDays) formula += `－ 事假 ${leaveDays}天 × 月薪/30 = ${leaveDayDeduct}元\n`;
-      if (leaveHours) formula += `－ 事假 ${leaveHours}小時 × 月薪/30/8 = ${leaveHourDeduct}元\n`;
-      if (sickDays) formula += `－ 病假 ${sickDays}天 × 月薪/30/2 = ${sickDayDeduct}元\n`;
-      if (sickHours) formula += `－ 病假 ${sickHours}小時 × 月薪/30/8/2 = ${sickHourDeduct}元\n`;
-      if (lateMinutes) formula += `－ 遲到 ${lateMinutes}分鐘 × 月薪/30/8/60 = ${lateDeduct}元\n`;
+      if (leaveDays) formula += `－ 事假 ${leaveDays}天 × ${salary}/30 = ${leaveDayDeduct}元\n`;
+      if (leaveHours) formula += `－ 事假 ${leaveHours}小時 × ${salary}/30/8 = ${leaveHourDeduct}元\n`;
+      if (sickDays) formula += `－ 病假 ${sickDays}天 × ${salary}/30/2 = ${sickDayDeduct}元\n`;
+      if (sickHours) formula += `－ 病假 ${sickHours}小時 × ${salary}/30/8/2 = ${sickHourDeduct}元\n`;
+      if (lateMinutes) formula += `－ 遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${lateDeduct}元\n`;
 
       formula += `＝ 本次所得：${finalPay}元`;
 
