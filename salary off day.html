@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>假別統計工具</title>
+    <style>
+        table, th, td {
+            border: 1px solid #aaa;
+            border-collapse: collapse;
+            padding: 4px;
+            text-align: center;
+            width: 50px;
+        }
+        th {
+            background-color: #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        input[type="number"] {
+            width: 60px;
+        }
+        .totals {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px dashed #ccc;
+        }
+        .weekend {
+            font-weight: bold;
+        }
+        .saturday {
+            background-color: #e6f7ff; /* 週六的背景顏色 */
+        }
+        .sunday {
+            background-color: #ffe6e6; /* 週日的背景顏色 */
+        }
+        tr.weekend-row:hover {
+            background-color: #f0f0f0; /* 滑鼠懸停時的變色 */
+        }
+        .import-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .import-button:hover {
+            background-color: #45a049;
+        }
+        .date-input {
+            width: 80px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>假別登記與統計工具</h2>
+    <label>老師姓名（非必填）：<input type="text" id="teacherNameLeave"></label><br><br>
+    <label>年份：<input type="number" id="yearInput" value="" min="2000" max="2100"></label>
+    <label>月份（1~12）：<input type="number" id="monthInput" value="5" min="1" max="12"></label>
+    <button onclick="generateTable()">產生日期表</button>
+
+    <div id="formArea"></div>
+    <button onclick="calculateLeave()">統計結果</button>
+
+    <h3>統計結果（可複製）：</h3>
+    <button onclick="copyResultsLeave()">📋 複製結果</button>
+    <div class="totals" id="resultsLeave" contenteditable="true"></div>
+    <button class="import-button" onclick="importLeaveResults()">➔ 匯入不計薪計算</button>
+
+    <hr>
+
+    <h2>🧮事病假 或 遲到 不計薪計算器</h2>
+
+    <label>老師姓名（可留空）：</label>
+    <input type="text" id="nameSalary" placeholder="例如：張老師"><br>
+
+    <label>原始月薪：</label>
+    <input type="number" id="salary" style="width: 100px;" placeholder="例如：32000"><br>
+
+    <label>事假（天）：</label>
+    <input type="number" id="leaveDaysSalary" placeholder="例如：1">
+
+    <label>事假（小時）：</label>
+    <input type="number" id="leaveHoursSalary" placeholder="例如：2">
+
+    <label>病假（天）：</label>
+    <input type="number" id="sickDaysSalary" placeholder="例如：0.5">
+
+    <label>病假（小時）：</label>
+    <input type="number" id="sickHoursSalary" placeholder="例如：1">
+
+    <label>超過三次5分鐘的遲到（分鐘）：</label>
+    <input type="number" id="lateMinutesSalary" placeholder="例如：15">
+
+    <button onclick="calculateSalaryDeduction()">計算</button>
+    <div id="salaryResult"></div>
+    <button onclick="copyResultsSalary()">📋 複製算式</button>
+
+    <script>
+        // 預設為當前年份
+        document.getElementById("yearInput").value = new Date().getFullYear();
+
+        function generateTable() {
+            const year = parseInt(document.getElementById("yearInput").value);
+            const month = parseInt(document.getElementById("monthInput").value);
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            let html = '<table><tr><th>日期</th><th>星期</th><th>特休 (天)</th><th>特休 (時)</th><th>事假 (天)</th><th>事假 (時)</th><th>病假 (天)</th><th>病假 (時)</th><th>遲到 (分鐘)</th></tr>';
+
+            const weekDays = ["日", "一", "二", "三", "四", "五", "六"];  // 星期的顯示格式
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);  // 月份是從 0 開始
+                const displayDate = `${month}/${day}`;
+                const dayOfWeek = date.getDay();  // 0: Sunday, 1: Monday, ..., 6: Saturday
+
+                let weekendClass = "";
+                if (dayOfWeek === 6) {  // Saturday
+                    weekendClass = "saturday";
+                } else if (dayOfWeek === 0) {  // Sunday
+                    weekendClass = "sunday";
+                }
+
+                html += `<tr class="weekend-row ${weekendClass}">
+                    <td>${displayDate}</td>
+                    <td>(${weekDays[dayOfWeek]})</td>
+                    <td><input type="number" name="leave-v" data-type="v-day" onchange="validateInput(this)"></td>
+                    <td><input type="number" name="leave-v" data-type="v-hour" onchange="validateInput(this)"></td>
+                    <td>
+                        <input type="number" name="leave-p" data-type="p-day" onchange="validateInput(this)">
+                        <input type="hidden" name="leave-p-date" value="${displayDate}">
+                    </td>
+                    <td>
+                        <input type="number" name="leave-p" data-type="p-hour" onchange="validateInput(this)">
+                        <input type="hidden" name="leave-p-date" value="${displayDate}">
+                    </td>
+                    <td>
+                        <input type="number" name="leave-s" data-type="s-day" onchange="validateInput(this)">
+                        <input type="hidden" name="leave-s-date" value="${displayDate}">
+                    </td>
+                    <td>
+                        <input type="number" name="leave-s" data-type="s-hour" onchange="validateInput(this)">
+                        <input type="hidden" name="leave-s-date" value="${displayDate}">
+                    </td>
+                    <td>
+                        <input type="number" name="late" data-type="late-min" onchange="validateInput(this)">
+                        <input type="hidden" name="late-date" value="${displayDate}">
+                    </td>
+                </tr>`;
+            }
+
+            html += '</table>';
+            document.getElementById("formArea").innerHTML = html;
+            document.getElementById("resultsLeave").innerText = '';
+        }
+
+        function validateInput(input) {
+            let value = parseFloat(input.value) || 0;
+
+            // 防呆機制：禁止輸入負數
+            if (value < 0) {
+                alert("數值不能是負數！");
+                input.value = 0; // 設定為 0
+                return;
+            }
+
+            // 防呆機制：特休、事假、病假填寫時不能超過 1 天
+            const dataType = input.getAttribute("data-type");
+            if (dataType.includes("day") && value > 1) {
+                alert("假別（天）不能超過 1 天！");
+                input.value = 1;
+            }
+
+            // 防呆機制：每格最多填 8 小時
+            if (dataType.includes("hour") && value > 8) {
+                alert("每格最多填寫 8 小時！");
+                input.value = 8; // 設定為 8 小時
+            }
+        }
+
+        let leaveRecords = [];
+        let sickRecords = [];
+        let lateRecords = [];
+
+        function calculateLeave() {
+            const rows = document.querySelectorAll("#formArea table tr:not(:first-child)");
+            leaveRecords = [];
+            sickRecords = [];
+            lateRecords = [];
+            let vDay = 0, vHour = 0, pDay = 0, pHour = 0, sDay = 0, sHour = 0, lateMin = 0;
+
+            rows.forEach(row => {
+                const date = row.querySelector("td:first-child").innerText;
+                const inputs = row.querySelectorAll("input[type='number']");
+                const pDateInput = row.querySelectorAll("input[type='hidden'][name$='-p-date']");
+                const sDateInput = row.querySelectorAll("input[type='hidden'][name$='-s-date']");
+                const lateDateInput = row.querySelectorAll("input[type='hidden'][name$='late-date']");
+
+
+                const vDayVal = parseFloat(inputs[0].value) || 0;
+                const vHourVal = parseFloat(inputs[1].value) || 0;
+                const pDayVal = parseFloat(inputs[2].value) || 0;
+                const pHourVal = parseFloat(inputs[3].value) || 0;
+                const sDayVal = parseFloat(inputs[4].value) || 0;
+                const sHourVal = parseFloat(inputs[5].value) || 0;
+                const lateMinVal = parseFloat(inputs[6].value) || 0;
+
+                vDay += vDayVal;
+                vHour += vHourVal;
+                pDay += pDayVal;
+                pHour += pHourVal;
+                sDay += sDayVal;
+                sHour += sHourVal;
+                lateMin += lateMinVal;
+
+                if (pDayVal > 0) leaveRecords.push({ days: pDayVal, date: pDateInput[0].value });
+                if (pHourVal > 0) leaveRecords.push({ hours: pHourVal, date: pDateInput[1].value });
+                if (sDayVal > 0) sickRecords.push({ days: sDayVal, date: sDateInput[0].value });
+                if (sHourVal > 0) sickRecords.push({ hours: sHourVal, date: sDateInput[1].value });
+                if (lateMinVal > 0) lateRecords.push({ minutes: lateMinVal, date: lateDateInput[0].value });
+            });
+
+            const name = document.getElementById("teacherNameLeave").value.trim();
+            const head = name ? `🔹${name}老師假別統計結果：\n` : '';
+
+            const result = `${head}✅ 特休：${vDay} 天 ${vHour} 小時
+✅ 事假：${pDay} 天 ${pHour} 小時
+✅ 病假：${sDay} 天 ${sHour} 小時
+✅ 遲到：${lateMin} 分鐘`;
+
+            document.getElementById("resultsLeave").innerText = result;
+        }
+
+        function copyResultsLeave() {
+            const resultText = document.getElementById("resultsLeave").innerText;
+            navigator.clipboard.writeText(resultText).then(() => {
+                alert("已複製統計結果！");
+            }, () => {
+                alert("複製失敗，請手動選取內容！");
+            });
+        }
+
+        function importLeaveResults() {
+            let totalLeaveDays = 0;
+            let totalLeaveHours = 0;
+            leaveRecords.forEach(record => {
+                if (record.days) totalLeaveDays += record.days;
+                if (record.hours) totalLeaveHours += record.hours;
+            });
+
+            let totalSickDays = 0;
+            let totalSickHours = 0;
+            sickRecords.forEach(record => {
+                if (record.days) totalSickDays += record.days;
+                if (record.hours) totalSickHours += record.hours;
+            });
+
+            let totalLateMinutes = 0;
+            lateRecords.forEach(record => {
+                if (record.minutes) totalLateMinutes += record.minutes;
+            });
+
+            document.getElementById("leaveDaysSalary").value = totalLeaveDays;
+            document.getElementById("leaveHoursSalary").value = totalLeaveHours;
+            document.getElementById("sickDaysSalary").value = totalSickDays;
+            document.getElementById("sickHoursSalary").value = totalSickHours;
+            document.getElementById("lateMinutesSalary").value = totalLateMinutes;
+
+            const teacherNameLeave = document.getElementById("teacherNameLeave").value.trim();
+            if (teacherNameLeave) {
+                document.getElementById("nameSalary").value = teacherNameLeave;
+            }
+
+            alert("假別統計結果已匯入不計薪計算！");
+        }
+    </script>
+
+    <hr>
+
+    <script>
+        function getValue(id) {
+            const val = parseFloat(document.getElementById(id).value);
+            return isNaN(val) ? 0 : val;
+        }
+
+        function calculateSalaryDeduction() {
+            const name = document.getElementById("nameSalary").value.trim();
+            const salary = getValue("salary");
+            const leaveDays = getValue("leaveDaysSalary");
+            const leaveHours = getValue("leaveHoursSalary");
+            const sickDays = getValue("sickDaysSalary");
+            const sickHours = getValue("sickHoursSalary");
+            const lateMinutes = getValue("lateMinutesSalary");
+
+            let leaveDaysNote = "";
+            leaveRecords.forEach(record => {
+                if (record.days) leaveDaysNote += `（${record.date} ${record.days}天）`;
+            });
+
+            let leaveHoursNote = "";
+            leaveRecords.forEach(record => {
+                if (record.hours) leaveHoursNote += `（${record.date} ${record.hours}小時）`;
+            });
+
+            let sickDaysNote = "";
+            sickRecords.forEach(record => {
+                if (record.days) sickDaysNote += `（${record.date} ${record.days}天）`;
+            });
+
+            let sickHoursNote = "";
+            sickRecords.forEach(record => {
+                if (record.hours) sickHoursNote += `（${record.date} ${record.hours}小時）`;
+            });
+
+            let lateNote = "";
+            lateRecords.forEach(record => {
+                if (record.minutes) lateNote += `（${record.date} ${record.minutes}分鐘）`;
+            });
+
+
+            if (salary <= 0) {
+                document.getElementById("salaryResult").innerText = "⚠️ 請填入原始月薪";
+                return;
+            }
+
+            const leaveDayDeduct = Math.floor((salary / 30) * leaveDays);
+            const leaveHourDeduct = Math.floor((salary / 30 / 8) * leaveHours);
+            const sickDayDeduct = Math.floor((salary / 30 / 2) * sickDays);
+            const sickHourDeduct = Math.floor((salary / 30 / 8 / 2) * sickHours);
+            const lateDeduct = Math.floor((salary / 30 / 8 / 60) * lateMinutes);
+
+            const totalDeduct = leaveDayDeduct + leaveHourDeduct + sickDayDeduct + sickHourDeduct + lateDeduct;
+            const finalPay = Math.floor(salary - totalDeduct);
+
+            let formula = `${name ? name + "：" : ""}原始月薪 ${salary}元\n`;
+
+            if (leaveDays) formula += `－ 事假 ${leaveDays}天 × ${salary}/30 = ${leaveDayDeduct}元 ${leaveDaysNote}\n`;
+            if (leaveHours) formula += `－ 事假 ${leaveHours}小時 × ${salary}/30/8 = ${leaveHourDeduct}元 ${leaveHoursNote}\n`;
+            if (sickDays) formula += `－ 病假 ${sickDays}天 × ${salary}/30/2 = ${sickDayDeduct}元 ${sickDaysNote}\n`;
+            if (sickHours) formula += `－ 病假 ${sickHours}小時 × ${salary}/30/8/2 = ${sickHourDeduct}元 ${sickHoursNote}\n`;
+            if (lateMinutes) formula += `－ 遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${lateDeduct}元 ${lateNote}\n`;
+
+            formula += `＝ 本次所得：${finalPay}元`;
+
+            document.getElementById("salaryResult").innerText = formula;
+        }
+
+        function copyResultsSalary() {
+            const text = document.getElementById("salaryResult").innerText;
+            if (!text) {
+                alert("⚠️ 尚未產生結果");
+                return;
+            }
+            navigator.clipboard.writeText(text)
+                .then(() => alert("✅ 已複製算式！"))
+                .catch(err => alert("❌ 複製失敗：" + err));
+        }
+    </script>
+</body>
+</html>
