@@ -1,111 +1,304 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>課輔導師【學期間帶班津貼】計算器</title>
-  <style>
+    <meta charset="UTF-8">
+    <title>課輔導師【學期間帶班津貼】計算器 - 永平校、秀朗校</title>
+    
+
+<style>
     body {
-      font-family: "Microsoft JhengHei", sans-serif;
-      padding: 20px;
-      line-height: 1.5;
+        font-family: "Microsoft JhengHei", sans-serif;
+        padding: 18px; /* 略微增加 padding */
+        line-height: 1.5; /* 略微增加 line-height */
+        background-color: #f4f8f8;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        box-sizing: border-box;
+        margin: 0;
+        font-size: 1.05em; /* 略微增大 body 的基礎字體大小 */
     }
-    input[type="number"], input[type="text"] {
-      width: 120px;
-      margin-right: 10px;
-      padding: 4px;
-    }
-    label {
-      margin-top: 10px;
-      display: inline-block;
+    h2 {
+        color: #2c3e50;
+        margin-bottom: 12px; /* 略微增加 margin-bottom */
+        text-align: center;
+        font-size: 1.5em; /* 略微增大字體大小 */
     }
     .block {
-      border: 1px solid #aaa;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      background-color: #f9f9f9;
+        border: 1px solid #d3d3d3;
+        padding: 12px; /* 略微增加 padding */
+        border-radius: 6px;
+        background-color: #fff;
+        box-shadow: 1px 1px 3px #e0e0e0;
+        margin-bottom: 10px; /* 略微增加 margin-bottom */
+        width: 100%;
+        max-width: 500px;
+        box-sizing: border-box;
+    }
+    .form-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 6px; /* 略微增加 margin-bottom */
+    }
+    .form-row label {
+        flex-shrink: 0;
+        width: auto;
+        font-weight: bold;
+        color: #555;
+        font-size: 1em; /* 略微增大字體大小 */
+    }
+    .form-row input[type="text"],
+    .form-row input[type="number"] {
+        flex-grow: 1;
+        padding: 6px; /* 略微增加 padding */
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        box-sizing: border-box;
+        font-size: 1em; /* 略微增大字體大小 */
+        width: auto;
+        min-width: 60px; /* 略微增加 min-width */
+    }
+    .collapsible-block {
+        width: 100%;
+        max-width: 500px;
+        margin-bottom: 10px; /* 略微增加 margin-bottom */
+        border: 1px solid #d3d3d3;
+        border-radius: 6px;
+        background-color: #fff;
+        box-shadow: 1px 1px 3px #e0e0e0;
+        padding: 12px; /* 略微增加 padding */
+        box-sizing: border-box;
+    }
+    .collapsible-block h3 {
+        color: #3498db;
+        margin-top: 0;
+        margin-bottom: 8px; /* 略微增加 margin-bottom */
+        font-size: 1.1em; /* 略微增大字體大小 */
+        cursor: pointer;
     }
     .student-row {
-      margin-bottom: 8px;
+        display: flex;
+        gap: 6px; /* 略微增加 gap */
+        align-items: center;
+        margin-bottom: 5px; /* 略微增加 margin-bottom */
+    }
+    .student-row label {
+        flex-shrink: 0;
+        width: auto;
+        font-size: 0.9em; /* 略微增大字體大小 */
+        color: #777;
+    }
+    .student-row input[type="text"] {
+        width: 70px; /* 略微增加 width */
+        padding: 5px; /* 略微增加 padding */
+        font-size: 0.9em; /* 略微增大字體大小 */
+    }
+    .student-row input[type="number"] {
+        width: 60px; /* 略微增加 width */
+        padding: 5px; /* 略微增加 padding */
+        font-size: 0.9em; /* 略微增大字體大小 */
+        flex-grow: 1;
+        min-width: 50px; /* 略微增加 min-width */
+    }
+    h3 {
+        color: #3498db;
+        margin-top: 0;
+        margin-bottom: 8px; /* 略微增加 margin-bottom */
+        font-size: 1.1em; /* 略微增大字體大小 */
+    }
+    p {
+        color: #777;
+        font-size: 0.8em; /* 略微增大字體大小 */
+        margin-top: 3px; /* 略微增加 margin-top */
     }
     button {
-      padding: 8px 16px;
-      margin-top: 10px;
-      font-size: 16px;
-      cursor: pointer;
+        padding: 8px 12px; /* 略微增加 padding */
+        margin-top: 10px; /* 略微增加 margin-top */
+        font-size: 1em; /* 略微增大字體大小 */
+        cursor: pointer;
+        border: none;
+        border-radius: 3px;
+        color: white;
+        background-color: #27ae60;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #219653;
     }
     pre {
-      background: #eee;
-      padding: 10px;
-      border-radius: 5px;
-      white-space: pre-wrap;
+        background: #e7f2f8;
+        padding: 10px; /* 略微增加 padding */
+        border-radius: 3px;
+        white-space: pre-wrap;
+        font-size: 1.2em; /* 計算結果的字體大小 */
+        color: #333;
+        border: 1px solid #d3d3d3;
+        margin-top: 10px; /* 略微增加 margin-top */
+        width: 100%;
+        max-width: 500px;
+        box-sizing: border-box;
     }
-  </style>
+    .button-container {
+        text-align: center;
+        margin-bottom: 10px; /* 略微增加 margin-bottom */
+        width: 100%;
+        max-width: 500px;
+        box-sizing: border-box;
+    }
+    #students-content, #leave-info {
+        display: none;
+        padding-top: 6px; /* 略微增加 padding-top */
+        font-size: 1em; /* 略微增大字體大小 */
+    }
+</style>
 </head>
 <body>
 
-<h2>📊 導師津貼計算器-永平校</h2>
+<h2>課輔導師【學期間帶班津貼】計算器 - 永平校、秀朗校</h2>
 
 <div class="block">
-  <label>👩‍🏫 導師姓名（可不填）：</label>
-  <input type="text" id="teacherName" placeholder="例如 王老師">
-  <br>
-  <label>🔢 全月人數：</label>
-  <input type="number" id="fullMonthCount" placeholder="例如 21">
-  <br>
-  <label>全月津貼比例（學期間天數 / 該月工作天數）：</label>
-  <input type="number" id="stipendRatio" value="1" step="0.01">
-  <p>說明：學期間天數 / 該月工作天數。預設比例為 1。</p>
+    <h3>基本資訊</h3>
+    <div class="form-row">
+        <label>👩‍🏫 導師姓名（可不填）：</label>
+        <input type="text" id="teacherName" placeholder="例如 王老師">
+    </div>
+    <div class="form-row">
+        <label>🔢 全月人數：</label>
+        <input type="number" id="fullMonthCount" placeholder="例如 21" min="15">
+    </div>
+    <div class="form-row">
+        <label>全月津貼比例：</label>
+        <input type="number" id="stipendRatio" value="1" step="0.01">
+    </div>
+    <p style="font-size: 0.8em; color: #777; margin-left: auto;">比例 = 學期間天數 / 該月工作天數。預設為 1。</p>
 </div>
 
-<div class="block">
-  <h3>👶 非全月學生資訊（最多五位）</h3>
-  <div id="students">
-    <div class="student-row"><input type="text" id="name0" placeholder="姓名1"><input type="number" id="days0" placeholder="實上天數"><input type="number" id="totalDays0" placeholder="應上天數"></div>
-    <div class="student-row"><input type="text" id="name1" placeholder="姓名2"><input type="number" id="days1" placeholder="實上天數"><input type="number" id="totalDays1" placeholder="應上天數"></div>
-    <div class="student-row"><input type="text" id="name2" placeholder="姓名3"><input type="number" id="days2" placeholder="實上天數"><input type="number" id="totalDays2" placeholder="應上天數"></div>
-    <div class="student-row"><input type="text" id="name3" placeholder="姓名4"><input type="number" id="days3" placeholder="實上天數"><input type="number" id="totalDays3" placeholder="應上天數"></div>
-    <div class="student-row"><input type="text" id="name4" placeholder="姓名5"><input type="number" id="days4" placeholder="實上天數"><input type="number" id="totalDays4" placeholder="應上天數"></div>
-  </div>
+<div class="collapsible-block">
+    <h3 onclick="toggleBlock('leave-info')">⏳ 扣除請人代課的津貼</h3>
+    <div id="leave-info">
+        <div class="form-row">
+            <label>📅 本月工作天數：</label>
+            <input type="number" id="workDays" placeholder="例如 22">
+        </div>
+        <div class="form-row">
+            <label>🗓️ 代課天數：</label>
+            <input type="number" id="leaveDays" placeholder="例如 1">
+        </div>
+        <div class="form-row">
+            <label>⏱️ 代課小時數：</label>
+            <input type="number" id="leaveHours" placeholder="例如 3">
+        </div>
+    </div>
 </div>
 
-<div class="block">
-  <h3>扣除請人代課的津貼</h3>
-  <label>📅 本月工作天數：</label>
-  <input type="number" id="workDays" placeholder="例如 22">
-  <br>
-  <label>🕒 代課天數：</label>
-  <input type="number" id="leaveDays" placeholder="例如 1">
-  <label>⏰ 代課小時數：</label>
-  <input type="number" id="leaveHours" placeholder="例如 3">
+<div class="collapsible-block">
+    <h3 onclick="toggleBlock('students-content')">👶 非全月學生資訊（最多五位）</h3>
+    <div id="students-content">
+        <div id="students">
+            <div class="student-row">
+                <label>姓名1</label>
+                <input type="text" id="name0" placeholder="">
+                <label>實上天數</label>
+                <input type="number" id="days0" placeholder="">
+                <label>本月工作天</label>
+                <input type="number" id="totalDays0" placeholder="">
+            </div>
+            <div class="student-row">
+                <label>姓名2</label>
+                <input type="text" id="name1" placeholder="">
+                <label>實上天數</label>
+                <input type="number" id="days1" placeholder="">
+                <label>本月工作天</label>
+                <input type="number" id="totalDays1" placeholder="">
+            </div>
+            <div class="student-row">
+                <label>姓名3</label>
+                <input type="text" id="name2" placeholder="">
+                <label>實上天數</label>
+                <input type="number" id="days2" placeholder="">
+                <label>本月工作天</label>
+                <input type="number" id="totalDays2" placeholder="">
+            </div>
+            <div class="student-row">
+                <label>姓名4</label>
+                <input type="text" id="name3" placeholder="">
+                <label>實上天數</label>
+                <input type="number" id="days3" placeholder="">
+                <label>本月工作天</label>
+                <input type="number" id="totalDays3" placeholder="">
+            </div>
+            <div class="student-row">
+                <label>姓名5</label>
+                <input type="text" id="name4" placeholder="">
+                <label>實上天數</label>
+                <input type="number" id="days4" placeholder="">
+                <label>本月工作天</label>
+                <input type="number" id="totalDays4" placeholder="">
+            </div>
+        </div>
+    </div>
 </div>
 
-<button onclick="calculate()">✅ 計算津貼</button>
-<button onclick="copyResult()">📋 複製結果</button>
+<div class="button-container">
+    <button onclick="calculate()">✅ 計算津貼</button>
+    <button onclick="copyResult()" style="background-color: #3498db; margin-left: 10px;">📋 複製結果</button>
+</div>
 
-<h3>結果：</h3>
+<h3>💰 計算結果：</h3>
 <pre id="result"></pre>
 
 <script>
-  function getStipendByCount(count) {
-    if (count >= 35) return 16000;
-    const table = {
-      16: 600, 17: 1200, 18: 1800, 19: 2400, 20: 3000,
-      21: 4200, 22: 4900, 23: 5600, 24: 6300, 25: 7000,
-      26: 8800, 27: 9600, 28: 10400, 29: 11200, 30: 12000,
-      31: 12800, 32: 13600, 33: 14400, 34: 15200, 35: 16000
-    };
-    return table[count] || 0;
-  }
+    // ---------------------- 修改全月人數對應津貼的級距從這裡開始 ----------------------
+ function getStipendByCount(count) {
+  const stipendMap = {
+    16: 600,
+    17: 1200,
+    18: 1800,
+    19: 2400,
+    20: 3000,
+    21: 4200,
+    22: 4900,
+    23: 5600,
+    24: 6300,
+    25: 7000,
+    26: 8800,
+    27: 9600,
+    28: 10400,
+    29: 11200,
+    30: 12000,
+    31: 12800,
+    32: 13600,
+    33: 14400,
+    34: 15200,
+    35: 16000,
+  };
 
-  function getPerStudentByCount(count) {
-    if (count >= 16 && count <= 20) return 600;
-    if (count >= 21 && count <= 25) return 700;
-    if (count >= 26) return 800;
+  if (count in stipendMap) {
+    return stipendMap[count];
+  } else if (count < 16) {
     return 0;
+  } else {
+    // 如果人數超過 35，則回傳 35 人對應的津貼
+    return stipendMap[35];
   }
+}
+    // ---------------------- 修改全月人數對應津貼的級距到這裡結束 ----------------------
 
-  function calculate() {
+    // ---------------------- 修改非全月學生人數對應個別津貼的級距從這裡開始 ----------------------
+    function getPerStudentByCount(count) {
+        if (count === 15) return 600; // 人數等於 15，每位學生津貼600
+        if (count >= 16 && count <= 20) return 600; // 人數 16-20，每位學生津貼 600
+        if (count >= 21 && count <= 25) return 700; // 人數 21-25，每位學生津貼 700
+        if (count >= 26) return 800; // 人數 >= 26，每位學生津貼 800
+        return 0; // 其他人數，每位學生津貼 0
+    }
+    // ---------------------- 修改非全月學生人數對應個別津貼的級距到這裡結束 ----------------------
+
+    function calculate() {
     const count = parseInt(document.getElementById("fullMonthCount").value);
     const teacher = document.getElementById("teacherName").value.trim();
     const workDays = parseInt(document.getElementById("workDays").value);
@@ -114,66 +307,105 @@
     const stipendRatio = parseFloat(document.getElementById("stipendRatio").value);
 
     if (isNaN(count) || count <= 0) {
-      alert("⚠️ 請輸入正確的【全月人數】！");
-      return;
+        alert("⚠️ 請輸入正確的【全月人數】！");
+        return;
+    }
+    if (isNaN(stipendRatio) || stipendRatio <= 0) {
+        alert("⚠️ 請輸入大於 0 的【比例】！");
+        return;
     }
 
     const baseStipend = getStipendByCount(count);
     const perStudentStipend = getPerStudentByCount(count);
 
-    let total = baseStipend * stipendRatio;
-    let output = ` +全月人數：${count}人 ➜ 津貼：${(baseStipend * stipendRatio).toFixed(2)} 元（比例：${stipendRatio}）`;
+    let total = baseStipend;
+    let output = `老師：${teacher}\n`;  // 加入老師姓名
+    output += `全月人數：${count} 人，津貼 `;
+    const percentageRatio = stipendRatio;
+    const fullMonthStipendTimesRatio = Math.ceil(baseStipend * stipendRatio);
+
+    if (stipendRatio !== 1) {
+        total = fullMonthStipendTimesRatio;
+        const formattedResult = fullMonthStipendTimesRatio.toFixed(0);
+        output += `(${baseStipend} 元 * 比例 ${percentageRatio.toFixed(3)}) = ${formattedResult} 元\n`;
+    } else {
+        const formattedResult = fullMonthStipendTimesRatio.toFixed(0);
+        output += `(${baseStipend} 元 * 比例 ${percentageRatio.toFixed(0)}) = ${formattedResult} 元\n`;
+    }
 
     let nonFullCount = 0;
     let nonFullTotal = 0;
 
     for (let i = 0; i < 5; i++) {
-      const name = document.getElementById(`name${i}`).value.trim();
-      const days = parseInt(document.getElementById(`days${i}`).value);
-      const totalDays = parseInt(document.getElementById(`totalDays${i}`).value);
+        const name = document.getElementById(`name${i}`).value.trim();
+        const days = parseInt(document.getElementById(`days${i}`).value);
+        const totalDays = parseInt(document.getElementById(`totalDays${i}`).value);
 
-      if (name && !isNaN(days) && !isNaN(totalDays) && days > 0 && totalDays > 0) {
-        const partial = Math.ceil(perStudentStipend / totalDays * days);
-        total += partial;
-        nonFullCount++;
-        nonFullTotal += partial;
-        output += `\n +${name}：(${perStudentStipend} ÷ ${totalDays} × ${days}) = ${partial} 元`;
-      }
+        if (name && !isNaN(days) && !isNaN(totalDays) && days > 0 && totalDays > 0) {
+            const partial = Math.ceil(perStudentStipend / totalDays * days);
+            total += partial;
+            nonFullCount++;
+            nonFullTotal += partial;
+            output += `+ ${name} (${perStudentStipend} ÷ ${totalDays} × ${days}) = ${partial} 元\n`;
+        }
     }
 
-    if (total > 16000) {
-      output += `\n🔒 計算總額超過上限，已調整為 16000 元`;
-      total = 16000;
-    }
-
-    output += `\n\n 小計：${Math.round(total)} 元`;
+    output += `小計 ${Math.round(total)} 元\n\n`;
 
     if (workDays && (leaveDays > 0 || leaveHours > 0)) {
-      const daily = total / workDays;
-      const hourly = daily / 8;
-      const leaveDeduction = Math.round(daily * leaveDays + hourly * leaveHours);
+        const daily = total / workDays;
+        const hourly = daily / 8;
+        let leaveDeduction = 0;
+        let deductionDescription = "";
 
-      output += `\n\n -代課扣除部份計算（${leaveDays} 天 ${leaveHours} 小時）：`;
-      output += `\n　 扣除計算：(${total} ÷ ${workDays} × ${leaveDays}) + (${total} ÷ ${workDays} ÷ 8 × ${leaveHours}) = ${leaveDeduction} 元`;
+        output += `-  代課扣除：\n`;
+        if (leaveDays > 0) {
+            const daysDeduction = Math.floor(daily * leaveDays);
+            leaveDeduction += daysDeduction;
+            deductionDescription += `(${Math.round(total)} ÷ ${workDays} × ${leaveDays})`;
+            output += `-  ${leaveDays} 天 ${deductionDescription} = ${daysDeduction} 元\n`;
+        }
 
-      total -= leaveDeduction;
+        if (leaveHours > 0) {
+            const hoursDeduction = Math.floor(hourly * leaveHours);
+            leaveDeduction += hoursDeduction;
+            const hourDescription = `(${Math.round(total)} ÷ ${workDays} ÷ 8 × ${leaveHours})`;
+            output += `-  ${leaveHours} 小時 ${hourDescription} = ${hoursDeduction} 元\n`;
+            if (deductionDescription) {
+                deductionDescription += " + ";
+            }
+            deductionDescription += hourDescription;
+        }
+        output += `共扣 ${leaveDeduction} 元\n\n`;
+        total = Math.round(total) - leaveDeduction;
     }
 
-    output += `\n\n${teacher ? ` ${teacher}本月帶班津貼合計` : "💰 帶班津貼總額"}：${Math.round(total)} 元`;
-
+    output += `= 本月帶班津貼總額：${Math.round(total)} 元`;
     document.getElementById("result").innerText = output;
-  }
-
-  function copyResult() {
-    const text = document.getElementById("result").innerText;
-    if (text.trim() === "") {
-      alert("⚠️ 請先計算後再複製！");
-      return;
     }
-    navigator.clipboard.writeText(text).then(() => {
-      alert("✅ 結果已複製！");
-    });
-  }
+
+
+
+
+    function copyResult() {
+        const text = document.getElementById("result").innerText;
+        if (text.trim() === "") {
+            alert("⚠️ 請先計算後再複製！");
+            return;
+        }
+        navigator.clipboard.writeText(text).then(() => {
+            alert("✅ 結果已複製到剪貼簿！");
+        });
+    }
+
+    function toggleBlock(id) {
+        const block = document.getElementById(id);
+        if (block.style.display === 'none') {
+            block.style.display = 'block';
+        } else {
+            block.style.display = 'none';
+        }
+    }
 </script>
 
 </body>
