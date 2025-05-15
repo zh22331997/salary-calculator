@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>時薪統計月曆</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f7fa;
+            padding: 30px;
+            max-width: 900px;
+            margin: auto;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"], select {
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            width: 120px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin: 10px 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            vertical-align: top;
+            text-align: center;
+            height: 100px;
+        }
+        th {
+            background-color: #e0e0e0;
+            height: 30px;
+        }
+        .date-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="number"] {
+            width: 45px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+            background: #fff3cd;
+            padding: 15px;
+            border: 1px solid #ffeeba;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .controls {
+            margin: 15px 0;
+        }
+        .filled-day {
+            background-color: #f0f4c3;
+        }
+        #copyButton {
+            padding: 8px 16px;
+            background-color: #81c784;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        #copyButton:hover {
+            background-color: #66bb6a;
+        }
+    </style>
+</head>
+<body>
+
+<h2>🧮 時薪統計月曆</h2>
+
+<div class="controls">
+    <label>老師姓名：</label>
+    <input type="text" id="teacherName" placeholder="可留空" />
+    <br>
+
+    <label>T 時薪：</label>
+    <input type="number" id="tRate" value="350" /> 元/小時
+
+    <label>A 時薪：</label>
+    <input type="number" id="aRate" value="200" /> 元/小時
+    <br>
+
+    <label>年份：</label>
+    <select id="yearSelect"></select>
+
+    <label>月份：</label>
+    <select id="monthSelect"></select>
+    <br>
+
+    <button onclick="generateCalendar()">📅 生成月曆</button>
+</div>
+
+<div id="calendarContainer"></div>
+<div class="controls">
+    <button onclick="calculateTotal()">💰 計算總薪資</button>
+</div>
+<div id="result"></div>
+
+<script>
+function initYearMonthSelector() {
+    const yearSelect = document.getElementById("yearSelect");
+    const monthSelect = document.getElementById("monthSelect");
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    for (let y = currentYear - 5; y <= currentYear + 5; y++) {
+        let option = document.createElement("option");
+        option.value = y;
+        option.text = y;
+        if (y === currentYear) option.selected = true;
+        yearSelect.appendChild(option);
+    }
+
+    for (let m = 0; m < 12; m++) {
+        let option = document.createElement("option");
+        option.value = m;
+        option.text = `${m + 1}月`;
+        if (m === currentMonth) option.selected = true;
+        monthSelect.appendChild(option);
+    }
+}
+
+function generateCalendar() {
+    const container = document.getElementById("calendarContainer");
+    container.innerHTML = "";
+
+    const year = parseInt(document.getElementById("yearSelect").value);
+    const month = parseInt(document.getElementById("monthSelect").value);
+
+    const firstDay = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startWeekday = firstDay.getDay(); // 0 = Sunday
+
+    const table = document.createElement("table");
+    const headerRow = document.createElement("tr");
+    const weekdayNames = ["日", "一", "二", "三", "四", "五", "六"];
+
+    weekdayNames.forEach(day => {
+        const th = document.createElement("th");
+        th.textContent = `週${day}`;
+        headerRow.appendChild(th);
+    });
+    table.appendChild(headerRow);
+
+    let tr = document.createElement("tr");
+    let dayCounter = 1;
+
+    for (let i = 0; i < startWeekday; i++) {
+        tr.appendChild(document.createElement("td"));
+    }
+
+    while (dayCounter <= daysInMonth) {
+        if (tr.children.length === 7) {
+            table.appendChild(tr);
+            tr = document.createElement("tr");
+        }
+
+        const td = document.createElement("td");
+        const label = document.createElement("span");
+        label.className = "date-label";
+        label.textContent = `${dayCounter}`;
+
+        const tInput = document.createElement("input");
+        tInput.type = "number";
+        tInput.placeholder = "T";
+        tInput.min = 0;
+        tInput.dataset.type = "T";
+        tInput.addEventListener('input', function() {
+            updateDayColor(td, tInput.value, aInput.value);
+        });
+
+        const aInput = document.createElement("input");
+        aInput.type = "number";
+        aInput.placeholder = "A";
+        aInput.min = 0;
+        aInput.dataset.type = "A";
+        aInput.addEventListener('input', function() {
+            updateDayColor(td, tInput.value, aInput.value);
+        });
+
+        td.appendChild(label);
+        td.appendChild(tInput);
+        td.appendChild(document.createElement("br"));
+        td.appendChild(aInput);
+
+        tr.appendChild(td);
+        dayCounter++;
+    }
+
+    while (tr.children.length < 7) {
+        tr.appendChild(document.createElement("td"));
+    }
+
+    table.appendChild(tr);
+    container.appendChild(table);
+}
+
+function updateDayColor(td, tValue, aValue) {
+    if (tValue || aValue) {
+        td.classList.add('filled-day');
+    } else {
+        td.classList.remove('filled-day');
+    }
+}
+
+
+function calculateTotal() {
+    const tRate = parseFloat(document.getElementById("tRate").value) || 0;
+    const aRate = parseFloat(document.getElementById("aRate").value) || 0;
+    const inputs = document.querySelectorAll("#calendarContainer input[type='number']");
+    const teacherName = document.getElementById("teacherName").value || "";
+
+    let tHours = 0, aHours = 0;
+
+
+    inputs.forEach(input => {
+        const type = input.dataset.type;
+        const val = parseFloat(input.value) || 0;
+        if (type === "T") {
+            tHours += val;
+        }
+        if (type === "A") {
+            aHours += val;
+        }
+    });
+
+    const tPay = tHours * tRate;
+    const aPay = aHours * aRate;
+    const total = tPay + aPay;
+    let formula = "";
+    if (teacherName) {
+        formula = `👩‍🏫 老師：${teacherName}<br>`;
+    }
+    formula += `💵 本月薪資：T ${tHours}小時 × ${tRate}元 + A ${aHours}小時 × ${aRate}元 = 共 ${total.toLocaleString()} 元`;
+
+
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = formula;
+    const copyButton = document.createElement("button");
+    copyButton.id = "copyButton";
+    copyButton.textContent = "📋 複製算式";
+    copyButton.onclick = copyResult;
+    resultDiv.appendChild(copyButton);
+}
+
+function copyResult() {
+    const resultText = document.getElementById("result").textContent;
+    if (resultText.trim() === "") {
+        alert("⚠️ 請先計算總薪資後再複製！");
+        return;
+    }
+    navigator.clipboard.writeText(resultText).then(() => {
+        alert("✅ 算式已複製到剪貼簿！");
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        alert("❌ 複製失敗，請手動複製。");
+    });
+}
+
+
+// 初始化下拉式年月選單
+initYearMonthSelector();
+</script>
+
+</body>
+</html>
