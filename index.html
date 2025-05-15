@@ -1,182 +1,91 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>薪資計算小工具首頁</title>
-    <meta name="description" content="提供各種薪資計算相關工具，方便您快速計算薪資、津貼等。">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" integrity="sha512-WpE4P1fzcbr4u+qRYxW40vAj/Lh9RPvVp169N4t+glR5yInx1DzL9zK+blMqoK38rZ1gMhB7tIQG5mKkvK/DkQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <style>
-        :root {
-            --primary-color: #2980b9;
-            --text-color: #333;
-            --link-hover-color: #3498db;
-            --background-color: #f5f9ff;
-            --card-background-color: #ffffff;
-            --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            --footer-color: #aaa;
-        }
-
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background: var(--background-color);
-            margin: 0;
-            padding: 40px;
-            text-align: center;
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            justify-content: space-between;
-        }
-
-        h1 {
-            font-size: 28px;
-            color: #2c3e50;
-            margin-bottom: 30px;
-        }
-
-        .tool-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
-            max-width: 500px;
-            margin: 0 auto;
-            flex-grow: 1;
-        }
-
-        .tool-card {
-            background-color: var(--card-background-color);
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
-            padding: 20px 30px;
-            width: 100%;
-            text-align: left;
-            transition: transform 0.2s;
-        }
-
-        .tool-card:hover {
-            transform: translateY(-4px);
-        }
-
-        .tool-card a {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--primary-color);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tool-card a:hover {
-            color: var(--link-hover-color);
-            text-decoration: underline;
-        }
-
-        .tool-card p {
-            font-size: 14px;
-            color: #666;
-            margin-top: 6px;
-        }
-
-        footer {
-            margin-top: 60px;
-            font-size: 13px;
-            color: var(--footer-color);
-            text-align: center;
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        li {
-            margin-bottom: 20px;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 20px;
-            }
-
-            .tool-container {
-                flex-direction: column;
-            }
-
-            .tool-card {
-                width: 100%;
-                padding: 15px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            footer {
-                margin-top: 40px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>薪資計算小工具首頁</title>
+  <style>
+    body {
+      font-family: "Segoe UI", "Noto Sans TC", sans-serif;
+      background: #f5f9ff;
+      margin: 0;
+      padding: 40px 16px;
+      color: #333;
+      text-align: center;
+    }
+    h1 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 40px;
+    }
+    main {
+      max-width: 480px;
+      margin: 0 auto;
+      text-align: left;
+    }
+    section {
+      margin-bottom: 36px;
+    }
+    section h2 {
+      font-size: 1.3rem;
+      color: #1a73e8;
+      margin-bottom: 16px;
+      border-left: 4px solid #1a73e8;
+      padding-left: 10px;
+      user-select: none;
+    }
+    a.button {
+      display: block;
+      background: #e3f2fd;
+      color: #1565c0;
+      text-decoration: none;
+      padding: 14px 20px;
+      margin-bottom: 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(21, 101, 192, 0.3);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    a.button:hover {
+      background: #cde5fd;
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.5);
+    }
+    footer {
+      margin-top: 60px;
+      font-size: 13px;
+      color: #aaa;
+      text-align: center;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
+  <h1>📊 薪資計算小工具首頁</h1>
+  <main>
+    <section>
+      <h2>📊 假勤統計</h2>
+      <a href="Absence.html" class="button">📉 假別統計 & 事病假遲到不計薪計算器</a>
+    </section>
 
-    <h1>📊 薪資計算小工具首頁</h1>
+    <section>
+      <h2>📅 學期間帶班津貼</h2>
+      <a href="MSCS.html" class="button">清水校</a>
+      <a href="MSYP.html" class="button">永平校、秀朗校</a>
+      <a href="MSYH.html" class="button">永和校</a>
+      <a href="MSJC.html" class="button">江翠校</a>
+    </section>
 
-    <main class="tool-container">
-        <ul>
-            <li>
-                <div class="tool-card">
-                    <a href="Absence.html"><i class="fas fa-calculator"></i> 📉假別統計&事病假遲到不計薪計算器</a>
-                    <p>快速統計各項假別與遲到分鐘數扣除不計薪後所得</p>
-                </div>
-            </li>
-            <li>
-                <div class="tool-card">
-                    <a href="MSCS.html"><i class="fas fa-calendar-day"></i> 📅 課輔導師【學期間】帶班津貼計算工具_清水校</a>
-                    <p>輸入導師資料與學生出勤天數，自動計算導師帶班津貼總額</p>
-                </div>
-            </li>
-            <li>
-                <div class="tool-card">
-                    <a href="MSYP.html"><i class="fas fa-calendar-day"></i> 📅 課輔導師【學期間】帶班津貼計算工具_永平校、秀朗校</a>
-                    <p>輸入導師資料與學生出勤天數，自動計算導師帶班津貼總額</p>
-                </div>
-            </li>
-            <li>
-                <div class="tool-card">
-                    <a href="MSYH.html"><i class="fas fa-calendar-day"></i> 📅 課輔導師【學期間】帶班津貼計算工具_永和校</a>
-                    <p>輸入導師資料與學生出勤天數，自動計算導師帶班津貼總額</p>
-                </div>
-            </li>
-            <li>
-                <div class="tool-card">
-                    <a href="MSJC.html"><i class="fas fa-calendar-day"></i> 📅 課輔導師【學期間】帶班津貼計算工具_江翠校</a>
-                    <p>輸入導師資料與學生出勤天數，自動計算導師帶班津貼總額</p>
-                </div>
-            </li>
-            <li>
-                <div class="tool-card">
-                    <a href="Summer.html"><i class="fas fa-coins"></i> 🧮 課輔【寒暑】帶班津貼計算工具</a>
-                    <p>輸入帶班點數與責任額天數，快速計算寒暑帶班津貼</p>
-                </div>
-            </li>
-            <li>
-                <div class="tool-card">
-                    <a href="TA.html"><i class="fas fa-money-bill-wave"></i> 🧮TA 薪資計算器</a>
-                    <p>輸入帶班點數與責任額天數，快速計算寒暑帶班津貼</p>
-                </div>
-            </li>
-        </ul>
-    </main>
+    <section>
+      <h2>❄️☀️ 寒暑帶班津貼</h2>
+      <a href="Summer.html" class="button">課輔【寒暑】帶班津貼計算工具</a>
+    </section>
 
-    <footer>Designed by CN ｜ Powered by GitHub Pages</footer>
+    <section>
+      <h2>🧮 TA薪資計算器</h2>
+      <a href="TA.html" class="button">TA 薪資計算器</a>
+    </section>
+  </main>
 
+  <footer>Designed by CN ｜ Powered by GitHub Pages</footer>
 </body>
 </html>
