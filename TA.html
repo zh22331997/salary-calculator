@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>時薪統計月曆</title>
+    <title>美語部TA薪資統計小工具</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -100,18 +100,21 @@
 </head>
 <body>
 
-<h2>🧮 時薪統計月曆</h2>
+<h2>🧮美語部TA薪資統計小工具</h2>
 
 <div class="controls">
     <label>老師姓名：</label>
     <input type="text" id="teacherName" placeholder="可留空" />
+    
+    <label for="tDuty">T 責任額時數：</label>
+    <input type="number" id="tDuty" value="0" min="0" step="0.1">
     <br>
 
     <label>T 時薪：</label>
-    <input type="number" id="tRate" value="350" /> 元/小時
+    <input type="number" id="tRate" value="0" /> 元/小時
 
     <label>A 時薪：</label>
-    <input type="number" id="aRate" value="200" /> 元/小時
+    <input type="number" id="aRate" value="0" /> 元/小時
     <br>
 
     <label>年份：</label>
@@ -240,43 +243,55 @@ function updateDayColor(td, tValue, aValue) {
 
 
 function calculateTotal() {
-    const tRate = parseFloat(document.getElementById("tRate").value) || 0;
-    const aRate = parseFloat(document.getElementById("aRate").value) || 0;
-    const inputs = document.querySelectorAll("#calendarContainer input[type='number']");
-    const teacherName = document.getElementById("teacherName").value || "";
+const tRate = parseFloat(document.getElementById("tRate").value) || 0;
+const aRate = parseFloat(document.getElementById("aRate").value) || 0;
+const tDuty = parseFloat(document.getElementById("tDuty").value) || 0;
+const inputs = document.querySelectorAll("#calendarContainer input[type='number']");
+const teacherName = document.getElementById("teacherName").value || "";
 
-    let tHours = 0, aHours = 0;
+let tHours = 0, aHours = 0;
 
+inputs.forEach(input => {
+    const type = input.dataset.type;
+    const val = parseFloat(input.value) || 0;
+    if (type === "T") tHours += val;
+    if (type === "A") aHours += val;
+});
 
-    inputs.forEach(input => {
-        const type = input.dataset.type;
-        const val = parseFloat(input.value) || 0;
-        if (type === "T") {
-            tHours += val;
-        }
-        if (type === "A") {
-            aHours += val;
-        }
-    });
+const tExtraHours = Math.max(0, tHours - tDuty);
+const tPay = tExtraHours * tRate;
+const aPay = aHours * aRate;
+const total = tPay + aPay;
 
-    const tPay = tHours * tRate;
-    const aPay = aHours * aRate;
-    const total = tPay + aPay;
-    let formula = "";
-    if (teacherName) {
-        formula = `👩‍🏫 老師：${teacherName}<br>`;
-    }
-    formula += `💵 本月薪資：T ${tHours}小時 × ${tRate}元 + A ${aHours}小時 × ${aRate}元 = 共 ${total.toLocaleString()} 元`;
-
-
-    const resultDiv = document.getElementById("result");
-    resultDiv.innerHTML = formula;
-    const copyButton = document.createElement("button");
-    copyButton.id = "copyButton";
-    copyButton.textContent = "📋 複製算式";
-    copyButton.onclick = copyResult;
-    resultDiv.appendChild(copyButton);
+// 組合薪資算式部分
+let salaryParts = [];
+if (tExtraHours > 0) {
+    salaryParts.push(`T (${tHours} - ${tDuty}) 小時 × ${tRate} 元`);
 }
+if (aHours > 0) {
+    salaryParts.push(`A ${aHours} 小時 × ${aRate} 元`);
+}
+const formulaText = salaryParts.join(" + ");
+
+// 組合最終輸出句子
+let formula = "";
+if (teacherName) {
+    formula += `${teacherName}老師TA薪資 = `;
+}
+formula += formulaText ? `${formulaText} = 共 ${total.toLocaleString()} 元` : `共 ${total.toLocaleString()} 元`;
+
+// 輸出與按鈕顯示
+const resultDiv = document.getElementById("result");
+resultDiv.innerHTML = formula;
+
+const copyButton = document.createElement("button");
+copyButton.id = "copyButton";
+copyButton.textContent = "📋 複製算式";
+copyButton.onclick = copyResult;
+resultDiv.appendChild(copyButton);
+
+}
+
 
 function copyResult() {
     const resultText = document.getElementById("result").textContent;
