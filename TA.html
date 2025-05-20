@@ -64,6 +64,7 @@
         }
         input[type="number"] {
             width: 45px;
+            margin: 2px;
         }
         #result {
             margin-top: 20px;
@@ -74,6 +75,7 @@
             border: 1px solid #ffeeba;
             border-radius: 6px;
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
         }
@@ -96,6 +98,12 @@
         #copyButton:hover {
             background-color: #66bb6a;
         }
+        .input-label {
+            display: inline-block;
+            width: 60px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -106,15 +114,15 @@
     <label>老師姓名：</label>
     <input type="text" id="teacherName" placeholder="可留空" />
     
-    <label for="tDuty">T 責任額時數：</label>
+    <label for="tDuty">T 責任額：</label>
     <input type="number" id="tDuty" value="0" min="0" step="0.5">
     <br>
 
     <label>T 時薪：</label>
-    <input type="number" id="tRate" value="0" /> 元/小時
+    <input type="number" id="tRate" value="0" /> 元/時
 
     <label>A 時薪：</label>
-    <input type="number" id="aRate" value="0" /> 元/小時
+    <input type="number" id="aRate" value="0" /> 元/時
     <br>
 
     <label>年份：</label>
@@ -167,7 +175,7 @@ function generateCalendar() {
 
     const firstDay = new Date(year, month, 1);
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const startWeekday = firstDay.getDay(); // 0 = Sunday
+    const startWeekday = firstDay.getDay();
 
     const table = document.createElement("table");
     const headerRow = document.createElement("tr");
@@ -241,64 +249,59 @@ function updateDayColor(td, tValue, aValue) {
     }
 }
 
-
 function calculateTotal() {
-const tRate = parseFloat(document.getElementById("tRate").value) || 0;
-const aRate = parseFloat(document.getElementById("aRate").value) || 0;
-const tDuty = parseFloat(document.getElementById("tDuty").value) || 0;
-const inputs = document.querySelectorAll("#calendarContainer input[type='number']");
-const teacherName = document.getElementById("teacherName").value || "";
+    const tRate = parseFloat(document.getElementById("tRate").value) || 0;
+    const aRate = parseFloat(document.getElementById("aRate").value) || 0;
+    const tDuty = parseFloat(document.getElementById("tDuty").value) || 0;
+    const inputs = document.querySelectorAll("#calendarContainer input[type='number']");
+    const teacherName = document.getElementById("teacherName").value || "";
 
-let tHours = 0, aHours = 0;
+    let tHours = 0, aHours = 0;
+    inputs.forEach(input => {
+        const type = input.dataset.type;
+        const val = parseFloat(input.value) || 0;
+        if (type === "T") tHours += val;
+        if (type === "A") aHours += val;
+    });
 
-inputs.forEach(input => {
-    const type = input.dataset.type;
-    const val = parseFloat(input.value) || 0;
-    if (type === "T") tHours += val;
-    if (type === "A") aHours += val;
-});
+    const tExtraHours = Math.max(0, tHours - tDuty);
+    const tPay = tExtraHours * tRate;
+    const aPay = aHours * aRate;
+    const total = tPay + aPay;
 
-const tExtraHours = Math.max(0, tHours - tDuty);
-const tPay = tExtraHours * tRate;
-const aPay = aHours * aRate;
-const total = tPay + aPay;
-
-// 組合薪資算式部分
 let salaryParts = [];
-if (tExtraHours > 0) {
-    salaryParts.push(`T (${tHours} - ${tDuty}) 小時 × ${tRate} 元`);
+
+if (tHours > 0) {
+    if (tDuty > 0 && tExtraHours > 0) {
+        salaryParts.push(`T(${tHours} - ${tDuty})H × ${tRate}`);
+    } else if (tDuty === 0) {
+        salaryParts.push(`T${tHours}H × ${tRate}`);
+    }
 }
+
 if (aHours > 0) {
-    salaryParts.push(`A ${aHours} 小時 × ${aRate} 元`);
-}
-const formulaText = salaryParts.join(" + ");
-
-// 組合最終輸出句子
-let formula = "";
-if (teacherName) {
-    formula += `${teacherName}老師TA薪資 = `;
-}
-formula += formulaText ? `${formulaText} = 共 ${total.toLocaleString()} 元` : `共 ${total.toLocaleString()} 元`;
-
-// 輸出與按鈕顯示
-const resultDiv = document.getElementById("result");
-resultDiv.innerHTML = ''; // 清空先前內容
-
-const formulaSpan = document.createElement("span"); // 用來包住算式內容
-formulaSpan.id = "formulaText";
-formulaSpan.textContent = formula;
-
-const copyButton = document.createElement("button");
-copyButton.id = "copyButton";
-copyButton.textContent = "📋 複製算式";
-copyButton.onclick = copyResult;
-
-resultDiv.appendChild(formulaSpan);
-resultDiv.appendChild(copyButton);
-
-
+    salaryParts.push(`A${aHours}H × ${aRate}`);
 }
 
+    const formulaText = salaryParts.join(" + ");
+    let formula = teacherName ? `${teacherName}老師TA薪資 = ` : "";
+    formula += formulaText ? `${formulaText} =  ${total.toLocaleString()} 元` : ` ${total.toLocaleString()} 元`;
+
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = '';
+
+    const formulaSpan = document.createElement("span");
+    formulaSpan.id = "formulaText";
+    formulaSpan.textContent = formula;
+
+    const copyButton = document.createElement("button");
+    copyButton.id = "copyButton";
+    copyButton.textContent = "📋 複製算式";
+    copyButton.onclick = copyResult;
+
+    resultDiv.appendChild(formulaSpan);
+    resultDiv.appendChild(copyButton);
+}
 
 function copyResult() {
     const formulaText = document.getElementById("formulaText").textContent;
@@ -314,7 +317,6 @@ function copyResult() {
     });
 }
 
-// 初始化下拉式年月選單
 initYearMonthSelector();
 </script>
 
