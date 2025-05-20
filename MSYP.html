@@ -105,6 +105,43 @@
       border-radius: 6px;
       box-shadow: 0 0 5px #ddd;
     }
+    
+    .btn-primary {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #2c80c4;
+  transform: translateY(-1px);
+}
+
+    .copy-button {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+.copy-button:hover {
+  background-color: #dbeafe;
+}
+
+.copy-feedback {
+  margin-left: 10px;
+  color: green;
+  font-size: 14px;
+}
   </style>
 </head>
 <body>
@@ -146,7 +183,7 @@
 
   <div class="side-by-side">
     <div class="box" id="oneDayStudentsContainer" style="display: none;">
-     <h3>單日生(有填名字才會計算)</h3>
+      <h3>單日生(有填名字才會計算)</h3>
       <div id="studentsContainer"></div>
       <button type="button" onclick="addStudent()">新增學生</button>
       <div style="margin-top: 10px;">
@@ -169,9 +206,11 @@
     </div>
   </div>
 
-  <button type="button" onclick="calculate()">計算津貼</button>
+  <button type="button" onclick="calculate()" class="btn-primary">📊 計算津貼</button>
+<div id="result">這裡是帶班津貼結果</div>
+<button id="copyBtn" class="btn-primary">📋 複製結果</button>
+<span id="copyFeedback" class="copy-feedback"></span>
 
-  <div id="result"></div>
 
   <script>
     let studentIndex = 0;
@@ -296,7 +335,18 @@ function calculate() {
 
   document.getElementById("result").textContent = resultText;
 }
-
+document.getElementById('copyBtn').addEventListener('click', function () {
+  const resultText = document.getElementById('result').innerText;
+  navigator.clipboard.writeText(resultText)
+    .then(() => {
+      const feedback = document.getElementById('copyFeedback');
+      feedback.innerText = '✅ 已複製！';
+      setTimeout(() => feedback.innerText = '', 2000);
+    })
+    .catch(() => {
+      alert('❌ 複製失敗，請手動選取文字');
+    });
+});
     // 初始化執行區塊顯示狀態
     toggleSections();
   </script>
