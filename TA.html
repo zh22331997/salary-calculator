@@ -282,31 +282,37 @@ formula += formulaText ? `${formulaText} = 共 ${total.toLocaleString()} 元` : 
 
 // 輸出與按鈕顯示
 const resultDiv = document.getElementById("result");
-resultDiv.innerHTML = formula;
+resultDiv.innerHTML = ''; // 清空先前內容
+
+const formulaSpan = document.createElement("span"); // 用來包住算式內容
+formulaSpan.id = "formulaText";
+formulaSpan.textContent = formula;
 
 const copyButton = document.createElement("button");
 copyButton.id = "copyButton";
 copyButton.textContent = "📋 複製算式";
 copyButton.onclick = copyResult;
+
+resultDiv.appendChild(formulaSpan);
 resultDiv.appendChild(copyButton);
+
 
 }
 
 
 function copyResult() {
-    const resultText = document.getElementById("result").textContent;
-    if (resultText.trim() === "") {
+    const formulaText = document.getElementById("formulaText").textContent;
+    if (!formulaText.trim()) {
         alert("⚠️ 請先計算總薪資後再複製！");
         return;
     }
-    navigator.clipboard.writeText(resultText).then(() => {
+    navigator.clipboard.writeText(formulaText).then(() => {
         alert("✅ 算式已複製到剪貼簿！");
     }).catch(err => {
         console.error('Failed to copy: ', err);
         alert("❌ 複製失敗，請手動複製。");
     });
 }
-
 
 // 初始化下拉式年月選單
 initYearMonthSelector();
