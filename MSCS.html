@@ -288,7 +288,7 @@
     }
     // ---------------------- 修改非全月學生人數對應個別津貼的級距到這裡結束 ----------------------
 
-    function calculate() {
+function calculate() {
     const count = parseInt(document.getElementById("fullMonthCount").value);
     const teacher = document.getElementById("teacherName").value.trim();
     const workDays = parseInt(document.getElementById("workDays").value);
@@ -307,72 +307,62 @@
 
     const baseStipend = getStipendByCount(count);
     const perStudentStipend = getPerStudentByCount(count);
+    const effectiveStipend = Math.ceil(baseStipend * stipendRatio);
 
-    let total = baseStipend;
-    let output = `老師：${teacher}\n`;  // 加入老師姓名
-    output += `全月人數：${count} 人，津貼 `;
-    const percentageRatio = stipendRatio;
-    const fullMonthStipendTimesRatio = Math.ceil(baseStipend * stipendRatio);
+let output = "";
+if (stipendRatio === 1) {
+    output = `${teacher}帶班津貼=${perStudentStipend}×(${count}-15)=${effectiveStipend}元`;
+} else {
+    output = `${teacher}帶班津貼=${perStudentStipend}×(${count}-15)×學期天比例 ${stipendRatio}=${effectiveStipend}元`;
+}
 
-    if (stipendRatio !== 1) {
-        total = fullMonthStipendTimesRatio;
-        const formattedResult = fullMonthStipendTimesRatio.toFixed(0);
-        output += `(${baseStipend} 元 * 比例 ${percentageRatio.toFixed(3)}) = ${formattedResult} 元\n`;
-    } else {
-        const formattedResult = fullMonthStipendTimesRatio.toFixed(0);
-        output += `(${baseStipend} 元 * 比例 ${percentageRatio.toFixed(0)}) = ${formattedResult} 元\n`;
-    }
 
-    let nonFullCount = 0;
-    let nonFullTotal = 0;
+    let total = effectiveStipend;
 
+    // 處理單日生
     for (let i = 0; i < 5; i++) {
         const name = document.getElementById(`name${i}`).value.trim();
         const days = parseInt(document.getElementById(`days${i}`).value);
         const totalDays = parseInt(document.getElementById(`totalDays${i}`).value);
 
         if (name && !isNaN(days) && !isNaN(totalDays) && days > 0 && totalDays > 0) {
-            const partial = Math.ceil(perStudentStipend / totalDays * days);
+            const partial = Math.ceil(perStudentStipend * (days / totalDays));
             total += partial;
-            nonFullCount++;
-            nonFullTotal += partial;
-            output += `+ ${name} (${perStudentStipend} ÷ ${totalDays} × ${days}) = ${partial} 元\n`;
+            output += `<br>＋${name}${perStudentStipend}×${days}÷${totalDays}=${partial}元`;
         }
     }
 
-    output += `小計 ${Math.round(total)} 元\n\n`;
+    //output += `，總計${total}元`;先不顯示//
 
+    // 處理代課扣除
     if (workDays && (leaveDays > 0 || leaveHours > 0)) {
         const daily = total / workDays;
         const hourly = daily / 8;
-        let leaveDeduction = 0;
-        let deductionDescription = "";
+        let deduction = 0;
+        let deductionDetail = "";
 
-        output += `-  代課扣除：\n`;
         if (leaveDays > 0) {
-            const daysDeduction = Math.floor(daily * leaveDays);
-            leaveDeduction += daysDeduction;
-            deductionDescription += `(${Math.round(total)} ÷ ${workDays} × ${leaveDays})`;
-            output += `-  ${leaveDays} 天 ${deductionDescription} = ${daysDeduction} 元\n`;
+            const dayDeduct = Math.floor(daily * leaveDays);
+            deduction += dayDeduct;
+            deductionDetail += `(${total}÷${workDays}×${leaveDays})=${dayDeduct}元`;
         }
 
         if (leaveHours > 0) {
-            const hoursDeduction = Math.floor(hourly * leaveHours);
-            leaveDeduction += hoursDeduction;
-            const hourDescription = `(${Math.round(total)} ÷ ${workDays} ÷ 8 × ${leaveHours})`;
-            output += `-  ${leaveHours} 小時 ${hourDescription} = ${hoursDeduction} 元\n`;
-            if (deductionDescription) {
-                deductionDescription += " + ";
-            }
-            deductionDescription += hourDescription;
+            const hourDeduct = Math.floor(hourly * leaveHours);
+            deduction += hourDeduct;
+            if (deductionDetail) deductionDetail += " + ";
+            deductionDetail += `(${total}÷${workDays}÷8×${leaveHours})=${hourDeduct} 元`;
         }
-        output += `共扣 ${leaveDeduction} 元\n\n`;
-        total = Math.round(total) - leaveDeduction;
+
+        output += `－代課${deductionDetail}`;
+
+        total = Math.round(total - deduction);
+        output += `，實領${total}元`;
     }
 
-    output += `= 本月帶班津貼總額：${Math.round(total)} 元`;
-    document.getElementById("result").innerText = output;
-    }
+    document.getElementById("result").innerHTML = output;
+}
+
 
 
 
