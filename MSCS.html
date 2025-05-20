@@ -63,7 +63,7 @@
 
 
   <meta charset="UTF-8" />
-  <title>學期間帶班津貼(清水江翠)</title>
+  <title>學期帶班津貼-清水、江翠</title>
   <style>
     body {
       font-family: "微軟正黑體", sans-serif;
@@ -210,7 +210,7 @@
 <div id="result">這裡是帶班津貼結果</div>
 <button id="copyBtn" class="btn-primary">📋 複製結果</button>
 <span id="copyFeedback" class="copy-feedback"></span>
-
+ 
 
   <script>
     let studentIndex = 0;
@@ -307,10 +307,13 @@ function calculate() {
     }
   }
 
+  // 代課扣款改用 津貼總和 = baseAllowance + oneDaySum 計算
   let deduction = 0;
   let deductionText = "";
+  const totalAllowanceBeforeDeduction = baseAllowance + oneDaySum;
+
   if (hasSubstitute && substituteHours > 0 && workDays > 0) {
-    const perHour = baseAllowance / workDays / 8;
+    const perHour = totalAllowanceBeforeDeduction / workDays / 8;
     deduction = Math.floor(perHour * substituteHours);
     const days = Math.floor(substituteHours / 8);
     const hours = substituteHours % 8;
@@ -318,10 +321,10 @@ function calculate() {
     if (days > 0) timeStr += `${days}天`;
     if (hours > 0) timeStr += `${hours}小時`;
     if (timeStr === "") timeStr = "0小時";
-    deductionText = `扣代課(${baseAllowance}/${workDays}/8*${timeStr})`;
+    deductionText = `扣代課(${totalAllowanceBeforeDeduction}/${workDays}/8*${timeStr})`;
   }
 
-  const finalAllowance = baseAllowance + oneDaySum - deduction;
+  const finalAllowance = totalAllowanceBeforeDeduction - deduction;
 
   // 組結果字串
   let resultText = "";
@@ -335,6 +338,7 @@ function calculate() {
 
   document.getElementById("result").textContent = resultText;
 }
+
 document.getElementById('copyBtn').addEventListener('click', function () {
   const resultText = document.getElementById('result').innerText;
   navigator.clipboard.writeText(resultText)
@@ -347,8 +351,10 @@ document.getElementById('copyBtn').addEventListener('click', function () {
       alert('❌ 複製失敗，請手動選取文字');
     });
 });
-    // 初始化執行區塊顯示狀態
-    toggleSections();
+
+// 初始化執行區塊顯示狀態
+toggleSections();
+
   </script>
 </body>
 </html>
