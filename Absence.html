@@ -1,4 +1,5 @@
-<!DOCTYPE html> /*原始版修正中*/
+
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -164,7 +165,7 @@
 </head>
 <body>
     <h2>假別登記與統計工具</h2>
-    <label>老師姓名（可留空）：<input type="text" id="teacherNameLeave"></label><br><br>
+    <label>老師姓名（可留空）：<input type="text" id="teacherNameLeave" style="width: 100px" placeholder="例如：Joyce"></label><br>
     <label>年份：<input type="number" id="yearInput" value="" min="2000" max="2100"></label>
     <label>月份（1~12）：<input type="number" id="monthInput" value="5" min="1" max="12"></label>
     <button onclick="generateTable()">產生日期表</button>
@@ -182,28 +183,28 @@
     <h2>🧮事病假 或 遲到 不計薪計算器</h2>
 
     <label>老師姓名（可留空）：</label>
-    <input type="text" id="nameSalary" placeholder="例如：張老師"><br>
+    <input type="text" id="nameSalary" style="width: 100px" placeholder="例如：張老師"><br>
 
     <label>原始月薪：</label>
     <input type="number" id="salary" style="width: 100px;" placeholder="例如：32000"><br>
 
     <label>事假（天）：</label>
-    <input type="number" id="leaveDaysSalary" placeholder="例如：1">
+    <input type="number" id="leaveDaysSalary" style="width: 60px" placeholder="0">
 
     <label>事假（小時）：</label>
-    <input type="number" id="leaveHoursSalary" placeholder="例如：2"><br>
+    <input type="number" id="leaveHoursSalary" style="width: 60px" placeholder="0"><br>
 
     <label>病假（天）：</label>
-    <input type="number" id="sickDaysSalary" placeholder="例如：0.5">
+    <input type="number" id="sickDaysSalary" style="width: 60px" placeholder="0">
 
     <label>病假（小時）：</label>
-    <input type="number" id="sickHoursSalary" placeholder="例如：1"><br>
+    <input type="number" id="sickHoursSalary" style="width: 60px" placeholder="0"><br>
 
     <label>生理假（小時）：</label>
-    <input type="number" id="menstrualHoursSalary" placeholder="例如：2"><br>
+    <input type="number" id="menstrualHoursSalary" style="width: 60px" placeholder="0"><br>
 
     <label>超過三次5分鐘的遲到（分鐘）：</label>
-    <input type="number" id="lateMinutesSalary" placeholder="例如：15"><br>
+    <input type="number" id="lateMinutesSalary" style="width: 60px" placeholder="0"><br>
 
     <button onclick="calculateSalaryDeduction()">計算</button><br><br>
     <div id="salaryResult"></div>
@@ -274,17 +275,17 @@
             <input type="hidden" name="leave-m-date" value="${displayDate}">
             </td>
             <td>
-            <input type="checkbox" name="leave-f" data-type="f-day" value="1">
-            <input type="hidden" name="leave-f-date" value="${displayDate}">
-            </td>
-            <td>
-            <input type="number" name="leave-f" data-type="f-hour" onchange="validateInput(this)">
-            <input type="hidden" name="leave-f-date" value="${displayDate}">
-            </td>
-            <td>
-            <input type="number" name="overtime" data-type="overtime-hour" onchange="validateInput(this)">
-            <input type="hidden" name="overtime-date" value="${displayDate}">
-            </td>            
+            <input type="checkbox" name="leave-f" data-type="f-day" value="1">
+            <input type="hidden" name="leave-f-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="number" name="leave-f" data-type="f-hour" onchange="validateInput(this)">
+            <input type="hidden" name="leave-f-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="number" name="overtime" data-type="overtime-hour" onchange="validateInput(this)">
+            <input type="hidden" name="overtime-date" value="${displayDate}">
+            </td>            
             </tr>`;
         }
 
@@ -322,13 +323,13 @@
         menstrualRecords = [];// 記錄
         vacationRecords = [];// 記錄
         funeralRecords = []; // 喪假記錄
-        overtimeRecords = []; // 超時記錄
+        overtimeRecords = []; // 超時記錄
         
         let vDay = 0, vHour = 0, pDay = 0, pHour = 0, sDay = 0, sHour = 0, lateMin = 0, lateNoDeductMin = 0;
         let punchInCount = 0, punchOutCount = 0;
         let mHour = 0;
         let fDay = 0, fHour = 0; // 新增喪假天、時
-        let otHour = 0; // 新增超時時
+        let otHour = 0; // 新增超時時
         
         rows.forEach(row => {
             const date = row.querySelector("td:first-child").innerText;
@@ -341,7 +342,7 @@
             const punchCardMissCheckboxes = row.querySelectorAll("input[type='checkbox'][name='punch-card-miss']");
             const mDateInput = row.querySelectorAll("input[type='hidden'][name$='-m-date']");
             const fDateInput = row.querySelectorAll("input[type='hidden'][name$='-f-date']"); // 新增喪假日期
-            const overtimeDateInput = row.querySelectorAll("input[type='hidden'][name$='overtime-date']"); // 新增超時日期            
+            const overtimeDateInput = row.querySelectorAll("input[type='hidden'][name$='overtime-date']"); // 新增超時日期            
             
             
             const vDayChecked = row.querySelector("input[data-type='v-day']").checked ? 1 : 0;
@@ -356,8 +357,8 @@
             const punchOutVal = punchCardMissCheckboxes[1].checked;
             const mHourVal = parseFloat(row.querySelector("input[data-type='m-hour']").value) || 0;
             const fDayChecked = row.querySelector("input[data-type='f-day']").checked ? 1 : 0; // 喪假天
-            const fHourVal = parseFloat(row.querySelector("input[data-type='f-hour']").value) || 0; // 喪假時
-            const otHourVal = parseFloat(row.querySelector("input[data-type='overtime-hour']").value) || 0; // 超時時
+            const fHourVal = parseFloat(row.querySelector("input[data-type='f-hour']").value) || 0; // 喪假時
+            const otHourVal = parseFloat(row.querySelector("input[data-type='overtime-hour']").value) || 0; // 超時時
             
             vDay += vDayChecked;
             vHour += vHourVal;
@@ -368,8 +369,8 @@
             lateMin += lateMinVal;
             lateNoDeductMin += lateNoDeductMinVal;
             fDay += fDayChecked; // 累加喪假天
-            fHour += fHourVal; // 累加喪假時
-            otHour += otHourVal; // 累加超時時
+            fHour += fHourVal; // 累加喪假時
+            otHour += otHourVal; // 累加超時時
             
             
             if (vDayChecked) vacationRecords.push({ days: 1, date: vDateInput[0].value, type: '天' });
@@ -393,8 +394,8 @@
                 mHour += mHourVal;
             }
             if (fDayChecked) funeralRecords.push({ days: 1, date: fDateInput[0].value }); // 喪假天記錄
-            if (fHourVal > 0) funeralRecords.push({ hours: fHourVal, date: fDateInput[1].value }); // 喪假時記錄
-            if (otHourVal > 0) overtimeRecords.push({ hours: otHourVal, date: overtimeDateInput[0].value }); // 超時時記錄
+            if (fHourVal > 0) funeralRecords.push({ hours: fHourVal, date: fDateInput[1].value }); // 喪假時記錄
+            if (otHourVal > 0) overtimeRecords.push({ hours: otHourVal, date: overtimeDateInput[0].value }); // 超時時記錄
         });         
         
         
@@ -427,15 +428,15 @@
             result += bufferString + "\n";
         }
         if (fDay > 0 || fHour > 0) { // 顯示喪假統計
-          result += `✅ 喪假：${fDay} 天 ${fHour} 小時`;
-          const funeralDetails = funeralRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
-          if (funeralDetails) result += `     ${funeralDetails}\n`;
-       }
-       if (otHour > 0) { // 顯示超時統計
-          result += `✅ 超時：${otHour} 小時`;
-          const overtimeDetails = overtimeRecords.map(record => `(${record.date} ${record.hours}小時)`).join('、');
-          if (overtimeDetails) result += `     ${overtimeDetails}\n`;
-       }
+          result += `✅ 喪假：${fDay} 天 ${fHour} 小時`;
+          const funeralDetails = funeralRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
+          if (funeralDetails) result += `     ${funeralDetails}\n`;
+       }
+       if (otHour > 0) { // 顯示超時統計
+          result += `✅ 超時：${otHour} 小時`;
+          const overtimeDetails = overtimeRecords.map(record => `(${record.date} ${record.hours}小時)`).join('、');
+          if (overtimeDetails) result += `     ${overtimeDetails}\n`;
+       }
 
 
         if (pDay > 0 || pHour > 0) {
@@ -579,14 +580,14 @@
 
         let formula = `${name ? name + "：" : ""}不支薪明細如下：\n`;
 
-        if (leaveDays) formula += `🔸 事假 ${leaveDays}天 × ${salary}/30 = ${leaveDayDeduct}元 ${leaveDaysNote}\n`;
-        if (leaveHours) formula += `🔸 事假 ${leaveHours}小時 × ${salary}/30/8 = ${leaveHourDeduct}元 ${leaveHoursNote}\n`;
-        if (sickDays) formula += `🔸 病假 ${sickDays}天 × ${salary}/30/2 = ${sickDayDeduct}元 ${sickDaysNote}\n`;
-        if (sickHours) formula += `🔸 病假 ${sickHours}小時 × ${salary}/30/8/2 = ${sickHourDeduct}元 ${sickHoursNote}\n`;
-        if (lateMinutes) formula += `🔸 遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${lateDeduct}元 ${lateNote}\n`;
-        if (menstrualHours) formula += `🔸 生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${menstrualDeduct}元 ${menstrualNote}\n`;
+        if (leaveDays) formula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${leaveDayDeduct}元 ${leaveDaysNote}\n`;
+        if (leaveHours) formula += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${leaveHourDeduct}元 ${leaveHoursNote}\n`;
+        if (sickDays) formula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${sickDayDeduct}元 ${sickDaysNote}\n`;
+        if (sickHours) formula += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${sickHourDeduct}元 ${sickHoursNote}\n`;
+        if (lateMinutes) formula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${lateDeduct}元 ${lateNote}\n`;
+        if (menstrualHours) formula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${menstrualDeduct}元 ${menstrualNote}\n`;
 
-        formula += `\n💰 不支薪金額：${totalDeduct} 元`;
+        formula += `不支薪金額：${totalDeduct} 元`;
 
         document.getElementById("salaryResult").innerText = formula;
     }
@@ -602,6 +603,61 @@
             .catch(err => alert("❌ 複製失敗：" + err));
     }
     </script>
+    <script>
+    //以下為特休補休折現區
+function calculateCashOut() {
+  const name = document.getElementById("cashOutName").value.trim();
+  const salary = parseFloat(document.getElementById("cashOutSalary").value);
+  const days = parseFloat(document.getElementById("cashOutDays").value) || 0;
+  const hours = parseFloat(document.getElementById("cashOutHours").value) || 0;
+
+  if (!salary || salary <= 0) {
+    document.getElementById("cashOutResult").innerText = "⚠️ 請填入正確的月薪";
+    return;
+  }
+
+  const dayCash = Math.floor((salary / 30) * days);
+  const hourCash = Math.floor((salary / 30 / 8) * hours);
+  const total = dayCash + hourCash;
+
+  let formula = `${name ? name + "：" : ""}年假.特休.補休折現明細如下：\n`;
+  if (days > 0) formula += `➕特休 ${days} 天 × ${salary}/30 = ${dayCash} 元\n`;
+  if (hours > 0) formula += `➕補休 ${hours} 小時 × ${salary}/30/8 = ${hourCash} 元\n`;
+  formula += `折現金額總計：${total} 元`;
+
+  document.getElementById("cashOutResult").innerText = formula;
+}
+
+function copyCashOutResult() {
+  const text = document.getElementById("cashOutResult").innerText;
+  if (!text) {
+    alert("⚠️ 尚未產生結果");
+    return;
+  }
+  navigator.clipboard.writeText(text)
+    .then(() => alert("✅ 已複製折現算式！"))
+    .catch(err => alert("❌ 複製失敗：" + err));
+}
+</script>    
+    
+    
+<hr>
+<h2>💰 特休補休折現區</h2>
+<label>老師姓名（可留空）：</label>
+<input type="text" id="cashOutName" style="width: 100px" placeholder="例如：張老師"><br>
+
+<label>原始月薪：</label>
+<input type="number" id="cashOutSalary" style="width: 100px" placeholder="例如：32000"><br>
+
+<label>折現特休（天）：</label>
+<input type="number" id="cashOutDays" style="width: 60px" placeholder="0">
+
+<label>折現補休（小時）：</label>
+<input type="number" id="cashOutHours" style="width: 60px" placeholder="0"><br>
+
+<button onclick="calculateCashOut()">計算折現金額</button>
+<button onclick="copyCashOutResult()">📋 複製算式</button>
+<div class="result-box" id="cashOutResult"></div>
 
 </body>
 </html>
