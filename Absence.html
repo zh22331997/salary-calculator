@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> /*原始版修正中*/
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -13,14 +13,6 @@
 
      label {
      margin-right: 0.5em;
-     }
-
-     input[type="number"], input[type="text"] {
-     width: 6em;
-     padding: 0.3em;
-     margin-right: 1em;
-     border: 1px solid #ccc;
-     border-radius: 4px;
      }
 
      button {
@@ -40,7 +32,7 @@
 
      table {  
      table-layout: fixed;
-     width: 60%;
+     width: 80%;/*改寬度*/
      border-collapse: collapse;
      margin-top: 1.5em;
      background-color: white;
@@ -71,13 +63,26 @@
 
   input[type="checkbox"] {
     transform: scale(1.3);
+    
+  }
+
+  input[type="text"] {
+    width: 6em;
+    padding: 0.3em;
+    margin-right: 1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
   }
 
   input[type="number"] {
     width: 4em;
     padding: 0.2em;
     text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 1em;
   }
+
 
   /* 每欄寬度設定 */
   table th:nth-child(1), table td:nth-child(1) { width: 20px; } /*日期*/
@@ -92,6 +97,11 @@
   table th:nth-child(10), table td:nth-child(10) { width: 50px; } /*遲到不扣*/
   table th:nth-child(11), table td:nth-child(11) { width: 50px; } /*漏打卡*/
   table th:nth-child(12), table td:nth-child(12) { width: 50px; } /*生理假*/
+  table th:nth-child(13), table td:nth-child(13) { width: 30px; } /*喪假(天)*/
+  table th:nth-child(14), table td:nth-child(14) { width: 50px; } /*喪假(時)*/
+  table th:nth-child(15), table td:nth-child(15) { width: 50px; } /*超時(時)*/
+
+
   
   .totals {
     margin-top: 20px;
@@ -207,7 +217,7 @@
         const month = parseInt(document.getElementById("monthInput").value);
         const daysInMonth = new Date(year, month, 0).getDate();
 
-        let html = '<table><tr><th>日期</th><th>星期</th><th>特休<br>補休<br>(天)</th><th>特休<br>補休<br>(時)</th><th>事假<br>(天)</th><th>事假<br>(時)</th><th>病假<br>(天)</th><th>病假<br>(時)</th><th>遲到扣<br>(分鐘)</th><th>遲到三次五分鐘內<br>(分鐘)</th><th id="punchCardMissColumn">漏打卡</th><th>生理假<br>(時)</th></tr>';
+        let html = '<table><tr><th>日期</th><th>星期</th><th>特休<br>補休<br>(天)</th><th>特休<br>補休<br>(時)</th><th>事假<br>(天)</th><th>事假<br>(時)</th><th>病假<br>(天)</th><th>病假<br>(時)</th><th>遲到扣<br>(分鐘)</th><th>遲到三次五分鐘內<br>(分鐘)</th><th id="punchCardMissColumn">漏打卡</th><th>生理假<br>(時)</th><th>喪假<br>(天)</th><th>喪假<br>(時)</th><th>超時<br>(時)</th></tr>';
 
         const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
 
@@ -221,48 +231,60 @@
             else if (dayOfWeek === 0) weekendClass = "sunday";
 
             html += `<tr class="weekend-row ${weekendClass}">
-                <td>${displayDate}</td>
-                <td>(${weekDays[dayOfWeek]})</td>
-                <td>
-                    <input type="checkbox" name="leave-v" data-type="v-day" value="1">
-                    <input type="hidden" name="leave-v-date" value="${displayDate}">
-                </td>
-                <td><input type="number" name="leave-v" data-type="v-hour" onchange="validateInput(this)">
-                    <input type="hidden" name="leave-v-date" value="${displayDate}">
-                </td>
-                <td>
-                    <input type="checkbox" name="leave-p" data-type="p-day" value="1">
-                    <input type="hidden" name="leave-p-date" value="${displayDate}">
-                </td>
-                <td>
-                    <input type="number" name="leave-p" data-type="p-hour" onchange="validateInput(this)">
-                    <input type="hidden" name="leave-p-date" value="${displayDate}">
-                </td>
-                <td>
-                    <input type="checkbox" name="leave-s" data-type="s-day" value="1">
-                    <input type="hidden" name="leave-s-date" value="${displayDate}">
-                </td>
-                <td>
-                    <input type="number" name="leave-s" data-type="s-hour" onchange="validateInput(this)">
-                    <input type="hidden" name="leave-s-date" value="${displayDate}">
-                </td>
-                <td>
-                    <input type="number" name="late" data-type="late-min" onchange="validateInput(this)">
-                    <input type="hidden" name="late-date" value="${displayDate}">
-                </td>
-                <td>
-                    <input type="number" name="late-no-deduct" data-type="late-no-deduct-min" onchange="validateInput(this)">
-                    <input type="hidden" name="late-no-deduct-date" value="${displayDate}">
-                </td>
-                <td>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox" name="punch-card-miss" data-type="punch-in" data-date="${displayDate}">上班</label>
-                        <label><input type="checkbox" name="punch-card-miss" data-type="punch-out" data-date="${displayDate}">下班</label>
-                    </div>
-                </td>
-                <td><input type="number" name="leave-m" data-type="m-hour" onchange="validateInput(this)">
-                    <input type="hidden" name="leave-m-date" value="${displayDate}">
-                </td>
+            <td>${displayDate}</td>
+            <td>(${weekDays[dayOfWeek]})</td>
+            <td>
+            <input type="checkbox" name="leave-v" data-type="v-day" value="1">
+            <input type="hidden" name="leave-v-date" value="${displayDate}">
+            </td>
+            <td><input type="number" name="leave-v" data-type="v-hour" onchange="validateInput(this)">
+            <input type="hidden" name="leave-v-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="checkbox" name="leave-p" data-type="p-day" value="1">
+            <input type="hidden" name="leave-p-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="number" name="leave-p" data-type="p-hour" onchange="validateInput(this)">
+            <input type="hidden" name="leave-p-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="checkbox" name="leave-s" data-type="s-day" value="1">
+            <input type="hidden" name="leave-s-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="number" name="leave-s" data-type="s-hour" onchange="validateInput(this)">
+            <input type="hidden" name="leave-s-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="number" name="late" data-type="late-min" onchange="validateInput(this)">
+            <input type="hidden" name="late-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="number" name="late-no-deduct" data-type="late-no-deduct-min" onchange="validateInput(this)">
+            <input type="hidden" name="late-no-deduct-date" value="${displayDate}">
+            </td>
+            <td>
+            <div class="checkbox-group">
+            <label><input type="checkbox" name="punch-card-miss" data-type="punch-in" data-date="${displayDate}">上班</label>
+            <label><input type="checkbox" name="punch-card-miss" data-type="punch-out" data-date="${displayDate}">下班</label>
+            </div>
+            </td>
+            <td><input type="number" name="leave-m" data-type="m-hour" onchange="validateInput(this)">
+            <input type="hidden" name="leave-m-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="checkbox" name="leave-f" data-type="f-day" value="1">
+            <input type="hidden" name="leave-f-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="number" name="leave-f" data-type="f-hour" onchange="validateInput(this)">
+            <input type="hidden" name="leave-f-date" value="${displayDate}">
+            </td>
+            <td>
+            <input type="number" name="overtime" data-type="overtime-hour" onchange="validateInput(this)">
+            <input type="hidden" name="overtime-date" value="${displayDate}">
+            </td>            
             </tr>`;
         }
 
@@ -279,13 +301,11 @@
             input.value = 0;
             return;
         }
-
-        const dataType = input.getAttribute("data-type");
+     const dataType = input.getAttribute("data-type");
         if (dataType.includes("day") && value > 1) {
             alert("假別（天）不能超過 1 天！");
             input.value = 1;
-        }
-
+     }
         if (dataType.includes("hour") && value > 8) {
             alert("每格最多填寫 8 小時！");
             input.value = 8;
@@ -294,17 +314,22 @@
 
      function calculateLeave() {
         const rows = document.querySelectorAll("#formArea table tr:not(:first-child)");
-        leaveRecords = [];
-        sickRecords = [];
-        lateRecords = [];
-        lateNoDeductRecords = [];
-        punchCardMissRecords = [];
-        menstrualRecords = [];
-        vacationRecords = [];
+        leaveRecords = [];// 事假記錄
+        sickRecords = [];// 病假記錄
+        lateRecords = [];// 遲到要扣記錄
+        lateNoDeductRecords = [];// 遲到不扣記錄
+        punchCardMissRecords = [];// 未打卡記錄
+        menstrualRecords = [];// 記錄
+        vacationRecords = [];// 記錄
+        funeralRecords = []; // 喪假記錄
+        overtimeRecords = []; // 超時記錄
+        
         let vDay = 0, vHour = 0, pDay = 0, pHour = 0, sDay = 0, sHour = 0, lateMin = 0, lateNoDeductMin = 0;
         let punchInCount = 0, punchOutCount = 0;
         let mHour = 0;
-
+        let fDay = 0, fHour = 0; // 新增喪假天、時
+        let otHour = 0; // 新增超時時
+        
         rows.forEach(row => {
             const date = row.querySelector("td:first-child").innerText;
             const inputs = row.querySelectorAll("input");
@@ -315,7 +340,10 @@
             const lateNoDeductDateInput = row.querySelectorAll("input[type='hidden'][name$='late-no-deduct-date']");
             const punchCardMissCheckboxes = row.querySelectorAll("input[type='checkbox'][name='punch-card-miss']");
             const mDateInput = row.querySelectorAll("input[type='hidden'][name$='-m-date']");
-
+            const fDateInput = row.querySelectorAll("input[type='hidden'][name$='-f-date']"); // 新增喪假日期
+            const overtimeDateInput = row.querySelectorAll("input[type='hidden'][name$='overtime-date']"); // 新增超時日期            
+            
+            
             const vDayChecked = row.querySelector("input[data-type='v-day']").checked ? 1 : 0;
             const vHourVal = parseFloat(row.querySelector("input[data-type='v-hour']").value) || 0;
             const pDayChecked = row.querySelector("input[data-type='p-day']").checked ? 1 : 0;
@@ -327,7 +355,10 @@
             const punchInVal = punchCardMissCheckboxes[0].checked;
             const punchOutVal = punchCardMissCheckboxes[1].checked;
             const mHourVal = parseFloat(row.querySelector("input[data-type='m-hour']").value) || 0;
-
+            const fDayChecked = row.querySelector("input[data-type='f-day']").checked ? 1 : 0; // 喪假天
+            const fHourVal = parseFloat(row.querySelector("input[data-type='f-hour']").value) || 0; // 喪假時
+            const otHourVal = parseFloat(row.querySelector("input[data-type='overtime-hour']").value) || 0; // 超時時
+            
             vDay += vDayChecked;
             vHour += vHourVal;
             pDay += pDayChecked;
@@ -336,7 +367,11 @@
             sHour += sHourVal;
             lateMin += lateMinVal;
             lateNoDeductMin += lateNoDeductMinVal;
-
+            fDay += fDayChecked; // 累加喪假天
+            fHour += fHourVal; // 累加喪假時
+            otHour += otHourVal; // 累加超時時
+            
+            
             if (vDayChecked) vacationRecords.push({ days: 1, date: vDateInput[0].value, type: '天' });
             if (vHourVal > 0) vacationRecords.push({ hours: vHourVal, date: vDateInput[1].value, type: '小時' });
             if (pDayChecked) leaveRecords.push({ days: 1, date: pDateInput[0].value });
@@ -357,15 +392,21 @@
                 menstrualRecords.push({ hours: mHourVal, date: mDateInput[0].value });
                 mHour += mHourVal;
             }
-        });
+            if (fDayChecked) funeralRecords.push({ days: 1, date: fDateInput[0].value }); // 喪假天記錄
+            if (fHourVal > 0) funeralRecords.push({ hours: fHourVal, date: fDateInput[1].value }); // 喪假時記錄
+            if (otHourVal > 0) overtimeRecords.push({ hours: otHourVal, date: overtimeDateInput[0].value }); // 超時時記錄
+        });         
+        
+        
+        
 
         const name = document.getElementById("teacherNameLeave").value.trim();
-        const head = name ? `🔹${name}老師假別統計結果：\n` : '';
+        const head = name ? `${name}\n` : '';
 
         let result = '';
         if (vDay > 0 || vHour > 0) {
-         result += `✅ 特休/補休：${vDay} 天 ${vHour} 小時`;
-          const vacationDetails = vacationRecords.map(record =>`(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})` ).join('、');
+        result += `✅ 特休/補休：${vDay} 天 ${vHour} 小時`;
+        const vacationDetails = vacationRecords.map(record =>`(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})` ).join('、');
 
         if (vacationDetails) result += `     ${vacationDetails}\n`;
         }
@@ -382,9 +423,20 @@
                 if (lateNoDeductMin > 0) bufferString += "，";
                 bufferString += `漏打卡 ${punchCardDetails}`;
             }
-            if (totalBufferCount > 3) bufferString += " (超過緩衝⚠️)";
+            if (totalBufferCount > 3) bufferString += " (沒有全勤了⚠️)";
             result += bufferString + "\n";
         }
+        if (fDay > 0 || fHour > 0) { // 顯示喪假統計
+          result += `✅ 喪假：${fDay} 天 ${fHour} 小時`;
+          const funeralDetails = funeralRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
+          if (funeralDetails) result += `     ${funeralDetails}\n`;
+       }
+       if (otHour > 0) { // 顯示超時統計
+          result += `✅ 超時：${otHour} 小時`;
+          const overtimeDetails = overtimeRecords.map(record => `(${record.date} ${record.hours}小時)`).join('、');
+          if (overtimeDetails) result += `     ${overtimeDetails}\n`;
+       }
+
 
         if (pDay > 0 || pHour > 0) {
          result += `✅ 事假：${pDay} 天 ${pHour} 小時`;
@@ -407,6 +459,7 @@
     const lateDetails = lateRecords.map(record => `(${record.date} ${record.minutes}分鐘)`).join('、');
     if (lateDetails) result += `　　${lateDetails}\n`;
 }
+
 
         document.getElementById("resultsLeave").innerText = head + result;
 
@@ -485,21 +538,21 @@
         let lateNote = "", menstrualNote = "", vacationDaysNote = "", vacationHoursNote = "";
 
         leaveRecords.forEach(record => {
-            if (record.days) leaveDaysNote += `（${record.date} ${record.days}天）`;
-            if (record.hours) leaveHoursNote += `（${record.date} ${record.hours}小時）`;
+   if (record.days) leaveDaysNote += `（${record.date} ${record.days}天）`;
+   if (record.hours) leaveHoursNote += `（${record.date} ${record.hours}小時）`;
         });
 
         sickRecords.forEach(record => {
-            if (record.days) sickDaysNote += `（${record.date} ${record.days}天）`;
-            if (record.hours) sickHoursNote += `（${record.date} ${record.hours}小時）`;
+   if (record.days) sickDaysNote += `（${record.date} ${record.days}天）`;
+   if (record.hours) sickHoursNote += `（${record.date} ${record.hours}小時）`;
         });
 
         lateRecords.forEach(record => {
-            if (record.minutes) lateNote += `（${record.date} ${record.minutes}分鐘）`;
+   if (record.minutes) lateNote += `（${record.date} ${record.minutes}分鐘）`;
         });
 
         menstrualRecords.forEach(record => {
-            if (record.hours) menstrualNote += `（${record.date} ${record.hours}小時）`;
+   if (record.hours) menstrualNote += `（${record.date} ${record.hours}小時）`;
         });
 
         vacationRecords.forEach(record => {
