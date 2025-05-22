@@ -165,7 +165,7 @@
 </head>
 <body>
     <h2>假別登記與統計工具</h2>
-    <label>老師姓名（可留空）：<input type="text" id="teacherNameLeave" style="width: 100px" placeholder="例如：Joyce"></label><br>
+    <label>老師姓名（可留空）：<input type="text" id="teacherNameLeave" style="width: 100px" placeholder="例如：張正華"></label><br>
     <label>年份：<input type="number" id="yearInput" value="" min="2000" max="2100"></label>
     <label>月份（1~12）：<input type="number" id="monthInput" value="5" min="1" max="12"></label>
     <button onclick="generateTable()">產生日期表</button>
@@ -180,10 +180,10 @@
 
     <hr>
 
-    <h2>🧮事病假 或 遲到 不計薪計算器</h2>
+    <h2>事病假 或 遲到 不計薪計算器</h2>
 
     <label>老師姓名（可留空）：</label>
-    <input type="text" id="nameSalary" style="width: 100px" placeholder="例如：張老師"><br>
+    <input type="text" id="nameSalary" style="width: 100px" placeholder="例如：張正華"><br>
 
     <label>原始月薪：</label>
     <input type="number" id="salary" style="width: 100px;" placeholder="例如：32000"><br>
@@ -206,7 +206,7 @@
     <label>超過三次5分鐘的遲到（分鐘）：</label>
     <input type="number" id="lateMinutesSalary" style="width: 60px" placeholder="0"><br>
 
-    <button onclick="calculateSalaryDeduction()">計算</button><br><br>
+    <button onclick="calculateSalaryDeduction()">計算不支薪</button><br><br>
     <div id="salaryResult"></div>
     <button onclick="copyResultsSalary()">📋 複製算式</button>
 
@@ -642,9 +642,9 @@ function copyCashOutResult() {
     
     
 <hr>
-<h2>💰 特休補休折現區</h2>
+<h2>特休補休折現區</h2>
 <label>老師姓名（可留空）：</label>
-<input type="text" id="cashOutName" style="width: 100px" placeholder="例如：張老師"><br>
+<input type="text" id="cashOutName" style="width: 100px" placeholder="例如：張正華"><br>
 
 <label>原始月薪：</label>
 <input type="number" id="cashOutSalary" style="width: 100px" placeholder="例如：32000"><br>
@@ -655,9 +655,9 @@ function copyCashOutResult() {
 <label>折現補休（小時）：</label>
 <input type="number" id="cashOutHours" style="width: 60px" placeholder="0"><br>
 
-<button onclick="calculateCashOut()">計算折現金額</button>
-<button onclick="copyCashOutResult()">📋 複製算式</button>
-<div class="result-box" id="cashOutResult"></div>
+<button onclick="calculateCashOut()">計算折現</button>
 
+<div class="result-box" id="cashOutResult"></div><br>
+<button onclick="copyCashOutResult()">📋 複製算式</button>
 </body>
 </html>
