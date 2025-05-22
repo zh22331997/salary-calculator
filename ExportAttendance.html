@@ -1,0 +1,196 @@
+<!DOCTYPE html> 
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>匯出缺勤明細檔案</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    textarea { width: 100%; font-family: monospace; }
+    button { margin-top: 10px; padding: 6px 12px; cursor: pointer; }
+    table { margin-top: 20px; border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #aaa; padding: 6px; text-align: left; }
+    th { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+
+<h2>匯出缺勤明細檔案工具</h2>
+
+<label for="month">年月：</label>
+<input type="month" id="month" />
+
+<label for="branch">分校名稱：</label>
+<input type="text" id="branch" placeholder="請輸入分校名稱，如：江翠校" />
+
+<label for="input">請貼上資料：</label>
+<textarea id="input" rows="12" placeholder="貼上多位老師資料..."></textarea>
+
+<button onclick="parseData()">整理資料</button>
+<button onclick="downloadCSV()">下載 CSV</button>
+
+<table id="outputTable" aria-label="整理後假別資料表格">
+  <thead>
+    <tr>
+      <th>分校</th>
+      <th>年月</th>
+      <th>姓名</th>
+      <th>假別/類型</th>
+      <th>小計</th>
+      <th>備註</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+function parseData() {
+  const branch = document.getElementById('branch').value.trim() || '未填分校';
+  const yearMonth = document.getElementById('month').value.trim();
+  const input = document.getElementById('input').value.trim();
+  const tbody = document.querySelector('#outputTable tbody');
+  tbody.innerHTML = '';
+
+  if (!input || !yearMonth) {
+    alert('請輸入「年月」與「資料內容」');
+    return;
+  }
+
+  const nameRegex = /^([\u4e00-\u9fa5]{2,5})$/;
+  const lines = input.split('\n');
+  const sections = [];
+  let currentBlock = [];
+
+  for (let line of lines) {
+    line = line.trim();
+    if (nameRegex.test(line)) {
+      if (currentBlock.length > 0) sections.push(currentBlock);
+      currentBlock = [line];
+    } else {
+      currentBlock.push(line);
+    }
+  }
+  if (currentBlock.length > 0) sections.push(currentBlock);
+
+  for (let block of sections) {
+    let name = block[0];
+    let content = block.slice(1).join('\n');
+
+    const regex = /✅\s*([^：]+)：\s*([\d\s天小時分鐘]+)?\s*([\s\S]+?)(?=✅|$)/g;
+    let match;
+
+    let lateDatesSet = new Set();
+    let lateTotalMinutes = 0;
+    let lateNotesList = [];
+
+    regex.lastIndex = 0; 
+
+    while ((match = regex.exec(content)) !== null) {
+      let type = match[1].trim();
+      let subtotal = (match[2] || '').trim().replace(/\s+/g,' ');
+      let notesRaw = match[3].trim();
+
+      if (type === '全勤緩衝') {
+        const missingMatch = notesRaw.match(/漏打卡\s*([\d\/\s上下班分鐘、（）超過緩衝⚠️]+)/);
+        if (missingMatch) {
+          const missStr = missingMatch[1];
+          const splitMiss = missStr.split(/[、,]/);
+          let missingCount = splitMiss.filter(x => x.trim().length > 0).length;
+
+          tbody.innerHTML += `
+            <tr>
+              <td>${branch}</td>
+              <td>${yearMonth}</td>
+              <td>${name}</td>
+              <td>漏打卡</td>
+              <td>${missingCount} 次</td>
+              <td>${missStr.trim()}</td>
+            </tr>`;
+          notesRaw = notesRaw.replace(/漏打卡\s*[\s\S]*/, '').trim();
+        }
+
+        const lateMatches = [...notesRaw.matchAll(/(\(?\d{1,2}\/\d{1,2}\)?)[^\d]*(\d+)分鐘/g)];
+        if (lateMatches.length > 0) {
+          for (let lm of lateMatches) {
+            lateDatesSet.add(lm[1].replace(/[()]/g, ''));
+            lateTotalMinutes += parseInt(lm[2]);
+          }
+          lateNotesList.push(notesRaw.replace(/[()，]/g, '').replace(/\s+/g, ' '));
+        }
+      } else if (type === '遲到' || type === '遲到(不扣)') {
+        const lateMatches = [...notesRaw.matchAll(/(\(?\d{1,2}\/\d{1,2}\)?)[^\d]*(\d+)分鐘/g)];
+        for (let lm of lateMatches) {
+          lateDatesSet.add(lm[1].replace(/[()]/g, ''));
+          lateTotalMinutes += parseInt(lm[2]);
+        }
+        if (lateMatches.length > 0) {
+          lateNotesList.push(notesRaw.replace(/[()，]/g, '').replace(/\s+/g, ' '));
+        }
+      } else {
+        let notes = [];
+        const noteRegex = /\(?([\d]+\/[\d]+\s*[\d天小時分鐘]+)\)?/g;
+        let nMatch;
+        while ((nMatch = noteRegex.exec(notesRaw)) !== null) {
+          notes.push(nMatch[1].trim());
+        }
+        if (notes.length === 0) notes.push(notesRaw.replace(/\s+/g, ' '));
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${branch}</td>
+            <td>${yearMonth}</td>
+            <td>${name}</td>
+            <td>${type}</td>
+            <td>${subtotal}</td>
+            <td>${notes.join('、')}</td>
+          </tr>`;
+      }
+    }
+
+    let lateCount = lateDatesSet.size;
+    if (lateCount > 0) {
+      tbody.innerHTML += `
+        <tr>
+          <td>${branch}</td>
+          <td>${yearMonth}</td>
+          <td>${name}</td>
+          <td>遲到(含不扣)</td>
+          <td>共遲到 ${lateCount} 次，共 ${lateTotalMinutes} 分鐘</td>
+          <td>${lateNotesList.join('、')}</td>
+        </tr>`;
+    }
+  }
+}
+
+function downloadCSV() {
+  const rows = Array.from(document.querySelectorAll('#outputTable tr'));
+  if (rows.length <= 1) {
+    alert('沒有資料可供下載');
+    return;
+  }
+
+  let csvContent = '\uFEFF';
+  rows.forEach(row => {
+    const cells = Array.from(row.querySelectorAll('td, th'));
+    const line = cells.map(cell => `"${cell.textContent.trim()}"`).join(',');
+    csvContent += line + '\n';
+  });
+
+  const branch = document.getElementById('branch').value.trim() || '未填分校';
+  const ym = document.getElementById('month').value;
+
+  const safeBranch = branch.replace(/[\\/:*?"<>|]/g, '_');
+  const filename = ym ? `${ym}-${safeBranch}分校缺勤資料.csv` : `${safeBranch}分校缺勤資料.csv`;
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
+
+</body>
+</html>
