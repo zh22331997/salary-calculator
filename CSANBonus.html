@@ -28,8 +28,13 @@
     th {
       padding: 4px;
     }
+    /* 字變小 */
+    td.thead-group-monthly label {
+    font-size: 0.85em;
+    }
+
     input[type="number"], input[type="text"] {
-      width: 4em;
+      width: 3em;
       padding: 0.2em;
       font-size: 1em;
       text-align: center;
@@ -37,12 +42,17 @@
       border-radius: 3px;
     }
     input[type="number"].rate {
-      width: 5em;
+      width: 3.5em;
     }
-    th.note, td .note input {
-    width: 12em;
+    input.note {
+    width: 6em !important;
     text-align: left;
     }
+    td.finalBonus {
+    min-width: 15em !important;
+    width: 15em !important;
+    }
+
 
     button {
       margin-right: 0.5em;
@@ -62,7 +72,7 @@
       background-color: #d6e9ff;
       font-weight: bold;
       text-align: left;
-      font-size: 1.1em;
+      font-size: 1em;
       padding-left: 0.5em;
     }
     .thead-group-semester {
@@ -93,10 +103,10 @@
     th.fullBonus, td.fullBonus { width: 6em; }
     th.partialDays, td .partialDays input { width: 5em; }
     th.partialBonus, td.partialBonus { width: 6em; }
-    th.rate, td .rate input { width: 5em; }
+    th.rate, td .rate input { width: 3.5em; }
     th.semTotal, td.semTotal { width: 7em; }
-    th.subDays, td .subDays input { width: 5em; }
-    th.subHours, td .subHours input { width: 5em; }
+    th.subDays, td .subDays input { width: 3.5em; }
+    th.subHours, td .subHours input { width: 3.55em; }
     th.subTotal, td.subTotal { width: 6em; }
     th.attend, td .attend input { width: 5em; }
     th.camp1, td .camp1 input { width: 5em; }
@@ -110,6 +120,8 @@
         text-align: left; /* 算式靠左對齊 */
         word-break: break-all; /* 防止文字溢出 */
     }
+    
+
   </style>
 </head>
 <body>
@@ -127,7 +139,7 @@
   <h2>批次新增班級/導師</h2>
 <textarea id="batchInput" rows="3" style="width: 100%;" placeholder="請貼上空格分隔的班級或導師名字，例如：1A 1B APPLE老師"></textarea>
 <br />
-<button onclick="batchAddTeachers()">👥批次新增班級/導師列</button>
+<button onclick="batchAddTeachers()">👥批次新增班級/導師</button>
 <button onclick="addRow()">➕新增班級/老師</button>
 <button onclick="removeEmptyRows()">🗑️刪除空白列</button>
 <button onclick="copyNameAndFormula()">📝複製導師與津貼算式</button>
@@ -257,7 +269,10 @@ if (isNaN(semRate)) semRate = 1; // 只在沒填時用 1
   row.querySelector('.partialBonus').textContent = partialBonus.toFixed(0);
   row.querySelector('.semTotal').textContent = semTotal.toFixed(0);
   row.querySelector('.subTotal').textContent = subTotal.toFixed(0);
-  row.querySelector('.vacBonus').textContent = vacBonus > 0 ? vacBonus.toFixed(0) : '未達責任額';
+  row.querySelector('.vacBonus').innerHTML =
+  vacBonus > 0
+    ? vacBonus.toFixed(0)
+    : '<span style="font-size:0.85em;">未達責任額</span>';
   row.querySelector('.finalBonusValue').textContent = finalBonus.toFixed(0);
 
   // --- 產生算式文字的邏輯修改 ---
@@ -525,11 +540,11 @@ function removeEmptyRows() {
     const camp2 = parseFloat(row.querySelector('.camp2')?.value || 0);
 
     const isEmpty =
-      !teacher &&
-      persons === 15 &&  // 預設值
-      attend === 0 &&
-      camp1 === 0 &&
-      camp2 === 0;
+    !teacher &&
+    (persons === 15 || persons === 0 || isNaN(persons)) &&
+    attend === 0 &&
+    camp1 === 0 &&
+    camp2 === 0;
 
     if (isEmpty) {
       row.remove();
