@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>計算課輔帶班津貼</title>
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      padding: 2em;
+      background: #fafafa;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5em;
+      text-align: center;
+      vertical-align: middle;
+    }
+    th {
+      padding: 4px;
+    }
+    input[type="number"], input[type="text"] {
+      width: 6em;
+      padding: 0.2em;
+      font-size: 1em;
+      text-align: center;
+      border: 1px solid #bbb;
+      border-radius: 3px;
+    }
+    input[type="number"].rate {
+      width: 5em;
+    }
+    button {
+      margin-right: 0.5em;
+      margin-top: 0.8em;
+      padding: 0.5em 1em;
+      font-size: 1em;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background-color: #3498db;
+      color: white;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .section-title td {
+      background-color: #d6e9ff;
+      font-weight: bold;
+      text-align: left;
+      font-size: 1.1em;
+      padding-left: 0.5em;
+    }
+    .thead-group-semester {
+      background-color: #e0f7fa;
+    }
+    .thead-group-sub {
+      background-color: #fff3e0;
+    }
+    .thead-group-summer {
+      background-color: #f3e5f5;
+    }
+    #rows tr td.thead-group-semester {
+    background-color: #f1fcfd; /* 淺一點的藍綠色 */
+    }
+    #rows tr td.thead-group-sub {
+    background-color: #fff8ee; /* 淺一點的米黃色 */
+    }
+    #rows tr td.thead-group-summer {
+    background-color: #faf3fb; /* 淺一點的粉紫色 */
+    }
+    #rows tr td.thead-group-monthly {
+    background-color: #ffffff; /* 或者統一白底 */
+    }
+    
+    th.teacher, td .teacher input { width: 9em; }
+    th.crossSchool, td .crossSchool input { width: 5em; }
+    th.persons, td .persons input { width: 5em; }
+    th.fullBonus, td.fullBonus { width: 6em; }
+    th.partialDays, td .partialDays input { width: 5em; }
+    th.partialBonus, td.partialBonus { width: 6em; }
+    th.rate, td .rate input { width: 5em; }
+    th.semTotal, td.semTotal { width: 7em; }
+    th.subDays, td .subDays input { width: 5em; }
+    th.subHours, td .subHours input { width: 5em; }
+    th.subTotal, td.subTotal { width: 6em; }
+    th.attend, td .attend input { width: 5em; }
+    th.camp1, td .camp1 input { width: 5em; }
+    th.camp2, td .camp2 input { width: 5em; }
+    th.vacBonus, td.vacBonus { width: 7em; }
+    th.finalBonus, td.finalBonus { width: 7em; }
+    /* 新增一個 CSS 類別來顯示算式 */
+    .finalBonusFormula {
+        font-size: 0.8em; /* 讓算式文字小一點 */
+        color: #555;
+        text-align: left; /* 算式靠左對齊 */
+        word-break: break-all; /* 防止文字溢出 */
+    }
+  </style>
+</head>
+<body>
+  <h1>計算課輔帶班津貼</h1>
+
+  <h2>非必填的設定</h2>
+  <label>本月工作天數：
+    <input type="number" id="workdays" value="0" min="0" oninput="recalcAll()" />
+  </label>
+  <label style="margin-left:1em;">寒暑責任額天數：
+    <input type="number" id="requiredDays" value="0" min="0" oninput="recalcAll()" />
+  (暑假用17天)
+  </label>
+  <br />
+  <h2>批次新增班級/導師</h2>
+<textarea id="batchInput" rows="3" style="width: 100%;" placeholder="請貼上空格分隔的班級或導師名字，例如：1A 1B APPLE老師"></textarea>
+<br />
+<button onclick="batchAddTeachers()">批次新增班級/導師列</button>
+<button onclick="addRow()">➕ 新增班級/老師</button>
+<button onclick="removeEmptyRows()">🗑️ 刪除空白列</button>
+
+  <button onclick="copyTable()">📋 複製表格</button>
+  <button onclick="exportCSV()">💾 匯出 CSV</button>
+
+  <table id="dataTable" role="grid" aria-label="教師津貼計算表">
+    <thead>
+      <tr>
+        <th class="thead-group-monthly" style="background-color: white;">導師</th>
+        <th class="thead-group-semester">是否跨校</th>
+        <th class="thead-group-semester">全月人數</th>
+        <th class="thead-group-semester">全月津貼</th>
+        <th class="thead-group-semester">非全月學生<br>總共幾天</th>
+        <th class="thead-group-semester">非全月津貼</th>
+        <th class="thead-group-semester">學期天比例</th>
+        <th class="thead-group-semester">學期津貼</th>
+
+        <th class="thead-group-sub">學期間代課天</th>
+        <th class="thead-group-sub">學期間代課時</th>
+        <th class="thead-group-sub">學期間代課扣除</th>
+
+        <th class="thead-group-summer">點名表點數</th>
+        <th class="thead-group-summer">一日營(1)點數</th>
+        <th class="thead-group-summer">一日營(2)點數</th>
+        <th class="thead-group-summer">寒暑津貼</th>
+
+        <th class="thead-group-monthly" style="background-color: white;">本月津貼<br>計算式</th>
+      </tr>
+    </thead>
+    <tbody id="rows">
+      </tbody>
+  </table>
+
+<script>
+function batchAddTeachers() {
+  const input = document.getElementById('batchInput').value.trim();
+  if (!input) {
+    alert('請先輸入班級/導師！');
+    return;
+  }
+  const names = input.split(/\s+/);
+  names.forEach(name => {
+    if(name) {
+      addRow();
+      const tbody = document.getElementById('rows');
+      const lastRow = tbody.lastElementChild;
+      const teacherInput = lastRow.querySelector('input.teacher');
+      if(teacherInput) teacherInput.value = name;
+    }
+  });
+  recalcAll();
+  document.getElementById('batchInput').value = '';
+}
+
+function calcGrade(persons, isCrossSchool) {
+  let baseGrade26 = 650;
+  let baseGrade21 = 600;
+  let baseGrade15 = 550;
+
+  if (isCrossSchool) {
+    baseGrade26 += 50;
+    baseGrade21 += 50;
+    baseGrade15 += 50;
+  }
+
+  if (persons >= 26) return baseGrade26;
+  if (persons >= 21) return baseGrade21;
+  if (persons >= 15) return baseGrade15;
+  return 0;
+}
+
+function calcRow(row) {
+  const workdays = parseFloat(document.getElementById('workdays').value) || 0;
+  const requiredDays = parseFloat(document.getElementById('requiredDays').value) || 0;
+
+  const getNum = (cls) => {
+    const el = row.querySelector(`.${cls}`);
+    if (!el) return 0;
+    if (el.tagName === 'INPUT' && el.type === 'checkbox') return el.checked ? 1 : 0;
+    if (el.tagName === 'INPUT') return parseFloat(el.value) || 0;
+    return parseFloat(el.textContent) || 0;
+  };
+
+  const persons = getNum('persons');
+  const isCrossSchool = row.querySelector('.crossSchool').checked;
+  const grade = calcGrade(persons, isCrossSchool);
+
+  const partialDays = getNum('partialDays');
+  const partialBonus = (workdays > 0 && partialDays > 0)
+  ? grade * partialDays / workdays
+  : 0;
+
+
+  let semRate = getNum('rate');
+if (isNaN(semRate)) semRate = 1; // 只在沒填時用 1
+
+
+  const subDays = getNum('subDays');
+  if (subDays > workdays) {
+  alert(`⚠️ 代課天數（${subDays}）不可大於本月工作天數（${workdays}）`);
+  row.querySelector('.subDays').value = workdays;
+  }
+  const subHours = getNum('subHours');
+  const attendPts = getNum('attend');
+  const camp1Pts = getNum('camp1');
+  const camp2Pts = getNum('camp2');
+
+  const fullBonus = (persons > 15) ? (persons - 15) * grade : 0;
+  const semTotal = (fullBonus + partialBonus) * semRate;
+
+  const subTotal = (workdays > 0)
+  ? (semTotal / workdays) * subDays + (semTotal / workdays / 8) * subHours
+  : 0;
+
+
+  let campTotalRaw = attendPts + camp1Pts + camp2Pts - 15 * requiredDays;
+  let campTotal = Math.max(0, campTotalRaw);
+  const vacBonus = campTotal * 36;
+
+  const finalBonus = semTotal - subTotal + vacBonus;
+
+  row.querySelector('.fullBonus').textContent = fullBonus.toFixed(0);
+  row.querySelector('.partialBonus').textContent = partialBonus.toFixed(0);
+  row.querySelector('.semTotal').textContent = semTotal.toFixed(0);
+  row.querySelector('.subTotal').textContent = subTotal.toFixed(0);
+  row.querySelector('.vacBonus').textContent = vacBonus > 0 ? vacBonus.toFixed(0) : '未達責任額';
+  row.querySelector('.finalBonusValue').textContent = finalBonus.toFixed(0);
+
+  // --- 產生算式文字的邏輯修改 ---
+  let formulaParts = [];
+
+  // 1. 學期津貼部分 (semester bonus)
+  let semBonusComponents = [];
+  if (persons > 15) {
+      semBonusComponents.push(`$${grade} * (${persons} - 15)`);
+  }
+  if (partialDays > 0) {
+      semBonusComponents.push(`$${grade} * ${partialDays} / ${workdays}`);
+  }
+
+  if (semBonusComponents.length > 0) {
+      let semBonusFormula = semBonusComponents.join(' + ');
+      if (semRate !== 1) {
+          semBonusFormula = `[${semBonusFormula}] * ${semRate.toFixed(3)}`;
+      }
+      formulaParts.push(semBonusFormula);
+  }
+
+
+  // 2. 代課扣除部分 (substitution deduction)
+  if (subDays > 0 || subHours > 0) {
+      let subDeductionText = ' - 請代課';
+      if (subDays > 0) {
+          subDeductionText += `${subDays}天`;
+      }
+      if (subHours > 0) {
+          subDeductionText += `${subHours}小時`;
+      }
+      subDeductionText += `$${subTotal.toFixed(0)}`;
+      formulaParts.push(subDeductionText);
+  } else if (subTotal > 0.01) { // 浮點數誤差導致的微小扣除額
+      formulaParts.push(` - 代課扣除$${subTotal.toFixed(0)}`);
+  }
+
+
+  // 3. 寒暑津貼部分 (vacation bonus)
+  let vacBonusPtsComponents = [];
+  if (attendPts > 0) {
+      vacBonusPtsComponents.push(`${attendPts}`);
+  }
+  if (camp1Pts > 0) {
+      vacBonusPtsComponents.push(`${camp1Pts}`);
+  }
+  if (camp2Pts > 0) {
+      vacBonusPtsComponents.push(`${camp2Pts}`);
+  }
+
+  if (campTotalRaw < 0) {
+      if (attendPts > 0 || camp1Pts > 0 || camp2Pts > 0) {
+          formulaParts.push(` (點數${vacBonusPtsComponents.join('+')}未達責任額 ${15 * requiredDays}點)`);
+      }
+  } else if (vacBonus > 0) {
+      let vacBonusExpr = `${vacBonusPtsComponents.join('+')}`;
+      if (requiredDays > 0) {
+          vacBonusExpr += `-15*${requiredDays}`;
+      }
+      formulaParts.push(` + $36*(${vacBonusExpr})`);
+  }
+
+  let finalFormula = formulaParts.join('');
+  if (finalFormula === '') {
+      finalFormula = '無津貼產生';
+  }
+
+  // 將最終結果與算式組合
+  row.querySelector('.finalBonusFormula').textContent = `${finalBonus.toFixed(0)}=${finalFormula}`;
+  // --- 算式文字生成結束 ---
+}
+function recalcAll() {
+  const rows = document.querySelectorAll('#rows tr');
+  rows.forEach(calcRow);
+}
+
+function addRow() {
+  const tbody = document.getElementById('rows');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="thead-group-monthly"><input type="text" class="teacher" placeholder="導師" /></td>
+    <td class="thead-group-semester"><input type="checkbox" class="crossSchool" onchange="recalcAll()" /></td>
+    <td class="thead-group-semester"><input type="number" class="persons" min="0" value="15" oninput="recalcAll()" /></td>
+    <td class="thead-group-semester fullBonus">0</td>
+    <td class="thead-group-semester"><input type="number" class="partialDays" min="0" value="0" oninput="recalcAll()" /></td>
+    <td class="thead-group-semester partialBonus">0</td>
+    <td class="thead-group-semester"><input type="number" class="rate" step="0.001" min="0" max="1" value="1" oninput="recalcAll()" /></td>
+    <td class="thead-group-semester semTotal">0</td>
+
+    <td class="thead-group-sub"><input type="number" class="subDays" min="0" value="0" oninput="recalcAll()" /></td>
+    <td class="thead-group-sub"><input type="number" class="subHours" min="0" value="0" oninput="recalcAll()" /></td>
+    <td class="thead-group-sub subTotal">0</td>
+
+    <td class="thead-group-summer"><input type="number" class="attend" min="0" value="0" oninput="recalcAll()" /></td>
+    <td class="thead-group-summer"><input type="number" class="camp1" min="0" value="0" oninput="recalcAll()" /></td>
+    <td class="thead-group-summer"><input type="number" class="camp2" min="0" value="0" oninput="recalcAll()" /></td>
+    <td class="thead-group-summer vacBonus">未達責任額</td>
+
+    <td class="thead-group-monthly finalBonus">
+      <span class="finalBonusValue" style="display:none;">0</span><br>
+      <span class="finalBonusFormula"></span>
+    </td>
+  `;
+  tbody.appendChild(tr);
+  recalcAll();
+}
+
+
+function copyTable() {
+  const table = document.getElementById('dataTable');
+  let text = '';
+  const headerCells = [...table.querySelector('thead tr').cells].map(c => c.textContent.trim());
+  text += headerCells.join('\t') + '\n';
+
+  const rows = document.querySelectorAll('#rows tr');
+  rows.forEach(row => {
+    const cells = [];
+    row.querySelectorAll('td').forEach(td => {
+      const input = td.querySelector('input, select');
+      if (input) {
+        if (input.type === 'checkbox') {
+          cells.push(input.checked ? '是' : '否');
+        } else {
+          cells.push(input.value);
+        }
+      } else {
+          if (td.classList.contains('finalBonus')) {
+              // 這裡只複製公式部分
+              const formula = td.querySelector('.finalBonusFormula').textContent;
+              cells.push(formula);
+          } else {
+              cells.push(td.textContent.trim());
+          }
+      }
+    });
+    text += cells.join('\t') + '\n';
+  });
+
+  navigator.clipboard.writeText(text).then(() => {
+    alert('表格已複製，可貼上至 Excel 或 Google Sheets');
+  });
+}
+
+function exportCSV() {
+  const rows = document.querySelectorAll('#rows tr');
+  const workdays = document.getElementById('workdays').value;
+  const requiredDays = document.getElementById('requiredDays').value;
+  let csv = `班級,導師,是否跨校,全月人數,全月津貼,非全月天數,非全月津貼,學期天比例,學期津貼,代課天,代課時,代課扣除,點名表點數,一日營1點數,一日營2點數,寒暑津貼,本月津貼計算式\n`; // 移除純數值欄位
+
+  rows.forEach(row => {
+    const getText = cls => {
+      const el = row.querySelector(`.${cls}`);
+      if (!el) return '';
+      if (el.tagName === 'INPUT' && el.type === 'checkbox') return el.checked ? '是' : '否';
+      if (el.tagName === 'INPUT' || el.tagName === 'SELECT') return el.value;
+      return el.textContent;
+    };
+
+    const finalBonusFormula = row.querySelector('.finalBonusFormula').textContent; // 只取得算式
+
+    csv += [
+      getText('className'),
+      getText('teacher'),
+      getText('crossSchool'),
+      getText('persons'),
+      getText('fullBonus'),
+      getText('partialDays'),
+      getText('partialBonus'),
+      getText('rate'),
+      getText('semTotal'),
+      getText('subDays'),
+      getText('subHours'),
+      getText('subTotal'),
+      getText('attend'),
+      getText('camp1'),
+      getText('camp2'),
+      getText('vacBonus'),
+      finalBonusFormula // 匯出算式
+    ].map(item => `"${item}"`).join(',') + '\n';
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const date = new Date().toISOString().slice(0, 10);
+  a.download = `${date}_教師津貼資料.csv`;
+  a.click();
+}
+
+</script>
+<script>
+function removeEmptyRows() {
+  const tbody = document.getElementById('rows');
+  const rows = tbody.querySelectorAll('tr');
+
+  rows.forEach(row => {
+    const teacher = row.querySelector('.teacher')?.value.trim();
+    const persons = parseFloat(row.querySelector('.persons')?.value || 0);
+    const attend = parseFloat(row.querySelector('.attend')?.value || 0);
+    const camp1 = parseFloat(row.querySelector('.camp1')?.value || 0);
+    const camp2 = parseFloat(row.querySelector('.camp2')?.value || 0);
+
+    const isEmpty =
+      !teacher &&
+      persons === 15 &&  // 預設值
+      attend === 0 &&
+      camp1 === 0 &&
+      camp2 === 0;
+
+    if (isEmpty) {
+      row.remove();
+    }
+  });
+
+  recalcAll();
+}
+</script>
+<script>
+    // 防呆提示功能要放最後
+    document.addEventListener('input', function(e) {
+      const workdays = parseFloat(document.getElementById('workdays').value) || 0;
+      const requiredDays = parseFloat(document.getElementById('requiredDays').value) || 0;
+
+      const warn = (condition, message) => {
+        if (condition) alert(message);
+      };
+
+      if (e.target.classList.contains('partialDays') ||
+          e.target.classList.contains('subDays') ||
+          e.target.classList.contains('subHours')) {
+        warn(workdays === 0, '請先填寫「本月工作天數」再輸入相關欄位');
+      }
+
+      if (e.target.classList.contains('attend')) {
+        warn(requiredDays === 0, '請先填寫「責任額天數」再輸入點名表點數');
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+
