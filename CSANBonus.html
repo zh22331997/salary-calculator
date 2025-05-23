@@ -505,7 +505,7 @@ function exportCSV() {
   const a = document.createElement('a');
   const date = new Date().toISOString().slice(0, 10);
   a.href = url;
-  a.download = `${date}_教師津貼資料.csv`;
+  a.download = `${date}_課輔帶班津貼.csv`;
   a.click();
   URL.revokeObjectURL(url); // 清理資源
 }
