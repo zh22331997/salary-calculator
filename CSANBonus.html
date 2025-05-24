@@ -455,9 +455,9 @@ function calcRow(row) {
 
   // 將最終結果與算式組合 (此處顯示最終加總，而非純算式結果)
   row.querySelector('.finalBonusFormula').textContent = `${finalBonusTotal.toFixed(0)}=${baseFormulaText}` +
+    (seniorBonusCount > 0 ? `（高年級加給$${seniorBonusAmount}）` : '') +
     (specialCourseCount > 0 ? `（特色課×${specialCourseCount}=$${specialCourseBonus}）` : '') +
     (signBonusCount > 0 ? `（簽約金$${signBonusAmount}）` : '') +
-    (seniorBonusCount > 0 ? `（高年級加給$${seniorBonusAmount}）` : '') +
     (repeatBonus > 0 ? `（留班獎金$${repeatBonus}）` : '');
   // --- 算式文字生成結束 ---
 }
