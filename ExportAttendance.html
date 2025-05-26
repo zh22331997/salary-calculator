@@ -59,7 +59,7 @@ function analyzeData() {
   tbody.innerHTML = '';
 
   if (!ym || !raw) {
-    alert('請輸入年月與資料');
+    alert('請輸入年月與分校');
     return;
   }
 
@@ -161,7 +161,7 @@ function copyTable() {
   selection.addRange(range);
   try {
     document.execCommand('copy');
-    alert('表格已複製到剪貼簿！');
+    alert('表格已複製到剪貼簿！可貼到excel或google sheets');
   } catch (err) {
     alert('複製失敗，請手動選取表格再複製。');
   }
@@ -184,7 +184,7 @@ function exportCSV() {
 
   const csvContent = "\uFEFF" + csv.join('\n'); // UTF-8 BOM
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const filename = `出缺勤分析_${branch}_${ym}.csv`;
+  const filename = `遲到缺勤明細_${branch}_${ym}.csv`;
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = filename;
