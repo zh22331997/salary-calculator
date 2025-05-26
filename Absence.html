@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -485,7 +486,7 @@
                 const lateDetails = lateNoDeductRecords.map(record => `${record.date} ${record.minutes}分鐘`).join('、');
                 const punchCardDetails = punchCardMissRecords.map(record => `${record.date} ${record.type}`).join('、');
 
-                if (lateNoDeductMin > 0) bufferString += `遲到 ${lateDetails}`;
+                if (lateNoDeductMin > 0) bufferString += `遲到不扣 ${lateDetails}`;
                 if (punchInCount > 0 || punchOutCount > 0) {
                     if (lateNoDeductMin > 0) bufferString += "，";
                     bufferString += `漏打卡 ${punchCardDetails}`;
