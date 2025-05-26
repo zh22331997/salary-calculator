@@ -227,6 +227,51 @@
         let funeralRecords = [];
         let overtimeRecords = [];
 
+        // 假別天數防呆檢查函數
+        function checkLeaveDayConflict(currentCheckbox) {
+            const currentRow = currentCheckbox.closest('tr');
+            // 獲取同列中所有「天數」假別的 checkbox
+            const dayTypeCheckboxes = currentRow.querySelectorAll('input[type="checkbox"][data-type$="-day"]');
+            // 獲取同列中所有非「天數」假別的輸入框 (小時數、分鐘數、漏打卡)
+            const otherInputsInRow = currentRow.querySelectorAll('input[type="number"], input[name="punch-card-miss"]');
+
+            let checkedDayCount = 0;
+            let currentCheckboxName = currentCheckbox.name;
+            let otherCheckedDayType = '';
+
+            dayTypeCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    checkedDayCount++;
+                    if (checkbox !== currentCheckbox) {
+                        otherCheckedDayType = checkbox.name;
+                    }
+                }
+            });
+
+            if (checkedDayCount > 1) {
+                // 如果同時勾選了多個「天數」假別，則取消當前勾選並提示
+                alert(`同一天不能同時勾選多種假別的天數！您已勾選了 "${currentCheckboxName}" 和 "${otherCheckedDayType}"。`);
+                currentCheckbox.checked = false; // 取消當前勾選
+            } else if (checkedDayCount === 1 && currentCheckbox.checked) {
+                // 如果只勾選了一個「天數」假別，則禁用並清空其他所有欄位
+                otherInputsInRow.forEach(input => {
+                    input.disabled = true;
+                    if (input.type === 'number') {
+                        input.value = ''; // 清空數字輸入
+                    } else if (input.type === 'checkbox') {
+                        input.checked = false; // 取消勾選漏打卡
+                    }
+                });
+            } else {
+                // 如果沒有任何「天數」假別被勾選 (或者取消勾選了唯一的那個)，則啟用所有其他欄位
+                otherInputsInRow.forEach(input => {
+                    input.disabled = false;
+                });
+            }
+            calculateLeave(); // 重新計算
+        }
+
+
         function generateTable() {
             const year = parseInt(document.getElementById("yearInput").value);
             const month = parseInt(document.getElementById("monthInput").value);
@@ -249,14 +294,14 @@
                 <td>${displayDate}</td>
                 <td>(${weekDays[dayOfWeek]})</td>
                 <td>
-                <input type="checkbox" name="leave-v" data-type="v-day" value="1" onchange="calculateLeave()">
+                <input type="checkbox" name="leave-v" data-type="v-day" value="1" onchange="checkLeaveDayConflict(this)">
                 <input type="hidden" name="leave-v-date" value="${displayDate}">
                 </td>
                 <td><input type="number" name="leave-v" data-type="v-hour" onchange="validateInput(this); calculateLeave();">
                 <input type="hidden" name="leave-v-date" value="${displayDate}">
                 </td>
                 <td>
-                <input type="checkbox" name="leave-p" data-type="p-day" value="1" onchange="calculateLeave()">
+                <input type="checkbox" name="leave-p" data-type="p-day" value="1" onchange="checkLeaveDayConflict(this)">
                 <input type="hidden" name="leave-p-date" value="${displayDate}">
                 </td>
                 <td>
@@ -264,7 +309,7 @@
                 <input type="hidden" name="leave-p-date" value="${displayDate}">
                 </td>
                 <td>
-                <input type="checkbox" name="leave-s" data-type="s-day" value="1" onchange="calculateLeave()">
+                <input type="checkbox" name="leave-s" data-type="s-day" value="1" onchange="checkLeaveDayConflict(this)">
                 <input type="hidden" name="leave-s-date" value="${displayDate}">
                 </td>
                 <td>
@@ -289,7 +334,7 @@
                 <input type="hidden" name="leave-m-date" value="${displayDate}">
                 </td>
                 <td>
-                <input type="checkbox" name="leave-f" data-type="f-day" value="1" onchange="calculateLeave()">
+                <input type="checkbox" name="leave-f" data-type="f-day" value="1" onchange="checkLeaveDayConflict(this)">
                 <input type="hidden" name="leave-f-date" value="${displayDate}">
                 </td>
                 <td>
@@ -352,20 +397,37 @@
                 
                 // 獲取所有相關輸入框的值
                 const vDayChecked = row.querySelector("input[data-type='v-day']").checked ? 1 : 0;
-                const vHourVal = parseFloat(row.querySelector("input[data-type='v-hour']").value) || 0;
+                // 注意：這裡需要檢查 input 是否被 disabled
+                const vHourInput = row.querySelector("input[data-type='v-hour']");
+                const vHourVal = vHourInput.disabled ? 0 : (parseFloat(vHourInput.value) || 0);
+
                 const pDayChecked = row.querySelector("input[data-type='p-day']").checked ? 1 : 0;
-                const pHourVal = parseFloat(row.querySelector("input[data-type='p-hour']").value) || 0;
+                const pHourInput = row.querySelector("input[data-type='p-hour']");
+                const pHourVal = pHourInput.disabled ? 0 : (parseFloat(pHourInput.value) || 0);
+
                 const sDayChecked = row.querySelector("input[data-type='s-day']").checked ? 1 : 0;
-                const sHourVal = parseFloat(row.querySelector("input[data-type='s-hour']").value) || 0;
-                const lateMinVal = parseFloat(row.querySelector("input[data-type='late-min']").value) || 0;
-                const lateNoDeductMinVal = parseFloat(row.querySelector("input[data-type='late-no-deduct-min']").value) || 0;
+                const sHourInput = row.querySelector("input[data-type='s-hour']");
+                const sHourVal = sHourInput.disabled ? 0 : (parseFloat(sHourInput.value) || 0);
+
+                const lateMinInput = row.querySelector("input[data-type='late-min']");
+                const lateMinVal = lateMinInput.disabled ? 0 : (parseFloat(lateMinInput.value) || 0);
+
+                const lateNoDeductMinInput = row.querySelector("input[data-type='late-no-deduct-min']");
+                const lateNoDeductMinVal = lateNoDeductMinInput.disabled ? 0 : (parseFloat(lateNoDeductMinInput.value) || 0);
+
                 const punchCardMissCheckboxes = row.querySelectorAll("input[type='checkbox'][name='punch-card-miss']");
-                const punchInVal = punchCardMissCheckboxes[0].checked;
-                const punchOutVal = punchCardMissCheckboxes[1].checked;
-                const mHourVal = parseFloat(row.querySelector("input[data-type='m-hour']").value) || 0;
+                const punchInVal = punchCardMissCheckboxes[0].disabled ? false : punchCardMissCheckboxes[0].checked;
+                const punchOutVal = punchCardMissCheckboxes[1].disabled ? false : punchCardMissCheckboxes[1].checked;
+
+                const mHourInput = row.querySelector("input[data-type='m-hour']");
+                const mHourVal = mHourInput.disabled ? 0 : (parseFloat(mHourInput.value) || 0);
+                
                 const fDayChecked = row.querySelector("input[data-type='f-day']").checked ? 1 : 0; // 喪假天
-                const fHourVal = parseFloat(row.querySelector("input[data-type='f-hour']").value) || 0; // 喪假時
-                const otHourVal = parseFloat(row.querySelector("input[data-type='overtime-hour']").value) || 0; // 超時時
+                const fHourInput = row.querySelector("input[data-type='f-hour']");
+                const fHourVal = fHourInput.disabled ? 0 : (parseFloat(fHourInput.value) || 0); // 喪假時
+
+                const otHourInput = row.querySelector("input[data-type='overtime-hour']");
+                const otHourVal = otHourInput.disabled ? 0 : (parseFloat(otHourInput.value) || 0); // 超時時
                 
                 // 累加總數
                 vDay += vDayChecked;
