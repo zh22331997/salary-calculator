@@ -658,7 +658,7 @@
             const totalCashOutBonus = Math.round(rawCashOutDayBonus + rawCashOutHourBonus);
 
 
-            let formula = `${name ? name + "：" : ""}不支薪明細如下：\n`;
+            let formula = `${name ? name + "：" : ""}明細如下：\n`;
 
             // 顯示時仍使用四捨五入後的個別金額，但總和是基於原始值
             if (leaveDays) formula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元 ${leaveDaysNote}\n`;
