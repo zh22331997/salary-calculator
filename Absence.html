@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -700,44 +701,6 @@
         }
     </script>
     <hr>
-    <script>
-        //以下為特休補休折現區
-    function calculateCashOut() {
-        const name = document.getElementById("cashOutName").value.trim();
-        const salary = parseFloat(document.getElementById("cashOutSalary").value);
-        const days = parseFloat(document.getElementById("cashOutDays").value) || 0;
-        const hours = parseFloat(document.getElementById("cashOutHours").value) || 0;
-
-        if (!salary || salary <= 0) {
-            document.getElementById("cashOutResult").innerText = "⚠️ 請填入正確的月薪";
-            return;
-        }
-
-    const rawDayCash = (salary / 30) * days;
-    const rawHourCash = (salary / 30 / 8) * hours;
-    const total = Math.round(rawDayCash + rawHourCash); // 最終加總時四捨五入
-
-
-        let formula = `${name ? name + "：" : ""}年假.特休.補休折現明細如下：\n`;
-        // 顯示時仍使用四捨五入後的個別金額
-        if (days > 0) formula += `➕特休 ${days} 天 × ${salary}/30 = ${Math.round(rawDayCash)} 元\n`;
-        if (hours > 0) formula += `➕補休 ${hours} 小時 × ${salary}/30/8 = ${Math.round(rawHourCash)} 元\n`;
-        formula += `折現金額總計：${total} 元`;
-
-        document.getElementById("cashOutResult").innerText = formula;
-    }
-
-    function copyCashOutResult() {
-        const text = document.getElementById("cashOutResult").innerText;
-        if (!text) {
-            alert("⚠️ 尚未產生結果");
-            return;
-        }
-        navigator.clipboard.writeText(text)
-            .then(() => alert("✅ 已複製折現算式！"))
-            .catch(err => alert("❌ 複製失敗：" + err));
-    }
-    </script>  
     <script>   
 function sendToIframe() {
   const data = document.getElementById('resultsLeave').innerText;
@@ -745,22 +708,6 @@ function sendToIframe() {
   iframe.contentWindow.postMessage({ type: 'IMPORT_LEAVE_DATA', payload: data }, 'https://zh22331997.github.io');
 }
  </script>
-    <h2>特休補休折現區 (如果要單獨運用時) </h2>
-    <label>老師姓名（可留空）：</label>
-    <input type="text" id="cashOutName" style="width: 100px" placeholder="例如：張正華"><br>
-
-    <label>原始月薪：</label>
-    <input type="number" id="cashOutSalary" style="width: 100px" placeholder="例如：32000"><br>
-
-    <label>折現特休（天）：</label>
-    <input type="number" id="cashOutDays" style="width: 60px" placeholder="0">
-
-    <label>折現補休（小時）：</label>
-    <input type="number" id="cashOutHours" style="width: 60px" placeholder="0"><br>
-
-    <button onclick="calculateCashOut()">計算折現</button>
-
-    <div class="result-box" id="cashOutResult"></div><br>
-    <button onclick="copyCashOutResult()">📋 複製算式</button>
+    
 </body>
 </html>
