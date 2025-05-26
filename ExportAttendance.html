@@ -51,17 +51,18 @@
 </table>
 
 <script>
-  window.addEventListener('message', function(event) {
+window.addEventListener('message', function(event) {
+  if (!event.origin.startsWith('https://zh22331997.github.io')) return;
+
   if (event.data.type === 'IMPORT_LEAVE_DATA') {
     const importedData = event.data.payload;
-
-    // 假設你有一個 textarea 要接收它
     const targetField = document.getElementById('input');
     if (targetField) {
       targetField.value = importedData;
     }
   }
 });
+
 </script>
 <script>
 function analyzeData() {
