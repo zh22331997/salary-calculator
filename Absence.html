@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -157,6 +158,9 @@
             width: 100px;
             white-space: nowrap;
         }
+        
+        
+
     </style>
 
 </head>
@@ -171,11 +175,16 @@
     <button onclick="generateTable()">產生日期表</button>
 
     <div id="formArea"></div>
-    <h3>統計結果（可複製）：</h3>
-    <button onclick="copyResultsLeave()">📋 複製結果</button>
+    <h3>統計結果（空白處點一下，再按複製）：</h3>
+    
     <div class="totals" id="resultsLeave" contenteditable="true"></div>
-    <button class="import-button" onclick="importLeaveResults()">➔ 匯入不計薪計算</button>
-
+    <button onclick="copyResultsLeave()">📋 複製結果</button>
+    <button onclick="sendToIframe()">➔ 匯入資料給缺勤分析產生表格</button>
+    <button class="import-button" onclick="importLeaveResults()">➔ 匯入不支薪計算</button>
+    
+    <div style="border: 4px solid #007ACC; padding: 10px; border-radius: 8px; background-color: #f9f9f9; margin-top: 20px;">
+  <iframe src="https://zh22331997.github.io/salary-calculator/ExportAttendance.html" width="100%" height="600" style="border:none;"></iframe>
+</div>
     <hr>
 
     <h2>事病假 或 遲到 不計薪計算器</h2>
@@ -728,8 +737,14 @@
             .then(() => alert("✅ 已複製折現算式！"))
             .catch(err => alert("❌ 複製失敗：" + err));
     }
-    </script>    
-
+    </script>  
+    <script>   
+function sendToIframe() {
+  const data = document.getElementById('resultsLeave').innerText;
+  const iframe = document.querySelector('iframe');
+  iframe.contentWindow.postMessage({ type: 'IMPORT_LEAVE_DATA', payload: data }, 'https://zh22331997.github.io');
+}
+ </script>
     <h2>特休補休折現區 (如果要單獨運用時) </h2>
     <label>老師姓名（可留空）：</label>
     <input type="text" id="cashOutName" style="width: 100px" placeholder="例如：張正華"><br>
