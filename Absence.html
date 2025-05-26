@@ -482,17 +482,17 @@
 
             const totalBufferCount = lateNoDeductRecords.length + punchInCount + punchOutCount;
             if (lateNoDeductMin > 0 || punchInCount > 0 || punchOutCount > 0) {
-                let bufferString = `✅ 全勤緩衝：`;
-                const lateDetails = lateNoDeductRecords.map(record => `${record.date} ${record.minutes}分鐘`).join('、');
-                const punchCardDetails = punchCardMissRecords.map(record => `${record.date} ${record.type}`).join('、');
+            let bufferString = `✅ 全勤緩衝：`;
+            const lateDetails = lateNoDeductRecords.map(record => `(${record.date} ${record.minutes}分鐘)`).join('、');
+            const punchCardDetails = punchCardMissRecords.map(record => `(${record.date} ${record.type})`).join('、');
 
-                if (lateNoDeductMin > 0) bufferString += `遲到不扣 ${lateDetails}`;
-                if (punchInCount > 0 || punchOutCount > 0) {
-                    if (lateNoDeductMin > 0) bufferString += "，";
-                    bufferString += `漏打卡 ${punchCardDetails}`;
-                }
-                if (totalBufferCount > 3) bufferString += " (沒有全勤了⚠️)";
-                result += bufferString + "\n";
+            if (lateNoDeductMin > 0) bufferString += `遲到不扣 ${lateDetails}`;
+            if (punchInCount > 0 || punchOutCount > 0) {
+            if (lateNoDeductMin > 0) bufferString += "，";
+            bufferString += `漏打卡 ${punchCardDetails}`;
+            }
+            if (totalBufferCount > 3) bufferString += " (沒有全勤了⚠️)";
+            result += bufferString + "\n";
             }
 
             if (fDay > 0 || fHour > 0) {
