@@ -3,52 +3,146 @@
 <head>
   <meta charset="UTF-8">
   <title>匯出缺勤明細</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    input, select, textarea, button { margin-top: 6px; font-size: 1em; }
-    textarea { width: 100%; height: 200px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #aaa; padding: 8px; text-align: left; }
-    th { background: #f0f0f0; }
-  </style>
+<style>
+  body {
+    font-family: "Segoe UI", "微軟正黑體", sans-serif;
+    background-color: #f3f1f0; /* 淺暖灰粉 */
+    padding: 30px;
+    color: #4a4a4a; /* 柔灰黑 */
+  }
+
+  h2 {
+    color: #6b6d76; /* 莫蘭迪深灰紫 */
+    border-left: 6px solid #9a9cab; /* 莫蘭迪藍灰 */
+    padding-left: 12px;
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    margin: 15px 0 5px;
+    font-weight: 600;
+    color: #5e5e5e;
+  }
+
+  input, select, textarea, button {
+    font-size: 1em;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    background-color: #fdfdfd;
+  }
+
+  input[type="month"] {
+    width: 200px;
+  }
+
+  select#branch {
+    width: 200px;
+  }
+
+  textarea#input {
+    max-width: none;
+    width: 90%;
+  }
+
+  textarea {
+    height: 200px;
+    resize: vertical;
+  }
+
+  button {
+    background-color: #b8b7b3; /* 莫蘭迪灰杏 */
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-right: 10px;
+    width: auto;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: #9f9d97; /* 深一階 */
+  }
+
+  .button-group {
+    margin-top: 15px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 25px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
+
+  th {
+    background-color: #e7e6e4; /* 莫蘭迪白灰 */
+    font-weight: bold;
+    color: #5e5e5e;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f5f4f2;
+  }
+
+  @media (max-width: 600px) {
+    input, select, textarea {
+      width: 100%;
+    }
+  }
+</style>
+
 </head>
 <body>
 
-<h2>匯出缺勤明細</h2>
+  <h2>匯出缺勤明細</h2>
 
-<label for="month">年月：</label>
-<input type="month" id="month" required>
+  <label for="month">📅 年月：</label>
+  <input type="month" id="month" required>
 
-<label for="branch">選擇分校：</label>
-<select id="branch">
-  <option value="永平校">永平校</option>
-  <option value="永和校">永和校</option>
-  <option value="秀朗校">秀朗校</option>
-  <option value="清水校">清水校</option>
-  <option value="江翠校">江翠校</option>
-</select>
+  <label for="branch">🏫 選擇分校：</label>
+  <select id="branch">
+    <option value="永平校">永平校</option>
+    <option value="永和校">永和校</option>
+    <option value="秀朗校">秀朗校</option>
+    <option value="清水校">清水校</option>
+    <option value="江翠校">江翠校</option>
+  </select>
 
-<label for="input">貼上老師的出缺勤資料</label>
-<textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
+  <label for="input">📋 貼上老師的出缺勤資料：</label>
+  <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
 
-<button onclick="analyzeData()">分析資料</button>
-<button onclick="copyTable()">複製整張表格</button>
-<button onclick="exportCSV()">匯出 CSV</button>
+  <div class="button-group">
+    <button onclick="analyzeData()">🔍 分析資料</button>
+    <button onclick="copyTable()">📄 複製整張表格</button>
+    <button onclick="exportCSV()">💾 匯出 CSV</button>
+  </div>
 
-<table id="outputTable">
-  <thead>
-    <tr>
-      <th>年月</th>
-      <th>分校</th>
-      <th>姓名</th>
-      <th>假別/類型</th>
-      <th>小計</th>
-      <th>備註</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+  <table id="outputTable">
+    <thead>
+      <tr>
+        <th>年月</th>
+        <th>分校</th>
+        <th>姓名</th>
+        <th>假別/類型</th>
+        <th>小計</th>
+        <th>備註</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
 <script>
 window.addEventListener('message', function(event) {
@@ -69,8 +163,6 @@ window.addEventListener('message', function(event) {
   }
 });
 
-</script>
-<script>
 function analyzeData() {
   const ym = document.getElementById('month').value;
   const branch = document.getElementById('branch').value;
@@ -181,7 +273,7 @@ function copyTable() {
   selection.addRange(range);
   try {
     document.execCommand('copy');
-    alert('表格已複製到剪貼簿！可貼到excel或google sheets');
+    alert('表格已複製到剪貼簿！可貼到 Excel 或 Google Sheets');
   } catch (err) {
     alert('複製失敗，請手動選取表格再複製。');
   }
