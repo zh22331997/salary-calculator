@@ -52,6 +52,9 @@
 
 <script>
 window.addEventListener('message', function(event) {
+  console.log("✅ 收到訊息來自：", event.origin);
+  console.log("✅ 資料內容：", event.data);
+
   if (!event.origin.startsWith('https://zh22331997.github.io')) return;
 
   if (event.data.type === 'IMPORT_LEAVE_DATA') {
@@ -59,6 +62,9 @@ window.addEventListener('message', function(event) {
     const targetField = document.getElementById('input');
     if (targetField) {
       targetField.value = importedData;
+      console.log("✅ 成功寫入 input！");
+    } else {
+      console.warn("⚠️ 找不到 id='input' 的欄位！");
     }
   }
 });
