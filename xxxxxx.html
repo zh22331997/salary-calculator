@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>聯絡我們</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+    input, textarea { width: 100%; padding: 8px; margin-bottom: 12px; }
+    button { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <h2>聯絡我們</h2>
+  <form id="contact-form">
+    <input type="text" name="name" placeholder="姓名" required />
+    <input type="email" name="email" placeholder="電子郵件" required />
+    <input type="tel" name="phone" placeholder="聯絡電話" required />
+    <textarea name="message" placeholder="留言內容" required></textarea>
+    <button type="submit">提交</button>
+  </form>
+  <p class="success" id="success-message" style="display:none;">資料已成功送出！</p>
+
+  <script>
+    document.getElementById("contact-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const formData = {
+        name: this.name.value,
+        email: this.email.value,
+        phone: this.phone.value,
+        message: this.message.value
+      };
+
+      fetch("https://script.google.com/macros/s/AKfycbwHz2AB6m0qJOrpZ1HMhWYX7WvTHU-fcFFfHXzPIXvmGvizPb4yl-MLALbhQTjxnmhqEg/exec", {
+        method: "POST",
+        body: JSON.stringify(formData),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("success-message").style.display = "block";
+        this.reset();
+      })
+      .catch(err => alert("發生錯誤：" + err));
+    });
+  </script>
+</body>
+</html>
