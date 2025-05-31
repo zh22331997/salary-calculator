@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>意見回饋表單</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
+        form { background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        h1 { text-align: center; color: #0056b3; margin-bottom: 30px; }
+        div { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="email"], input[type="tel"], textarea {
+            width: calc(100% - 24px);
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            box-sizing: border-box; /* 確保內邊距和邊框包含在寬度內 */
+            font-size: 16px;
+        }
+        input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus, textarea:focus {
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            display: block;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #responseMessage {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            display: none; /* 預設隱藏 */
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+
+    <h1>意見回饋表單</h1>
+
+    <form id="feedbackForm">
+        <div>
+            <label for="name">姓名:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div>
+            <label for="phone">電話:</label>
+            <input type="tel" id="phone" name="phone">
+        </div>
+        <div>
+            <label for="email">電子郵件:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div>
+            <label for="suggestion">建議:</label>
+            <textarea id="suggestion" name="suggestion" rows="7"></textarea>
+        </div>
+        <button type="submit">提交建議</button>
+    </form>
+
+    <div id="responseMessage"></div>
+
+    <script>
+        const form = document.getElementById('feedbackForm');
+        const responseMessage = document.getElementById('responseMessage');
+        // 你的 Google Apps Script 網頁應用程式 URL 已經被替換到這裡了
+        const googleAppsScriptURL = 'https://script.google.com/macros/s/AKfycbzWAIBPDY1vbxqFKt-0yh9y1WjzDpiXQdX6_tzahA-IhzdFM0aoaffhaRbJawbVkOQ/exec';
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault(); // 阻止表單預設提交行為 (頁面重新整理)
+
+            const formData = new FormData(form);
+            const data = {};
+            // 將 FormData 轉換為 JSON 物件，確保 key 值與 Apps Script 期望的匹配
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+
+            // 清除之前的訊息
+            responseMessage.style.display = 'none';
+            responseMessage.className = '';
+            responseMessage.textContent = '';
+
+            try {
+                const response = await fetch(googleAppsScriptURL, {
+                    method: 'POST',
+                    mode: 'cors', // 啟用 CORS
+                    headers: {
+                        'Content-Type': 'application/json' // 告訴 Apps Script 你發送的是 JSON
+                    },
+                    body: JSON.stringify(data) // 將資料轉換為 JSON 字串發送
+                });
+
+                const result = await response.json(); // 解析 Apps Script 回傳的 JSON
+
+                if (result.status === 'success') {
+                    responseMessage.textContent = result.message;
+                    responseMessage.className = 'success';
+                    form.reset(); // 提交成功後清除表單
+                } else {
+                    responseMessage.textContent = result.message || '提交失敗，請重試。';
+                    responseMessage.className = 'error';
+                }
+            } catch (error) {
+                console.error('提交錯誤:', error);
+                responseMessage.textContent = '發生錯誤，請檢查網路連線或稍後再試。';
+                responseMessage.className = 'error';
+            } finally {
+                responseMessage.style.display = 'block'; // 顯示訊息
+            }
+        });
+    </script>
+
+</body>
+</html>
