@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -266,17 +267,58 @@ function analyzeData() {
 
 function copyTable() {
   const table = document.getElementById('outputTable');
+  
+  // 加入資料是否為空的防呆
+  if (table.querySelectorAll('tbody tr').length === 0) {
+  const warningNotice = document.createElement('div');
+  warningNotice.textContent = '⚠️ 尚未有資料，請先分析後再複製！';
+  warningNotice.style.position = 'fixed';
+  warningNotice.style.top = '50%';
+  warningNotice.style.left = '20%';
+  warningNotice.style.transform = 'translateY(-50%)';
+  warningNotice.style.backgroundColor = '#d9534f';  // 鮮紅提示
+  warningNotice.style.color = 'white';
+  warningNotice.style.padding = '12px 24px';
+  warningNotice.style.borderRadius = '10px';
+  warningNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+  warningNotice.style.zIndex = '9999';
+  warningNotice.style.fontSize = '16px';
+  document.body.appendChild(warningNotice);
+  setTimeout(() => warningNotice.remove(), 2500);
+  return;
+}
+
+
   const range = document.createRange();
   range.selectNode(table);
   const selection = window.getSelection();
   selection.removeAllRanges();
   selection.addRange(range);
+
   try {
     document.execCommand('copy');
-    alert('表格已複製到剪貼簿！可貼到 Excel 或 Google Sheets');
+
+    // ✅ 浮出式提示訊息：垂直置中、偏左
+   const copiedNotice = document.createElement('div');
+   copiedNotice.textContent = '✅ 表格已複製！';
+   copiedNotice.style.position = 'fixed';
+   copiedNotice.style.top = '50%';
+   copiedNotice.style.left = '20%';
+   copiedNotice.style.transform = 'translateY(-50%)';
+   copiedNotice.style.backgroundColor = '#6b6d76';
+   copiedNotice.style.color = 'white';
+   copiedNotice.style.padding = '10px 20px';
+   copiedNotice.style.borderRadius = '10px';
+   copiedNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+   copiedNotice.style.zIndex = '9999';
+   copiedNotice.style.fontSize = '16px';
+   document.body.appendChild(copiedNotice);
+   setTimeout(() => copiedNotice.remove(), 2000);
+
   } catch (err) {
     alert('複製失敗，請手動選取表格再複製。');
   }
+
   selection.removeAllRanges();
 }
 
