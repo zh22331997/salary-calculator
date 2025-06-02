@@ -711,7 +711,7 @@ function sendToIframe() {
   const iframe = document.querySelector('iframe');
   iframe.contentWindow.postMessage({ type: 'IMPORT_LEAVE_DATA', payload: data }, 'https://zh22331997.github.io');
   importLeaveResults(); // ✅ 同步執行匯入不支薪計算欄位
-  calculateSalaryDeduction(); // ✅ 同步產生扣薪算式
+
 }
  </script>
     
