@@ -386,8 +386,6 @@ function sendTableToSheet() {
   progressBox.textContent = '⏳ 資料上傳中...';
   document.body.appendChild(progressBox);
 
-  const delay = ms => new Promise(res => setTimeout(res, ms));
-
   const uploadRow = async (row, index, total) => {
     const [ym, branch, name, type, totalLeave, note] = Array.from(row.children).map(td => td.innerText);
     const formData = new FormData();
@@ -409,21 +407,27 @@ function sendTableToSheet() {
       console.error(`❌ 第 ${index + 1} 筆上傳失敗：`, err);
     }
 
-    // 更新進度顯示
     progressBox.textContent = `📤 上傳中 ${index + 1} / ${total} 筆...`;
   };
 
+  // 🔁 批次上傳，每批最多5筆
   (async () => {
-    for (let i = 0; i < rows.length; i++) {
-      await uploadRow(rows[i], i, rows.length);
+    const total = rows.length;
+    const batchSize = 5;
+
+    for (let i = 0; i < total; i += batchSize) {
+      const batch = Array.from(rows).slice(i, i + batchSize);
+      await Promise.all(batch.map((row, j) =>
+        uploadRow(row, i + j, total)
+      ));
     }
 
     progressBox.textContent = '✅ 所有資料已成功送出！';
     progressBox.style.backgroundColor = '#6b6d76';
-
     setTimeout(() => progressBox.remove(), 3000);
   })();
 }
+
 
 
 
