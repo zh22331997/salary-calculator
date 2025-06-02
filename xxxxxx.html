@@ -1,3 +1,7 @@
+
+
+
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -177,8 +181,7 @@
     
     <div class="totals" id="resultsLeave" contenteditable="true"></div>
     <button onclick="copyResultsLeave()">📋 複製結果</button>
-    <button onclick="sendToIframe()">➔ 一鍵匯入［不支薪計算機］&［出勤分析］</button>
-    <button class="import-button" onclick="importLeaveResults()">➔ 匯入不支薪計算</button>
+    <button onclick="sendToIframe()">➔ 一鍵匯入［不支薪計算機］和［出勤分析］</button>
     
     <div style="margin-top: 30px; padding: 15px; background-color: #f7f6f4; border-radius: 16px;">
   <h3 style="margin-bottom: 10px; color: #5a5a5a;">📄 缺勤分析結果</h3>
@@ -711,7 +714,7 @@ function sendToIframe() {
   const iframe = document.querySelector('iframe');
   iframe.contentWindow.postMessage({ type: 'IMPORT_LEAVE_DATA', payload: data }, 'https://zh22331997.github.io');
   importLeaveResults(); // ✅ 同步執行匯入不支薪計算欄位
-
+  calculateSalaryDeduction(); // ✅ 同步產生扣薪算式
 }
  </script>
     
