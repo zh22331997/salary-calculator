@@ -164,6 +164,46 @@ window.addEventListener('message', function(event) {
   }
 });
 
+// 將這個 URL 替換為你剛剛部署 Web App 後得到的實際 URL！
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyLcNDoaZLDfbTCy60nd8S9E1Lr79rpsGU0lfgC5s_5nXBGjO2Mv-fxQx3Gcugq21rw/exec
+"; 
+
+async function postRowsSequentially(rows) {
+  let successCount = 0;
+  let failCount = 0;
+
+  for (const rowData of rows) {
+    try {
+      const res = await fetch(WEB_APP_URL, { // <--- 這裡改成你的 Web App URL
+        method: "POST",
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(rowData) // 將單筆資料轉換為 JSON 字串發送
+      });
+      
+      const jsonResponse = await res.json(); // 期望 Web App 回傳 JSON 格式的回應
+
+      if (jsonResponse.success) {
+        console.log("✅ 資料已送出至 Google Sheet：", jsonResponse);
+        successCount++;
+      } else {
+        console.warn("⚠️ Google Sheet 處理失敗：", jsonResponse.error);
+        failCount++;
+      }
+    } catch (err) {
+      console.error("❌ 發送錯誤或網絡問題：", err);
+      failCount++;
+    }
+  }
+
+  // 顯示結果訊息給使用者 (這裡使用你之前優化過的 showMessage 函數)
+  if (failCount === 0) {
+    showMessage(`✅ 完成送出：成功 ${successCount} 筆。`, 'success');
+  } else if (successCount === 0) {
+    showMessage(`❌ 送出失敗：全部 ${failCount} 筆。`, 'error');
+  } else {
+    showMessage(`⚠️ 完成送出：成功 ${successCount} 筆，失敗 ${failCount} 筆。`, 'info');
+  }
+}
 
 function analyzeData() {
   const ym = document.getElementById('month').value;
@@ -178,6 +218,8 @@ function analyzeData() {
   }
 
   const sections = raw.split(/(?=^[^\s：]{1,10}\s*$)/m);
+  const allRows = [];
+
   sections.forEach(block => {
     const lines = block.trim().split('\n');
     const name = lines.shift().trim();
@@ -226,23 +268,14 @@ function analyzeData() {
             <td>${cleanNotes}</td>
           </tr>`;
 
-        const rowData = {
+        allRows.push({
           ym,
           branch,
           name,
           type,
           total: subtotal,
           notes: cleanNotes
-        };
-
-        fetch("https://corsproxy.io/?https://script.google.com/macros/s/AKfycbwgNh9LPXHtmd25l-mQZjCubIO4Unt7dsCfr9h2nt3nLK8zWbEAuyvM-IW9Aq6J-_5K/exec", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(rowData)
-        })
-        .then(res => res.json())
-        .then(res => console.log("✅ 資料已送出至 Google Sheet：", res))
-        .catch(err => console.error("❌ 發送錯誤：", err));
+        });
       }
     }
 
@@ -257,6 +290,7 @@ function analyzeData() {
           <td>${lateNDTotal}分鐘 (${lateNDCount} 次)</td>
           <td>${notes}</td>
         </tr>`;
+      allRows.push({ ym, branch, name, type: "遲到(不扣)", total: `${lateNDTotal}分鐘 (${lateNDCount} 次)`, notes });
     }
 
     if (lateCount > 0) {
@@ -270,6 +304,7 @@ function analyzeData() {
           <td>${lateTotal}分鐘 (${lateCount} 次)</td>
           <td>${notes}</td>
         </tr>`;
+      allRows.push({ ym, branch, name, type: "遲到⚠️", total: `${lateTotal}分鐘 (${lateCount} 次)`, notes });
     }
 
     if (punchDetails.length > 0) {
@@ -283,10 +318,16 @@ function analyzeData() {
           <td>${punchDetails.length} 次</td>
           <td>${notes}</td>
         </tr>`;
+      allRows.push({ ym, branch, name, type: "漏打卡", total: `${punchDetails.length} 次`, notes });
     }
   });
-}
 
+  postRowsSequentially(allRows);
+}
+</script>
+
+
+<script>    
 function copyTable() {
   const table = document.getElementById('outputTable');
   const range = document.createRange();
