@@ -2,101 +2,51 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>課程紀錄表單</title>
-  <style>
-    body {
-      font-family: "Segoe UI", "微軟正黑體", sans-serif;
-      background-color: #f6f5f3;
-      color: #444;
-      padding: 30px;
-      max-width: 600px;
-      margin: auto;
-    }
-
-    h2 {
-      color: #6b6d76;
-      border-left: 6px solid #9a9cab;
-      padding-left: 12px;
-    }
-
-    label {
-      display: block;
-      margin: 15px 0 5px;
-      font-weight: bold;
-    }
-
-    input, button {
-      font-size: 1em;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      width: 100%;
-      box-sizing: border-box;
-      background-color: #fff;
-    }
-
-    button {
-      background-color: #9a9cab;
-      color: #fff;
-      margin-top: 15px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    button:hover {
-      background-color: #7f808e;
-    }
-
-    #confirmation {
-      margin-top: 20px;
-      font-weight: bold;
-      color: green;
-    }
-
-    #myRecords {
-      margin-top: 30px;
-    }
-  </style>
-</head>
-<body>
-  <h2>📋 課程紀錄表單</h2>
-
-  <form id="recordForm">
-    <label>👤 姓名：<input type="text" name="name" required></label>
-    <label>📅 日期：<input type="date" name="date" required></label>
-    <label>⏰ 時間：<input type="time" name="time" required></label>
-    <label>📚 課程內容：<input type="text" name="course" required></label>
-    <button type="submit">📤 送出紀錄</button>
-  </form>
-
-  <div id="confirmation"></div>
-  <div id="myRecords"></div>
-
+  <title>出缺勤紀錄查詢</title>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyVGZq4iN2I2vUARvxx2iYspEWL0W2a-97fsuzdQLs1GAWjOTVAKsfABY3RFIsmJzQw1g/exec"; // 替換成你的網址
+    google.charts.load('current', {'packages':['table']});
 
-    const form = document.getElementById('recordForm');
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(form));
-
-      try {
-        const res = await fetch(GAS_URL, {
-          method: 'POST',
-          body: JSON.stringify(data)
-        });
-
-        document.getElementById('confirmation').textContent = '✅ 上傳成功！';
-
-        // 查詢自己的紀錄
-        const queryRes = await fetch(`${GAS_URL}?name=${encodeURIComponent(data.name)}`);
-        const records = await queryRes.json();
-        const recordList = records.map(r => `<li>${r[2]} ${r[3]} - ${r[4]}</li>`).join('');
-        document.getElementById('myRecords').innerHTML = `<h3>你的紀錄：</h3><ul>${recordList}</ul>`;
-      } catch (err) {
-        document.getElementById('confirmation').textContent = '❌ 上傳失敗，請稍後再試';
+    function search() {
+      const name = document.getElementById('nameInput').value.trim();
+      if (!name) {
+        alert('請輸入姓名');
+        return;
       }
+
+      const query = new google.visualization.Query(
+        "https://docs.google.com/spreadsheets/d/1iLrvWxyhpfrvOH4ZI1zK_4MzGRzrFKq0INfdyDJYjMg/gviz/tq?sheet=工作表1"
+      );
+
+      query.setQuery(`select A,B,C,D,E,F where C = '${name}'`);
+      query.send(function(response) {
+        if (response.isError()) {
+          document.getElementById('result').innerHTML = '查詢失敗：' + response.getMessage();
+          return;
+        }
+
+        const data = response.getDataTable();
+        if (data.getNumberOfRows() === 0) {
+          document.getElementById('result').innerHTML = '查無資料。';
+          return;
+        }
+
+        const table = new google.visualization.Table(document.getElementById('result'));
+        table.draw(data, {showRowNumber: false, width: '100%', height: 'auto'});
+      });
+    }
+
+    google.charts.setOnLoadCallback(() => {
+      document.getElementById('searchBtn').addEventListener('click', search);
     });
   </script>
+</head>
+<body style="font-family: 'Segoe UI', '微軟正黑體', sans-serif; padding: 30px; background-color: #f9f9f9;">
+  <h2>📋 出缺勤紀錄查詢</h2>
+  <label for="nameInput">請輸入姓名：</label>
+  <input type="text" id="nameInput" placeholder="例如：卡比" style="padding: 8px; font-size: 16px;">
+  <button id="searchBtn" style="padding: 8px 16px; margin-left: 10px; font-size: 16px; cursor: pointer;">查詢</button>
+
+  <div id="result" style="margin-top: 30px;"></div>
 </body>
 </html>
