@@ -108,7 +108,7 @@
 </head>
 <body>
 
-  <h2>匯出缺勤明細1343</h2>
+  <h2>匯出缺勤明細1352</h2>
 
   <label for="month">📅 年月：</label>
   <input type="month" id="month" required>
@@ -235,7 +235,7 @@ function analyzeData() {
           notes: cleanNotes
         };
 
-        fetch("https://script.google.com/macros/s/AKfycbwgNh9LPXHtmd25l-mQZjCubIO4Unt7dsCfr9h2nt3nLK8zWbEAuyvM-IW9Aq6J-_5K/exec", {
+        fetch("https://corsproxy.io/?https://script.google.com/macros/s/AKfycbwgNh9LPXHtmd25l-mQZjCubIO4Unt7dsCfr9h2nt3nLK8zWbEAuyvM-IW9Aq6J-_5K/exec", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(rowData)
