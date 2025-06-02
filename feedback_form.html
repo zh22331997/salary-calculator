@@ -1,132 +1,311 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>意見回饋表單</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f8f9fa; color: #333; }
-        form { background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
-        h1 { text-align: center; color: #0056b3; margin-bottom: 30px; }
-        div { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        input[type="text"], input[type="email"], input[type="tel"], textarea {
-            width: calc(100% - 24px);
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            box-sizing: border-box; /* 確保內邊距和邊框包含在寬度內 */
-            font-size: 16px;
-        }
-        input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus, textarea:focus {
-            border-color: #80bdff;
-            outline: 0;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-        }
-        textarea { resize: vertical; min-height: 100px; }
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 18px;
-            display: block;
-            width: 100%;
-            transition: background-color 0.3s ease;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #responseMessage {
-            margin-top: 25px;
-            padding: 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            text-align: center;
-            display: none; /* 預設隱藏 */
-        }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    </style>
+  <meta charset="UTF-8">
+  <title>匯出缺勤明細</title>
+<style>
+  body {
+    font-family: "Segoe UI", "微軟正黑體", sans-serif;
+    background-color: #f3f1f0; /* 淺暖灰粉 */
+    padding: 30px;
+    color: #4a4a4a; /* 柔灰黑 */
+  }
+
+  h2 {
+    color: #6b6d76; /* 莫蘭迪深灰紫 */
+    border-left: 6px solid #9a9cab; /* 莫蘭迪藍灰 */
+    padding-left: 12px;
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    margin: 15px 0 5px;
+    font-weight: 600;
+    color: #5e5e5e;
+  }
+
+  input, select, textarea, button {
+    font-size: 1em;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    background-color: #fdfdfd;
+  }
+
+  input[type="month"] {
+    width: 200px;
+  }
+
+  select#branch {
+    width: 200px;
+  }
+
+  textarea#input {
+    max-width: none;
+    width: 90%;
+  }
+
+  textarea {
+    height: 200px;
+    resize: vertical;
+  }
+
+  button {
+    background-color: #b8b7b3; /* 莫蘭迪灰杏 */
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-right: 10px;
+    width: auto;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: #9f9d97; /* 深一階 */
+  }
+
+  .button-group {
+    margin-top: 15px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 25px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
+
+  th {
+    background-color: #e7e6e4; /* 莫蘭迪白灰 */
+    font-weight: bold;
+    color: #5e5e5e;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f5f4f2;
+  }
+
+  @media (max-width: 600px) {
+    input, select, textarea {
+      width: 100%;
+    }
+  }
+</style>
+
 </head>
 <body>
 
-    <h1>意見回饋表單</h1>
+  <h2>匯出缺勤明細</h2>
 
-    <form id="feedbackForm">
-        <div>
-            <label for="name">姓名:</label>
-            <input type="text" id="name" name="name" required>
-        </div>
-        <div>
-            <label for="phone">電話:</label>
-            <input type="tel" id="phone" name="phone">
-        </div>
-        <div>
-            <label for="email">電子郵件:</label>
-            <input type="email" id="email" name="email" required>
-        </div>
-        <div>
-            <label for="suggestion">建議:</label>
-            <textarea id="suggestion" name="suggestion" rows="7"></textarea>
-        </div>
-        <button type="submit">提交建議</button>
-    </form>
+  <label for="month">📅 年月：</label>
+  <input type="month" id="month" required>
 
-    <div id="responseMessage"></div>
+  <label for="branch">🏫 選擇分校：</label>
+  <select id="branch">
+    <option value="永平校">永平校</option>
+    <option value="永和校">永和校</option>
+    <option value="秀朗校">秀朗校</option>
+    <option value="清水校">清水校</option>
+    <option value="江翠校">江翠校</option>
+  </select>
 
-    <script>
-        const form = document.getElementById('feedbackForm');
-        const responseMessage = document.getElementById('responseMessage');
-        // 你的 Google Apps Script 網頁應用程式 URL 已經被替換到這裡了
-        const googleAppsScriptURL = 'https://script.google.com/macros/s/AKfycbwY5mouJSbT0K0Q02I5UkevfXdAuRrUMM7Bs8O3wF4tEfQzNnjCWdTQSNWpnzD_SCzOTQ/exec';
+  <label for="input">📋 貼上老師的出缺勤資料：</label>
+  <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
 
-        form.addEventListener('submit', async function(event) {
-            event.preventDefault(); // 阻止表單預設提交行為 (頁面重新整理)
+  <div class="button-group">
+    <button onclick="analyzeData()">🔍 分析資料</button>
+    <button onclick="copyTable()">📄 複製整張表格</button>
+    <button onclick="exportCSV()">💾 匯出 CSV</button>
+  </div>
 
-            const formData = new FormData(form);
-            const data = {};
-            // 將 FormData 轉換為 JSON 物件，確保 key 值與 Apps Script 期望的匹配
-            for (let [key, value] of formData.entries()) {
-                data[key] = value;
-            }
+  <table id="outputTable">
+    <thead>
+      <tr>
+        <th>年月</th>
+        <th>分校</th>
+        <th>姓名</th>
+        <th>假別/類型</th>
+        <th>小計</th>
+        <th>備註</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-            // 清除之前的訊息
-            responseMessage.style.display = 'none';
-            responseMessage.className = '';
-            responseMessage.textContent = '';
+<script>
+window.addEventListener('message', function(event) {
+  console.log("✅ 收到訊息來自：", event.origin);
+  console.log("✅ 資料內容：", event.data);
 
-            try {
-                const response = await fetch(googleAppsScriptURL, {
-                    method: 'POST',
-                    mode: 'cors', // 啟用 CORS
-                    headers: {
-                        'Content-Type': 'application/json' // 告訴 Apps Script 你發送的是 JSON
-                    },
-                    body: JSON.stringify(data) // 將資料轉換為 JSON 字串發送
-                });
+  if (!event.origin.startsWith('https://zh22331997.github.io')) return;
 
-                const result = await response.json(); // 解析 Apps Script 回傳的 JSON
+  if (event.data.type === 'IMPORT_LEAVE_DATA') {
+    const importedData = event.data.payload;
+    const targetField = document.getElementById('input');
+    if (targetField) {
+      targetField.value = importedData;
+      console.log("✅ 成功寫入 input！");
+    } else {
+      console.warn("⚠️ 找不到 id='input' 的欄位！");
+    }
+  }
+});
 
-                if (result.status === 'success') {
-                    responseMessage.textContent = result.message;
-                    responseMessage.className = 'success';
-                    form.reset(); // 提交成功後清除表單
-                } else {
-                    responseMessage.textContent = result.message || '提交失敗，請重試。';
-                    responseMessage.className = 'error';
-                }
-            } catch (error) {
-                console.error('提交錯誤:', error);
-                responseMessage.textContent = '發生錯誤，請檢查網路連線或稍後再試。';
-                responseMessage.className = 'error';
-            } finally {
-                responseMessage.style.display = 'block'; // 顯示訊息
-            }
+function analyzeData() {
+  const ym = document.getElementById('month').value;
+  const branch = document.getElementById('branch').value;
+  const raw = document.getElementById('input').value.trim();
+  const tbody = document.querySelector('#outputTable tbody');
+  tbody.innerHTML = '';
+
+  if (!ym || !raw) {
+    alert('請輸入年月與分校');
+    return;
+  }
+
+  const sections = raw.split(/(?=^[^\s：]{1,10}\s*$)/m);
+  sections.forEach(block => {
+    const lines = block.trim().split('\n');
+    const name = lines.shift().trim();
+    const content = lines.join('\n');
+
+    const regex = /([^\s：]+)：\s*([\d天小時分鐘 ]+)?\s*([\s\S]*?)(?=^[^\s：]+：|$)/gm;
+    let match;
+
+    let lateTotal = 0, lateCount = 0, lateDetails = [];
+    let lateNDTotal = 0, lateNDCount = 0, lateNDDetails = [];
+    let punchDetails = [];
+
+    while ((match = regex.exec(content)) !== null) {
+      const type = match[1].trim();
+      const subtotal = (match[2] || '').trim();
+      const notes = match[3].trim();
+
+      if (type === '全勤緩衝') {
+        const lateNDMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*(\d+)分鐘\)/g)];
+        lateNDMatches.forEach(m => {
+          lateNDTotal += parseInt(m[2]);
+          lateNDCount++;
+          lateNDDetails.push(`${m[1]} ${m[2]}分鐘`);
         });
-    </script>
+        const punchMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*(上班|下班)\)/g)];
+        punchMatches.forEach(m => punchDetails.push(`${m[1]} ${m[2]}`));
+      } else if (type === '遲到') {
+        const lateMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*(\d+)分鐘\)/g)];
+        lateMatches.forEach(m => {
+          lateTotal += parseInt(m[2]);
+          lateCount++;
+          lateDetails.push(`${m[1]} ${m[2]}分鐘`);
+        });
+      } else if (type === '預計折現' || type === '超時') {
+        continue;
+      } else {
+        const cleanNotes = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*([\d天小時分鐘]+)\)/g)]
+          .map(m => `${m[1]} ${m[2]}`).join('、');
+        tbody.innerHTML += `
+          <tr>
+            <td>${ym}</td>
+            <td>${branch}</td>
+            <td>${name}</td>
+            <td>${type}</td>
+            <td>${subtotal}</td>
+            <td>${cleanNotes}</td>
+          </tr>`;
+      }
+    }
+
+    if (lateNDCount > 0) {
+      tbody.innerHTML += `
+        <tr>
+          <td>${ym}</td>
+          <td>${branch}</td>
+          <td>${name}</td>
+          <td>遲到(不扣)</td>
+          <td>${lateNDTotal}分鐘 (${lateNDCount} 次)</td>
+          <td>${lateNDDetails.join('、')}</td>
+        </tr>`;
+    }
+
+    if (lateCount > 0) {
+      tbody.innerHTML += `
+        <tr>
+          <td>${ym}</td>
+          <td>${branch}</td>
+          <td>${name}</td>
+          <td>遲到⚠️</td>
+          <td>${lateTotal}分鐘 (${lateCount} 次)</td>
+          <td>${lateDetails.join('、')}</td>
+        </tr>`;
+    }
+
+    if (punchDetails.length > 0) {
+      tbody.innerHTML += `
+        <tr>
+          <td>${ym}</td>
+          <td>${branch}</td>
+          <td>${name}</td>
+          <td>漏打卡</td>
+          <td>${punchDetails.length} 次</td>
+          <td>${punchDetails.join('、')}</td>
+        </tr>`;
+    }
+  });
+}
+
+function copyTable() {
+  const table = document.getElementById('outputTable');
+  const range = document.createRange();
+  range.selectNode(table);
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+  try {
+    document.execCommand('copy');
+    alert('表格已複製到剪貼簿！可貼到 Excel 或 Google Sheets');
+  } catch (err) {
+    alert('複製失敗，請手動選取表格再複製。');
+  }
+  selection.removeAllRanges();
+}
+
+function exportCSV() {
+  const ym = document.getElementById('month').value;
+  const branch = document.getElementById('branch').value;
+  const table = document.getElementById('outputTable');
+  const rows = Array.from(table.querySelectorAll('tr'));
+  const csv = [];
+
+  rows.forEach(row => {
+    const cols = Array.from(row.querySelectorAll('th, td')).map(col =>
+      '"' + col.innerText.replace(/"/g, '""') + '"'
+    );
+    csv.push(cols.join(','));
+  });
+
+  const csvContent = "\uFEFF" + csv.join('\n'); // UTF-8 BOM
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const filename = `遲到缺勤明細_${branch}_${ym}.csv`;
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
 
 </body>
 </html>
