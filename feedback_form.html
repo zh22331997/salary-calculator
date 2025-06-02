@@ -108,7 +108,7 @@
 </head>
 <body>
 
-  <h2>匯出缺勤明細1446</h2>
+  <h2>匯出缺勤明細</h2>
 
   <label for="month">📅 年月：</label>
   <input type="month" id="month" required>
@@ -129,6 +129,7 @@
     <button onclick="analyzeData()">🔍 分析資料</button>
     <button onclick="copyTable()">📄 複製整張表格</button>
     <button onclick="exportCSV()">💾 匯出 CSV</button>
+    <button onclick="sendTableToSheet()">📤 上傳至 Google 表單</button>
   </div>
 
   <table id="outputTable">
@@ -164,47 +165,6 @@ window.addEventListener('message', function(event) {
   }
 });
 
-// 將這個 URL 替換為你剛剛部署 Web App 後得到的實際 URL！
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyLcNDoaZLDfbTCy60nd8S9E1Lr79rpsGU0lfgC5s_5nXBGjO2Mv-fxQx3Gcugq21rw/exec
-"; 
-
-async function postRowsSequentially(rows) {
-  let successCount = 0;
-  let failCount = 0;
-
-  for (const rowData of rows) {
-    try {
-      const res = await fetch(WEB_APP_URL, { // <--- 這裡改成你的 Web App URL
-        method: "POST",
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(rowData) // 將單筆資料轉換為 JSON 字串發送
-      });
-      
-      const jsonResponse = await res.json(); // 期望 Web App 回傳 JSON 格式的回應
-
-      if (jsonResponse.success) {
-        console.log("✅ 資料已送出至 Google Sheet：", jsonResponse);
-        successCount++;
-      } else {
-        console.warn("⚠️ Google Sheet 處理失敗：", jsonResponse.error);
-        failCount++;
-      }
-    } catch (err) {
-      console.error("❌ 發送錯誤或網絡問題：", err);
-      failCount++;
-    }
-  }
-
-  // 顯示結果訊息給使用者 (這裡使用你之前優化過的 showMessage 函數)
-  if (failCount === 0) {
-    showMessage(`✅ 完成送出：成功 ${successCount} 筆。`, 'success');
-  } else if (successCount === 0) {
-    showMessage(`❌ 送出失敗：全部 ${failCount} 筆。`, 'error');
-  } else {
-    showMessage(`⚠️ 完成送出：成功 ${successCount} 筆，失敗 ${failCount} 筆。`, 'info');
-  }
-}
-
 function analyzeData() {
   const ym = document.getElementById('month').value;
   const branch = document.getElementById('branch').value;
@@ -218,8 +178,6 @@ function analyzeData() {
   }
 
   const sections = raw.split(/(?=^[^\s：]{1,10}\s*$)/m);
-  const allRows = [];
-
   sections.forEach(block => {
     const lines = block.trim().split('\n');
     const name = lines.shift().trim();
@@ -267,20 +225,10 @@ function analyzeData() {
             <td>${subtotal}</td>
             <td>${cleanNotes}</td>
           </tr>`;
-
-        allRows.push({
-          ym,
-          branch,
-          name,
-          type,
-          total: subtotal,
-          notes: cleanNotes
-        });
       }
     }
 
     if (lateNDCount > 0) {
-      const notes = lateNDDetails.join('、');
       tbody.innerHTML += `
         <tr>
           <td>${ym}</td>
@@ -288,13 +236,11 @@ function analyzeData() {
           <td>${name}</td>
           <td>遲到(不扣)</td>
           <td>${lateNDTotal}分鐘 (${lateNDCount} 次)</td>
-          <td>${notes}</td>
+          <td>${lateNDDetails.join('、')}</td>
         </tr>`;
-      allRows.push({ ym, branch, name, type: "遲到(不扣)", total: `${lateNDTotal}分鐘 (${lateNDCount} 次)`, notes });
     }
 
     if (lateCount > 0) {
-      const notes = lateDetails.join('、');
       tbody.innerHTML += `
         <tr>
           <td>${ym}</td>
@@ -302,13 +248,11 @@ function analyzeData() {
           <td>${name}</td>
           <td>遲到⚠️</td>
           <td>${lateTotal}分鐘 (${lateCount} 次)</td>
-          <td>${notes}</td>
+          <td>${lateDetails.join('、')}</td>
         </tr>`;
-      allRows.push({ ym, branch, name, type: "遲到⚠️", total: `${lateTotal}分鐘 (${lateCount} 次)`, notes });
     }
 
     if (punchDetails.length > 0) {
-      const notes = punchDetails.join('、');
       tbody.innerHTML += `
         <tr>
           <td>${ym}</td>
@@ -316,31 +260,66 @@ function analyzeData() {
           <td>${name}</td>
           <td>漏打卡</td>
           <td>${punchDetails.length} 次</td>
-          <td>${notes}</td>
+          <td>${punchDetails.join('、')}</td>
         </tr>`;
-      allRows.push({ ym, branch, name, type: "漏打卡", total: `${punchDetails.length} 次`, notes });
     }
   });
-
-  postRowsSequentially(allRows);
 }
-</script>
 
-
-<script>    
 function copyTable() {
   const table = document.getElementById('outputTable');
+  
+  // 加入資料是否為空的防呆
+  if (table.querySelectorAll('tbody tr').length === 0) {
+  const warningNotice = document.createElement('div');
+  warningNotice.textContent = '⚠️ 尚未有資料，請先分析後再複製！';
+  warningNotice.style.position = 'fixed';
+  warningNotice.style.top = '50%';
+  warningNotice.style.left = '20%';
+  warningNotice.style.transform = 'translateY(-50%)';
+  warningNotice.style.backgroundColor = '#d9534f';  // 鮮紅提示
+  warningNotice.style.color = 'white';
+  warningNotice.style.padding = '12px 24px';
+  warningNotice.style.borderRadius = '10px';
+  warningNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+  warningNotice.style.zIndex = '9999';
+  warningNotice.style.fontSize = '16px';
+  document.body.appendChild(warningNotice);
+  setTimeout(() => warningNotice.remove(), 2500);
+  return;
+}
+
+
   const range = document.createRange();
   range.selectNode(table);
   const selection = window.getSelection();
   selection.removeAllRanges();
   selection.addRange(range);
+
   try {
     document.execCommand('copy');
-    alert('表格已複製到剪貼簿！可貼到 Excel 或 Google Sheets');
+
+    // ✅ 浮出式提示訊息：垂直置中、偏左
+   const copiedNotice = document.createElement('div');
+   copiedNotice.textContent = '✅ 表格已複製！';
+   copiedNotice.style.position = 'fixed';
+   copiedNotice.style.top = '50%';
+   copiedNotice.style.left = '20%';
+   copiedNotice.style.transform = 'translateY(-50%)';
+   copiedNotice.style.backgroundColor = '#6b6d76';
+   copiedNotice.style.color = 'white';
+   copiedNotice.style.padding = '10px 20px';
+   copiedNotice.style.borderRadius = '10px';
+   copiedNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+   copiedNotice.style.zIndex = '9999';
+   copiedNotice.style.fontSize = '16px';
+   document.body.appendChild(copiedNotice);
+   setTimeout(() => copiedNotice.remove(), 2000);
+
   } catch (err) {
     alert('複製失敗，請手動選取表格再複製。');
   }
+
   selection.removeAllRanges();
 }
 
@@ -368,6 +347,95 @@ function exportCSV() {
   link.click();
   document.body.removeChild(link);
 }
+
+function sendTableToSheet() {
+  const rows = document.querySelectorAll('#outputTable tbody tr');
+  if (rows.length === 0) {
+    const warning = document.createElement('div');
+    warning.textContent = '⚠️ 沒有資料可上傳，請先分析資料！';
+    Object.assign(warning.style, {
+      position: 'fixed',
+      top: '50%',
+      left: '20%',
+      transform: 'translateY(-50%)',
+      backgroundColor: '#d9534f',
+      color: 'white',
+      padding: '12px 24px',
+      borderRadius: '10px',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+      zIndex: '9999',
+      fontSize: '16px'
+    });
+    document.body.appendChild(warning);
+    setTimeout(() => warning.remove(), 2500);
+    return;
+  }
+
+  // 🔄 顯示「上傳中...」提示
+  const loading = document.createElement('div');
+  loading.textContent = '⏳ 資料上傳中...';
+  Object.assign(loading.style, {
+    position: 'fixed',
+    top: '50%',
+    left: '20%',
+    transform: 'translateY(-50%)',
+    backgroundColor: '#5c5c5c',
+    color: 'white',
+    padding: '10px 20px',
+    borderRadius: '10px',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+    zIndex: '9999',
+    fontSize: '16px'
+  });
+  document.body.appendChild(loading);
+
+  // 📤 建立每一筆上傳的 Promise
+  const uploadPromises = Array.from(rows).map(row => {
+    const [ym, branch, name, type, total, note] = Array.from(row.children).map(td => td.innerText);
+    const formData = new FormData();
+    formData.append("ym", ym);
+    formData.append("branch", branch);
+    formData.append("name", name);
+    formData.append("type", type);
+    formData.append("total", total);
+    formData.append("note", note);
+
+    return fetch("https://script.google.com/macros/s/AKfycbw8OtpYhxGWOUX06egZnjrTkSefw-701p5Jo4d1DuRKTyPGARw46sZeSfeNYDS9FTka/exec", {
+      method: "POST",
+      body: formData
+    });
+  });
+
+  // 🟢 全部上傳完成後顯示成功提示
+  Promise.all(uploadPromises)
+    .then(() => {
+      loading.remove(); // 移除「上傳中」
+      const sentNotice = document.createElement('div');
+      sentNotice.textContent = '✅ 所有資料已成功送出！';
+      Object.assign(sentNotice.style, {
+        position: 'fixed',
+        top: '50%',
+        left: '20%',
+        transform: 'translateY(-50%)',
+        backgroundColor: '#6b6d76',
+        color: 'white',
+        padding: '10px 20px',
+        borderRadius: '10px',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+        zIndex: '9999',
+        fontSize: '16px'
+      });
+      document.body.appendChild(sentNotice);
+      setTimeout(() => sentNotice.remove(), 2000);
+    })
+    .catch(err => {
+      loading.remove();
+      console.error("❌ 上傳錯誤：", err);
+      alert('❌ 上傳時發生錯誤，請檢查網路或表單設定。');
+    });
+}
+
+
 </script>
 
 </body>
