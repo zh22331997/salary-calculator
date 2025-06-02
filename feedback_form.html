@@ -108,7 +108,7 @@
 </head>
 <body>
 
-  <h2>匯出缺勤明細</h2>
+  <h2>匯出缺勤明細1242</h2>
 
   <label for="month">📅 年月：</label>
   <input type="month" id="month" required>
@@ -163,6 +163,7 @@ window.addEventListener('message', function(event) {
     }
   }
 });
+
 
 function analyzeData() {
   const ym = document.getElementById('month').value;
@@ -224,10 +225,29 @@ function analyzeData() {
             <td>${subtotal}</td>
             <td>${cleanNotes}</td>
           </tr>`;
+
+        const rowData = {
+          ym,
+          branch,
+          name,
+          type,
+          total: subtotal,
+          notes: cleanNotes
+        };
+
+        fetch("https://script.google.com/macros/s/AKfycby_b1wQg6B-TedOILDMKaX8sdUxK4Dsj1S7fhnGHXtjVKeDJuvo2NS0hnbvYft94hs4/exec", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(rowData)
+        })
+        .then(res => res.json())
+        .then(res => console.log("✅ 資料已送出至 Google Sheet：", res))
+        .catch(err => console.error("❌ 發送錯誤：", err));
       }
     }
 
     if (lateNDCount > 0) {
+      const notes = lateNDDetails.join('、');
       tbody.innerHTML += `
         <tr>
           <td>${ym}</td>
@@ -235,11 +255,12 @@ function analyzeData() {
           <td>${name}</td>
           <td>遲到(不扣)</td>
           <td>${lateNDTotal}分鐘 (${lateNDCount} 次)</td>
-          <td>${lateNDDetails.join('、')}</td>
+          <td>${notes}</td>
         </tr>`;
     }
 
     if (lateCount > 0) {
+      const notes = lateDetails.join('、');
       tbody.innerHTML += `
         <tr>
           <td>${ym}</td>
@@ -247,11 +268,12 @@ function analyzeData() {
           <td>${name}</td>
           <td>遲到⚠️</td>
           <td>${lateTotal}分鐘 (${lateCount} 次)</td>
-          <td>${lateDetails.join('、')}</td>
+          <td>${notes}</td>
         </tr>`;
     }
 
     if (punchDetails.length > 0) {
+      const notes = punchDetails.join('、');
       tbody.innerHTML += `
         <tr>
           <td>${ym}</td>
@@ -259,7 +281,7 @@ function analyzeData() {
           <td>${name}</td>
           <td>漏打卡</td>
           <td>${punchDetails.length} 次</td>
-          <td>${punchDetails.join('、')}</td>
+          <td>${notes}</td>
         </tr>`;
     }
   });
