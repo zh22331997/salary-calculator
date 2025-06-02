@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -128,7 +129,7 @@
     <button onclick="analyzeData()">🔍 分析資料</button>
     <button onclick="copyTable()">📄 複製整張表格</button>
     <button onclick="exportCSV()">💾 匯出 CSV</button>
-    <button onclick="sendTableToSheet()">📤 上傳至 Google 表單</button>
+    <button onclick="sendTableToSheet()">📤 上傳至 Google 表單(多人勿選)</button>
   </div>
 
   <table id="outputTable">
@@ -370,33 +371,31 @@ function sendTableToSheet() {
     return;
   }
 
-  const loading = document.createElement('div');
-  loading.textContent = '⏳ 資料上傳中...';
-  Object.assign(loading.style, {
-    position: 'fixed',
-    top: '50%',
-    left: '20%',
-    transform: 'translateY(-50%)',
-    backgroundColor: '#5c5c5c',
-    color: 'white',
-    padding: '10px 20px',
-    borderRadius: '10px',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-    zIndex: '9999',
-    fontSize: '16px'
-  });
-  document.body.appendChild(loading);
+  // 🔄 建立進度區塊
+  const progressBox = document.createElement('div');
+  progressBox.style.position = 'fixed';
+  progressBox.style.bottom = '20px';
+  progressBox.style.left = '20px';
+  progressBox.style.backgroundColor = '#5c5c5c';
+  progressBox.style.color = 'white';
+  progressBox.style.padding = '12px 20px';
+  progressBox.style.borderRadius = '10px';
+  progressBox.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+  progressBox.style.zIndex = '9999';
+  progressBox.style.fontSize = '16px';
+  progressBox.textContent = '⏳ 資料上傳中...';
+  document.body.appendChild(progressBox);
 
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
-  const uploadRow = async (row, index) => {
-    const [ym, branch, name, type, total, note] = Array.from(row.children).map(td => td.innerText);
+  const uploadRow = async (row, index, total) => {
+    const [ym, branch, name, type, totalLeave, note] = Array.from(row.children).map(td => td.innerText);
     const formData = new FormData();
     formData.append("ym", ym);
     formData.append("branch", branch);
     formData.append("name", name);
     formData.append("type", type);
-    formData.append("total", total);
+    formData.append("total", totalLeave);
     formData.append("note", note);
 
     try {
@@ -404,40 +403,28 @@ function sendTableToSheet() {
         method: "POST",
         body: formData
       });
-      const text = await response.text();
-      console.log(`✅ 第 ${index + 1} 筆上傳成功：`, text);
+      await response.text();
+      console.log(`✅ 第 ${index + 1} 筆上傳成功`);
     } catch (err) {
-      console.error(`❌ 第 ${index + 1} 筆上傳錯誤：`, err);
+      console.error(`❌ 第 ${index + 1} 筆上傳失敗：`, err);
     }
 
-    await delay(400); // 🕓 每筆間隔 400ms
+    // 更新進度顯示
+    progressBox.textContent = `📤 上傳中 ${index + 1} / ${total} 筆...`;
   };
 
   (async () => {
     for (let i = 0; i < rows.length; i++) {
-      await uploadRow(rows[i], i);
+      await uploadRow(rows[i], i, rows.length);
     }
 
-    loading.remove();
-    const doneNotice = document.createElement('div');
-    doneNotice.textContent = '✅ 所有資料已成功送出！';
-    Object.assign(doneNotice.style, {
-      position: 'fixed',
-      top: '50%',
-      left: '20%',
-      transform: 'translateY(-50%)',
-      backgroundColor: '#6b6d76',
-      color: 'white',
-      padding: '10px 20px',
-      borderRadius: '10px',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-      zIndex: '9999',
-      fontSize: '16px'
-    });
-    document.body.appendChild(doneNotice);
-    setTimeout(() => doneNotice.remove(), 2000);
+    progressBox.textContent = '✅ 所有資料已成功送出！';
+    progressBox.style.backgroundColor = '#6b6d76';
+
+    setTimeout(() => progressBox.remove(), 3000);
   })();
 }
+
 
 
 // 📌 記住分校
