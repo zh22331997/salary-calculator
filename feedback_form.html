@@ -435,6 +435,24 @@ function sendTableToSheet() {
     });
 }
 
+// 📌 記住分校
+document.getElementById('branch').addEventListener('change', function () {
+  localStorage.setItem('selectedBranch', this.value);
+});
+
+// 📌 記住年月
+document.getElementById('month').addEventListener('change', function () {
+  localStorage.setItem('selectedMonth', this.value);
+});
+
+// 📌 頁面載入時套用儲存值
+window.addEventListener('DOMContentLoaded', function () {
+  const savedBranch = localStorage.getItem('selectedBranch');
+  const savedMonth = localStorage.getItem('selectedMonth');
+  if (savedBranch) document.getElementById('branch').value = savedBranch;
+  if (savedMonth) document.getElementById('month').value = savedMonth;
+});
+
 
 </script>
 
