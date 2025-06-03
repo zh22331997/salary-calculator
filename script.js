@@ -6,7 +6,7 @@ const MESSAGES = {
     HOUR_LIMIT_ERROR: "每格最多填寫 8 小時！",
     MULTI_DAY_LEAVE_ERROR: "同一天不能同時勾選多種假別的天數！",
     FULL_ATTENDANCE_LOST: " (沒有全勤了⚠️)",
-    MENSTRUAL_OVER_LIMIT: "(超過額度⚠️)", // 這個訊息在這個計算邏輯下可能不會被使用，但保留
+    MENSTRUAL_OVER_LIMIT: "(超過額度⚠️)", 
     COPY_SUCCESS: "✅ 已複製！",
     COPY_FAIL: "⚠️ 複製失敗，請手動選取內容！",
     IMPORT_SUCCESS: "假別統計結果已匯入不計薪計算！"
@@ -490,7 +490,7 @@ function calculateSalaryDeduction() {
         return;
     }
 
-    // 計算原始未取整的扣款金額
+    // 計算原始未取整的扣款金額 (依照你期望的邏輯)
     const dailyRate = salary / 30;
     const hourlyRate = salary / 30 / 8; // 基於每天8小時計算
 
@@ -505,39 +505,39 @@ function calculateSalaryDeduction() {
     const rawCashOutDayBonus = dailyRate * cashOutDays;
     const rawCashOutHourBonus = hourlyRate * cashOutHours;
 
-    // 最終加總時再進行無條件捨去 (Math.floor())
-    const totalDeduct = Math.floor(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
-    const totalCashOutBonus = Math.floor(rawCashOutDayBonus + rawCashOutHourBonus);
+    // 總扣薪金額和總折現金額使用四捨五入 (Math.round())
+    const totalDeduct = Math.round(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
+    const totalCashOutBonus = Math.round(rawCashOutDayBonus + rawCashOutHourBonus);
 
-    // 實領薪資也採用無條件捨去，以符合最終結果的呈現方式
-    const netSalary = Math.floor(salary - totalDeduct + totalCashOutBonus); 
+    // 計算最終實領薪資
+    // 實領薪水若有小數就無條件進位 (Math.ceil())
+    const netSalary = Math.ceil(salary - totalDeduct + totalCashOutBonus); 
     
-    // 構建結果字符串
     let formula = `${name ? name + "：" : ""}明細如下：\n`;
 
-    // 顯示時仍使用四捨五入後的個別金額
-    if (leaveDays) formula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元\n`;
-    if (leaveHours) formula += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元\n`;
-    if (sickDays) formula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元\n`;
-    if (sickHours) formula += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元\n`;
-    if (lateMinutes) formula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
-    if (menstrualHours) formula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
+    // 顯示時仍使用四捨五入後的個別金額 (Math.round())
+    if (leaveDays > 0) formula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元\n`;
+    if (leaveHours > 0) formula += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元\n`;
+    if (sickDays > 0) formula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元\n`;
+    if (sickHours > 0) formula += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元\n`;
+    if (lateMinutes > 0) formula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
+    if (menstrualHours > 0) formula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
 
-    formula += `不支薪金額：${totalDeduct} 元\n`;
+    formula += `不支薪金額：${totalDeduct} 元\n`; // 總扣薪金額四捨五入
 
     // 💰 顯示折現算式（放在所有 ➖ 扣薪公式之後）
-    if (cashOutDays) formula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
-    if (cashOutHours) formula += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
-    if (cashOutDays || cashOutHours) formula += `折現總金額：${totalCashOutBonus} 元\n`;
+    if (cashOutDays > 0) formula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
+    if (cashOutHours > 0) formula += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
+    if (cashOutDays > 0 || cashOutHours > 0) formula += `折現總金額：${totalCashOutBonus} 元\n`; // 總折現金額四捨五入
     
     // 計算最終實領薪資
     formula += `實領薪資：${salary.toLocaleString('zh-TW')} - ${totalDeduct.toLocaleString('zh-TW')} + ${totalCashOutBonus.toLocaleString('zh-TW')} = ${netSalary.toLocaleString('zh-TW')} 元`;
 
-    document.getElementById("salaryResult").innerText = formula; // 使用innerText確保純文本輸出
+    document.getElementById("salaryResult").innerText = formula; // 使用innerText以確保純文本輸出
 }
 
 function copyResultsSalary() {
-    const resultText = document.getElementById("salaryResult").innerText; // 複製純文本內容
+    const resultText = document.getElementById("salaryResult").innerText;
     navigator.clipboard.writeText(resultText).then(() => {
         showToast(MESSAGES.COPY_SUCCESS);
     }, () => {
