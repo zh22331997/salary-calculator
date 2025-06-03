@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -16,7 +15,7 @@
             margin-right: 0.5em;
         }
 
-        /* 統一的按鈕樣式 */
+        /* 統一按鈕樣式 */
 .btn {
   padding: 0.5em 1.2em;
   border: none;
@@ -24,35 +23,32 @@
   color: white;
   font-size: 1em;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: background-color 0.3s ease;
   margin: 0.3em;
 }
 
-/* 藍色主題按鈕 */
+/* 藍色按鈕 */
 .btn-blue {
   background-color: #3c82f6;
 }
 .btn-blue:hover {
   background-color: #2563eb;
-  transform: translateY(-2px);
 }
 
-/* 綠色主題按鈕 */
+/* 綠色按鈕（如：匯入） */
 .btn-green {
   background-color: #10b981;
 }
 .btn-green:hover {
   background-color: #0e9f6e;
-  transform: translateY(-2px);
 }
 
-/* 灰色按鈕（例如複製、次要功能） */
+/* 灰色按鈕（如：複製、次要操作） */
 .btn-gray {
   background-color: #6b7280;
 }
 .btn-gray:hover {
   background-color: #4b5563;
-  transform: translateY(-2px);
 }
 
 
@@ -134,16 +130,12 @@
             border: 1px dashed #ccc;
         }
 
-        .weekend {
-            font-weight: bold;
-        }
-
 
         tr.weekend-row:hover {
             background-color: #A29093;
         }
 
-
+        
         .date-input {
             width: 80px;
             margin-top: 5px;
@@ -184,11 +176,6 @@
     <div class="totals" id="resultsLeave" contenteditable="true"></div>
     <button class="btn btn-gray" onclick="copyResultsLeave()">📋 複製結果</button>
     <button class="btn btn-green" onclick="importToAll()">➔ 匯入 假別表格 與 不支薪計算</button>
-    
-
-
-
-
 
     
     <div style="margin-top: 30px; padding: 15px; background-color: #f7f6f4; border-radius: 16px;">
@@ -249,12 +236,10 @@
     <label>折現（小時）：</label>
     <input type="number" id="cashOutHoursSalary" style="width: 60px" placeholder="0"><br>
 
-    <button class="btn btn-green" onclick="calculateSalaryDeduction()">計算不支薪</button><br><br>
+    <button class="btn btn-blue" onclick="calculateSalaryDeduction()">計算不支薪</button>
+    <br><br>
     <div id="salaryResult"></div>
     <button class="btn btn-gray" onclick="copyResultsSalary()">📋 複製算式</button>
-    
-
-
 
 
     <script>
@@ -417,19 +402,6 @@
             }
         }
 
-        // ✅ 功能說明：
-        // 統計結果中的每筆明細會在日期後加上「(一)」「(二)」等星期文字（例如：5/13 (一)）
-        // 這有助於更直觀地了解是哪一天。
-        // 📌 若需進一步標示「國定假日」、「補班日」，可以擴充此函式。
-        function getChineseWeekday(dateStr) {
-            const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
-            const [month, day] = dateStr.split("/").map(Number);
-            const year = parseInt(document.getElementById("yearInput").value);
-            const date = new Date(year, month - 1, day);
-            return `(${weekDays[date.getDay()]})`;
-        }
-
-
         function calculateLeave() {
             const rows = document.querySelectorAll("#formArea table tr:not(:first-child)");
             // 清空記錄，避免重複累積
@@ -531,11 +503,7 @@
             let result = '';
             if (vDay > 0 || vHour > 0) {
                 result += `✅ 特休/補休：${vDay} 天 ${vHour} 小時`;
-               const vacationDetails = vacationRecords.map(record => {
-               const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
-            return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
-            }).join('、');
-
+                const vacationDetails = vacationRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
                 if (vacationDetails) result += `      ${vacationDetails}\n`;
                 else result += '\n'; // 確保換行
             }
@@ -543,16 +511,8 @@
             const totalBufferCount = lateNoDeductRecords.length + punchInCount + punchOutCount;
             if (lateNoDeductMin > 0 || punchInCount > 0 || punchOutCount > 0) {
             let bufferString = `✅ 全勤緩衝：`;
-            const lateDetails = lateNoDeductRecords.map(record => {
-            const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
-            return `(${record.date} ${weekday} ${record.minutes}分鐘)`;
-            }).join('、');
-
-            const punchCardDetails = punchCardMissRecords.map(record => {
-            const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
-            return `(${record.date} ${weekday} ${record.type})`;
-            }).join('、');
-
+            const lateDetails = lateNoDeductRecords.map(record => `(${record.date} ${record.minutes}分鐘)`).join('、');
+            const punchCardDetails = punchCardMissRecords.map(record => `(${record.date} ${record.type})`).join('、');
 
             if (lateNoDeductMin > 0) bufferString += `遲到不扣 ${lateDetails}`;
             if (punchInCount > 0 || punchOutCount > 0) {
@@ -565,66 +525,42 @@
 
             if (fDay > 0 || fHour > 0) {
                 result += `✅ 喪假：${fDay} 天 ${fHour} 小時`;
-                const funeralDetails = funeralRecords.map(record => {
-                const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
-                return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
-            }).join('、');
-
+                const funeralDetails = funeralRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
                 if (funeralDetails) result += `      ${funeralDetails}\n`;
                 else result += '\n'; // 確保換行
             }
 
             if (otHour > 0) {
                 result += `✅ 超時：${otHour} 小時`;
-                const overtimeDetails = overtimeRecords.map(record => {
-                const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
-                return `(${record.date} ${weekday} ${record.hours}小時)`;
-                }).join('、');
-
+                const overtimeDetails = overtimeRecords.map(record => `(${record.date} ${record.hours}小時)`).join('、');
                 if (overtimeDetails) result += `      ${overtimeDetails}\n`;
                 else result += '\n'; // 確保換行
             }
 
             if (pDay > 0 || pHour > 0) {
                 result += `✅ 事假：${pDay} 天 ${pHour} 小時`;
-                const leaveDetails = leaveRecords.map(record => {
-                const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
-                return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
-            }).join('、');
-
+                const leaveDetails = leaveRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
                 if (leaveDetails) result += `      ${leaveDetails}\n`;
                 else result += '\n'; // 確保換行
             }
 
             if (sDay > 0 || sHour > 0) {
                 result += `✅ 病假：${sDay} 天 ${sHour} 小時`;
-                const sickDetails = sickRecords.map(record => {
-                const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
-                return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
-            }).join('、');
-
+                const sickDetails = sickRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
                 if (sickDetails) result += `      ${sickDetails}\n`;
                 else result += '\n'; // 確保換行
             }
 
             if (mHour > 0) {
                 result += `✅ 生理假：${mHour} 小時 ${mHour > 8 ? "(超過額度⚠️)" : ""}`;
-                const mDetails = menstrualRecords.map(record => {
-                const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
-                return `(${record.date} ${weekday} ${record.hours}小時)`;
-            }).join('、');
-
+                const mDetails = menstrualRecords.map(record => `(${record.date} ${record.hours}小時)`).join('、');
                 if (mDetails) result += `　　${mDetails}\n`;
                 else result += '\n'; // 確保換行
             }
 
             if (lateMin > 0) {
                 result += `✅ 遲到：${lateMin} 分鐘`;
-                const lateDetails = lateRecords.map(record => {
-                const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
-                return `(${record.date} ${weekday} ${record.minutes}分鐘)`;
-            }).join('、');
-
+                const lateDetails = lateRecords.map(record => `(${record.date} ${record.minutes}分鐘)`).join('、');
                 if (lateDetails) result += `　　${lateDetails}\n`;
                 else result += '\n'; // 確保換行
             }
@@ -809,45 +745,6 @@
          }, duration);
         }
     </script>
-    
    
-<!-- Code injected by live-server -->
-<script>
-	// <![CDATA[  <-- For SVG support
-	if ('WebSocket' in window) {
-		(function () {
-			function refreshCSS() {
-				var sheets = [].slice.call(document.getElementsByTagName("link"));
-				var head = document.getElementsByTagName("head")[0];
-				for (var i = 0; i < sheets.length; ++i) {
-					var elem = sheets[i];
-					var parent = elem.parentElement || head;
-					parent.removeChild(elem);
-					var rel = elem.rel;
-					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
-						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
-						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
-					}
-					parent.appendChild(elem);
-				}
-			}
-			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
-			var address = protocol + window.location.host + window.location.pathname + '/ws';
-			var socket = new WebSocket(address);
-			socket.onmessage = function (msg) {
-				if (msg.data == 'reload') window.location.reload();
-				else if (msg.data == 'refreshcss') refreshCSS();
-			};
-			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
-				console.log('Live reload enabled.');
-				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
-			}
-		})();
-	}
-	else {
-		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
-	}
-	// ]]>
-</script>
 </body>
 </html>
