@@ -49,8 +49,8 @@ label {
 }
 
 table {
-    table-layout: fixed;
-    width: 80%; /*改寬度*/
+    table-layout: fixed; /* 固定欄寬 */
+    width: 80%; /* 表格的總寬度 */
     border-collapse: collapse;
     margin-top: 1.5em;
     background-color: white;
@@ -100,22 +100,30 @@ input[type="number"] {
     margin-right: 1em;
 }
 
-/* 每欄寬度設定 */
-table th:nth-child(1), table td:nth-child(1) { width: 20px; } /*日期*/
-table th:nth-child(2), table td:nth-child(2) { width: 20px; } /*星期*/
-table th:nth-child(3), table td:nth-child(3) { width: 30px; } /*特休(天)*/
-table th:nth-child(4), table td:nth-child(4) { width: 50px; } /*特休(時)*/
-table th:nth-child(5), table td:nth-child(5) { width: 30px; } /*事假(天)*/
-table th:nth-child(6), table td:nth-child(6) { width: 50px; } /*事假(時)*/
-table th:nth-child(7), table td:nth-child(7) { width: 30px; } /*病假(天)*/
-table th:nth-child(8), table td:nth-child(8) { width: 50px; } /*病假(時)*/
-table th:nth-child(9), table td:nth-child(9) { width: 50px; } /*遲到扣*/
-table th:nth-child(10), table td:nth-child(10) { width: 50px; } /*遲到三次五分鐘內(分鐘)*/
-table th:nth-child(11), table td:nth-child(11) { width: 50px; } /*漏打卡*/
-table th:nth-child(12), table td:nth-child(12) { width: 50px; } /*生理假*/
-table th:nth-child(13), table td:nth-child(13) { width: 30px; } /*喪假(天)*/
-table th:nth-child(14), table td:nth-child(14) { width: 50px; } /*喪假(時)*/
-table th:nth-child(15), table td:nth-child(15) { width: 50px; } /*超時(時)*/
+/* 每欄寬度設定 - 已將第11欄位的寬度整合到ID選擇器中 */
+table th:nth-child(1), table td:nth-child(1) { width: 20px; } /* 日期 */
+table th:nth-child(2), table td:nth-child(2) { width: 20px; } /* 星期 */
+table th:nth-child(3), table td:nth-child(3) { width: 30px; } /* 特休(天) */
+table th:nth-child(4), table td:nth-child(4) { width: 50px; } /* 特休(時) */
+table th:nth-child(5), table td:nth-child(5) { width: 30px; } /* 事假(天) */
+table th:nth-child(6), table td:nth-child(6) { width: 50px; } /* 事假(時) */
+table th:nth-child(7), table td:nth-child(7) { width: 30px; } /* 病假(天) */
+table th:nth-child(8), table td:nth-child(8) { width: 50px; } /* 病假(時) */
+table th:nth-child(9), table td:nth-child(9) { width: 50px; } /* 遲到扣 */
+table th:nth-child(10), table td:nth-child(10) { width: 50px; } /* 遲到三次五分鐘內(分鐘) */
+/* table th:nth-child(11), table td:nth-child(11) { width: 50px; } 漏打卡 - 此行已移除，由 #punchCardMissColumn 控制 */
+table th:nth-child(12), table td:nth-child(12) { width: 50px; } /* 生理假 */
+table th:nth-child(13), table td:nth-child(13) { width: 30px; } /* 喪假(天) */
+table th:nth-child(14), table td:nth-child(14) { width: 50px; } /* 喪假(時) */
+table th:nth-child(15), table td:nth-child(15) { width: 50px; } /* 超時(時) */
+
+/* 針對「漏打卡」欄位的寬度與不換行顯示設定 */
+#punchCardMissColumn {
+    width: 150px; /* 透過 ID 精確控制其寬度，並確保足夠容納內容 */
+    white-space: nowrap; /* 確保內容不換行 */
+    overflow: hidden; /* 如果文字超出，隱藏超出部分 */
+    text-overflow: ellipsis; /* 如果隱藏，顯示省略號 (...) */
+}
 
 .totals {
     margin-top: 20px;
@@ -144,9 +152,4 @@ tr.weekend-row:hover {
     gap: 4px; /* 調整間距 */
     flex-wrap: wrap;
     max-width: 150px;
-}
-
-#punchCardMissColumn {
-    width: 100px;
-    white-space: nowrap;
 }
