@@ -477,12 +477,12 @@ function calculateSalaryDeduction() {
     if (lateMinutes > 0) resultText += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
     if (menstrualHours > 0) resultText += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
 
-    resultText += `\n**不支薪總共：${totalDeduct.toLocaleString('zh-TW')} 元**\n`; // 顯示無條件捨去後的總額
+    resultText += `\n不支薪總共：${totalDeduct.toLocaleString('zh-TW')} 元\n`; // 顯示無條件捨去後的總額
 
     // 💰 顯示折現算式
     if (cashOutDays > 0) resultText += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
     if (cashOutHours > 0) resultText += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
-    if (cashOutDays > 0 || cashOutHours > 0) resultText += `**折現總共：${totalCashOutBonus.toLocaleString('zh-TW')} 元**\n`; // 顯示無條件進位後的總額
+    if (cashOutDays > 0 || cashOutHours > 0) resultText += `折現總共：${totalCashOutBonus.toLocaleString('zh-TW')} 元\n`; // 顯示無條件進位後的總額
 
     // 移除實領薪資的計算和顯示
 
