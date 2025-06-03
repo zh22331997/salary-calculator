@@ -276,7 +276,7 @@ function calculateLeave() {
             const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
             return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
         }).join('、');
-        if (vacationDetails) result += `      ${vacationDetails}\n`;
+        if (vacationDetails) result += `      ${vacationDetails}\n`;
         else result += '\n';
     }
 
@@ -308,7 +308,7 @@ function calculateLeave() {
             const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
             return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
         }).join('、');
-        if (funeralDetails) result += `      ${funeralDetails}\n`;
+        if (funeralDetails) result += `      ${funeralDetails}\n`;
         else result += '\n';
     }
 
@@ -318,7 +318,7 @@ function calculateLeave() {
             const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
             return `(${record.date} ${weekday} ${record.hours}小時)`;
         }).join('、');
-        if (overtimeDetails) result += `      ${overtimeDetails}\n`;
+        if (overtimeDetails) result += `      ${overtimeDetails}\n`;
         else result += '\n';
     }
 
@@ -328,7 +328,7 @@ function calculateLeave() {
             const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
             return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
         }).join('、');
-        if (leaveDetails) result += `      ${leaveDetails}\n`;
+        if (leaveDetails) result += `      ${leaveDetails}\n`;
         else result += '\n';
     }
 
@@ -338,7 +338,7 @@ function calculateLeave() {
             const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
             return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
         }).join('、');
-        if (sickDetails) result += `      ${sickDetails}\n`;
+        if (sickDetails) result += `      ${sickDetails}\n`;
         else result += '\n';
     }
 
@@ -385,7 +385,6 @@ function importToAll() {
     // 匯入表格的功能如果還沒實現，可以考慮在這裡呼叫相關函數
 }
 
-
 function importLeaveResults() {
     let totalLeaveDays = 0;
     let totalLeaveHours = 0;
@@ -429,48 +428,6 @@ function importLeaveResults() {
     document.getElementById("cashOutHoursSalary").value = inputCashOutHours;
 
     showToast(MESSAGES.IMPORT_SUCCESS);
-}
-
-function updateSummaryTable(ym, branch, name, type, subtotal, notes) {
-    const tbody = document.getElementById("summaryBody");
-    const row = document.createElement("tr");
-    [ym, branch, name, type, subtotal, notes].forEach(val => {
-        const td = document.createElement("td");
-        td.textContent = val;
-        td.style.border = "1px solid #ddd";
-        td.style.padding = "8px";
-        row.appendChild(td);
-    });
-    tbody.appendChild(row);
-}
-
-function copySummaryTable() {
-    const table = document.getElementById("summaryTable");
-    const range = document.createRange();
-    range.selectNode(table);
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-    try {
-        document.execCommand("copy");
-        showToast(MESSAGES.COPY_SUCCESS);
-    } catch {
-        showToast(MESSAGES.COPY_FAIL);
-    }
-    selection.removeAllRanges();
-}
-
-function exportSummaryCSV() {
-    const rows = document.querySelectorAll("#summaryTable tr");
-    const csv = Array.from(rows).map(row =>
-        Array.from(row.cells).map(cell => `"${cell.textContent.replace(/"/g, '""')}"`).join(",")
-    ).join("\n");
-
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "假別統計表格.csv";
-    link.click();
 }
 
 function calculateSalaryDeduction() {
@@ -529,8 +486,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('importToAllBtn').addEventListener('click', importToAll);
     document.getElementById('calculateSalaryDeductionBtn').addEventListener('click', calculateSalaryDeduction);
     document.getElementById('copyResultsSalaryBtn').addEventListener('click', copyResultsSalary);
-    document.getElementById('copySummaryTableBtn').addEventListener('click', copySummaryTable); // 複製表格按鈕
-    document.getElementById('exportSummaryCSVBtn').addEventListener('click', exportSummaryCSV); // 匯出CSV按鈕
+    // document.getElementById('copySummaryTableBtn').addEventListener('click', copySummaryTable); // 已移除
+    // document.getElementById('exportSummaryCSVBtn').addEventListener('click', exportSummaryCSV); // 已移除
 
     // 假別統計區塊的輸入框
     document.getElementById('teacherNameLeave').addEventListener('input', calculateLeave);
