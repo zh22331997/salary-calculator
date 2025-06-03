@@ -476,7 +476,6 @@ function calculateSalaryDeduction() {
     if (sickHours > 0) resultText += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元\n`;
     if (lateMinutes > 0) resultText += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
     if (menstrualHours > 0) resultText += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
-
     resultText += `不支薪總共：${totalDeduct.toLocaleString('zh-TW')} 元\n`; // 顯示無條件捨去後的總額
 
     // 💰 顯示折現算式
