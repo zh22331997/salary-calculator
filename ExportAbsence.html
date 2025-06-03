@@ -163,6 +163,12 @@ window.addEventListener('message', function(event) {
     }
   }
 });
+function getChineseWeekday(datestr) {
+  const [month, day] = datestr.split('/').map(Number);
+  const date = new Date(new Date().getFullYear(), month - 1, day);
+  const week = ['日', '一', '二', '三', '四', '五', '六'];
+  return week[date.getDay()];
+}
 
 function analyzeData() {
   const ym = document.getElementById('month').value;
@@ -189,43 +195,51 @@ function analyzeData() {
     let lateNDTotal = 0, lateNDCount = 0, lateNDDetails = [];
     let punchDetails = [];
 
-    while ((match = regex.exec(content)) !== null) {
-      const type = match[1].trim();
-      const subtotal = (match[2] || '').trim();
-      const notes = match[3].trim();
+  while ((match = regex.exec(content)) !== null) {
+  const type = match[1].trim();
+  const subtotal = (match[2] || '').trim();
+  const notes = match[3].trim();
 
-      if (type === '全勤緩衝') {
-        const lateNDMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*(\d+)分鐘\)/g)];
-        lateNDMatches.forEach(m => {
-          lateNDTotal += parseInt(m[2]);
-          lateNDCount++;
-          lateNDDetails.push(`${m[1]} ${m[2]}分鐘`);
-        });
-        const punchMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*(上班|下班)\)/g)];
-        punchMatches.forEach(m => punchDetails.push(`${m[1]} ${m[2]}`));
-      } else if (type === '遲到') {
-        const lateMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*(\d+)分鐘\)/g)];
-        lateMatches.forEach(m => {
-          lateTotal += parseInt(m[2]);
-          lateCount++;
-          lateDetails.push(`${m[1]} ${m[2]}分鐘`);
-        });
-      } else if (type === '預計折現' || type === '超時') {
-        continue;
-      } else {
-        const cleanNotes = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*([\d天小時分鐘]+)\)/g)]
-          .map(m => `${m[1]} ${m[2]}`).join('、');
-        tbody.innerHTML += `
-          <tr>
-            <td>${ym}</td>
-            <td>${branch}</td>
-            <td>${name}</td>
-            <td>${type}</td>
-            <td>${subtotal}</td>
-            <td>${cleanNotes}</td>
-          </tr>`;
-      }
-    }
+  if (type === '全勤緩衝') {
+    const lateNDMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*(\d+)分鐘\)/g)];
+    lateNDMatches.forEach(m => {
+      lateNDTotal += parseInt(m[2]);
+      lateNDCount++;
+      lateNDDetails.push(`${m[1]} ${getChineseWeekday(m[1])} ${m[2]}分鐘`);
+    });
+
+    const punchMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*(上班|下班)\)/g)];
+    punchMatches.forEach(m => {
+      punchDetails.push(`${m[1]} ${getChineseWeekday(m[1])} ${m[2]}`);
+    });
+
+  } else if (type === '遲到') {
+    const lateMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*(\d+)分鐘\)/g)];
+    lateMatches.forEach(m => {
+      lateTotal += parseInt(m[2]);
+      lateCount++;
+      lateDetails.push(`${m[1]} ${getChineseWeekday(m[1])} ${m[2]}分鐘`);
+    });
+
+  } else if (type === '預計折現' || type === '超時') {
+    continue;
+
+  } else {
+    const cleanNotes = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*([\d天小時分鐘]+)\)/g)]
+      .map(m => `${m[1]} ${getChineseWeekday(m[1])} ${m[2]}`).join('、');
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${ym}</td>
+        <td>${branch}</td>
+        <td>${name}</td>
+        <td>${type}</td>
+        <td>${subtotal}</td>
+        <td>${cleanNotes}</td>
+      </tr>`;
+  }
+}
+
 
     if (lateNDCount > 0) {
       tbody.innerHTML += `
