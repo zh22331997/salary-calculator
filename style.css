@@ -71,8 +71,6 @@ th {
     z-index: 1;
 }
 
-/* 斑馬紋樣式已移除，現在所有表格行都將繼承 table 的背景顏色或其父元素的背景顏色 */
-
 tr.sunday {
     background-color: #ffe5e5;
 }
