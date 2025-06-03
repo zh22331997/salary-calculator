@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>假別統計工具</title>
+    <style>
+        body {
+            font-family: "Segoe UI", "微軟正黑體", sans-serif;
+            background-color:#D4DCDB;
+            padding: 1.5em;
+            color: #333;
+        }
+
+        label {
+            margin-right: 0.5em;
+        }
+
+        button {
+            padding: 0.5em 1em;
+            background-color: #3c82f6;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-left: 1em;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        table {  
+            table-layout: fixed;
+            width: 80%;/*改寬度*/
+            border-collapse: collapse;
+            margin-top: 1.5em;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.6em;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f0f4f8;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tr.sunday {
+            background-color: #ffe5e5;
+        }
+
+        tr.saturday {
+            background-color: #e5f0ff;
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.3);
+            
+        }
+
+        input[type="text"] {
+            width: 6em;
+            padding: 0.3em;
+            margin-right: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[type="number"] {
+            width: 4em;
+            padding: 0.2em;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 1em;
+        }
+
+        /* 每欄寬度設定 */
+        table th:nth-child(1), table td:nth-child(1) { width: 20px; } /*日期*/
+        table th:nth-child(2), table td:nth-child(2) { width: 20px; } /*星期*/
+        table th:nth-child(3), table td:nth-child(3) { width: 30px; } /*特休(天)*/
+        table th:nth-child(4), table td:nth-child(4) { width: 50px; } /*特休(時)*/
+        table th:nth-child(5), table td:nth-child(5) { width: 30px; } /*事假(天)*/
+        table th:nth-child(6), table td:nth-child(6) { width: 50px; } /*事假(時)*/
+        table th:nth-child(7), table td:nth-child(7) { width: 30px; } /*病假(天)*/
+        table th:nth-child(8), table td:nth-child(8) { width: 50px; } /*病假(時)*/
+        table th:nth-child(9), table td:nth-child(9) { width: 50px; } /*遲到扣*/
+        table th:nth-child(10), table td:nth-child(10) { width: 50px; } /*遲到三次五分鐘內(分鐘)*/
+        table th:nth-child(11), table td:nth-child(11) { width: 50px; } /*漏打卡*/
+        table th:nth-child(12), table td:nth-child(12) { width: 50px; } /*生理假*/
+        table th:nth-child(13), table td:nth-child(13) { width: 30px; } /*喪假(天)*/
+        table th:nth-child(14), table td:nth-child(14) { width: 50px; } /*喪假(時)*/
+        table th:nth-child(15), table td:nth-child(15) { width: 50px; } /*超時(時)*/
+
+        .totals {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px dashed #ccc;
+        }
+
+        .weekend {
+            font-weight: bold;
+        }
+
+        .saturday {
+            background-color: #e6f7ff;
+        }
+
+        .sunday {
+            background-color: #ffe6e6;
+        }
+
+        tr.weekend-row:hover {
+            background-color: #A29093;
+        }
+
+        .import-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .import-button:hover {
+            background-color: #45a049;
+        }
+
+        .date-input {
+            width: 80px;
+            margin-top: 5px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center; /* 水平對齊 */
+            gap: 4px; /* 調整間距 */
+            flex-wrap: wrap;
+            max-width: 150px;
+            
+        }
+        
+        #punchCardMissColumn {
+            width: 100px;
+            white-space: nowrap;
+        }
+        
+        
+
+    </style>
+
+</head>
+<body>
+    <h2>假別登記與統計工具</h2>
+    <label>老師姓名（可留空）：<input type="text" id="teacherNameLeave" style="width: 100px" placeholder="例如：張正華" oninput="calculateLeave()"></label>
+    <label>💰預計折現特休（天）：<input type="number" id="inputCashOutDays" style="width:60px;" placeholder="0" oninput="calculateLeave()"></label>
+    <label>💰預計折現補休（時）：<input type="number" id="inputCashOutHours" style="width:60px;" placeholder="0" oninput="calculateLeave()"></label></br>
+
+    <label>年份：<input type="number" id="yearInput" value="" min="2000" max="2100"></label>
+    <label>月份（1~12）：<input type="number" id="monthInput" value="5" min="1" max="12"></label>
+    <button onclick="generateTable()">產生日期表</button>
+
+    <div id="formArea"></div>
+    <h3>統計結果（空白處點一下，再按複製）：</h3>
+    
+    <div class="totals" id="resultsLeave" contenteditable="true"></div>
+    <button onclick="copyResultsLeave()">📋 複製結果</button>
+    <button onclick="sendToIframe()">➔ 匯入資料給缺勤分析產生表格</button>
+    <button class="import-button" onclick="importLeaveResults()">➔ 匯入不支薪計算</button>
+    
+    <div style="margin-top: 30px; padding: 15px; background-color: #f7f6f4; border-radius: 16px;">
+    <h3 style="margin-bottom: 10px; color: #5a5a5a;">📄 缺勤分析結果</h3>
+    <iframe
+    src="https://zh22331997.github.io/salary-calculator/ExportAttendance.html"
+    width="100%"
+    height="600"
+    style="border: 4px solid #c2b9b0; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+    </iframe>
+    </div>
+    <div id="toast" style="
+     position: fixed;
+     bottom: 20px;
+     left: 50%;
+     transform: translateX(-50%);
+     background-color: #323232;
+     color: white;
+     padding: 10px 20px;
+     border-radius: 8px;
+     font-size: 0.95em;
+     opacity: 0;
+     transition: opacity 0.5s ease;
+     z-index: 1000;
+     pointer-events: none;
+     ">提示訊息</div>
+     <hr>
+
+    <h2>事病假 或 遲到 不計薪計算器</h2>
+
+    <label>老師姓名（可留空）：</label>
+    <input type="text" id="nameSalary" style="width: 100px" placeholder="例如：張正華"><br>
+
+    <label>原始月薪：</label>
+    <input type="number" id="salary" style="width: 100px;" placeholder="例如：32000"><br>
+
+    <label>事假（天）：</label>
+    <input type="number" id="leaveDaysSalary" style="width: 60px" placeholder="0">
+
+    <label>事假（小時）：</label>
+    <input type="number" id="leaveHoursSalary" style="width: 60px" placeholder="0"><br>
+
+    <label>病假（天）：</label>
+    <input type="number" id="sickDaysSalary" style="width: 60px" placeholder="0">
+
+    <label>病假（小時）：</label>
+    <input type="number" id="sickHoursSalary" style="width: 60px" placeholder="0"><br>
+
+    <label>生理假（小時）：</label>
+    <input type="number" id="menstrualHoursSalary" style="width: 60px" placeholder="0"><br>
+
+    <label>超過三次5分鐘的遲到（分鐘）：</label>
+    <input type="number" id="lateMinutesSalary" style="width: 60px" placeholder="0"><br>
+    
+    <label>折現（天）：</label>
+    <input type="number" id="cashOutDaysSalary" style="width: 60px" placeholder="0">
+    
+    <label>折現（小時）：</label>
+    <input type="number" id="cashOutHoursSalary" style="width: 60px" placeholder="0"><br>
+
+    <button onclick="calculateSalaryDeduction()">計算不支薪</button><br><br>
+    <div id="salaryResult"></div>
+    <button onclick="copyResultsSalary()">📋 複製算式</button>
+
+    <script>
+        document.getElementById("yearInput").value = new Date().getFullYear();
+
+        // 全局變數用於儲存記錄，以便匯入
+        let leaveRecords = [];
+        let sickRecords = [];
+        let lateRecords = [];
+        let lateNoDeductRecords = [];
+        let punchCardMissRecords = [];
+        let menstrualRecords = [];
+        let vacationRecords = [];
+        let funeralRecords = [];
+        let overtimeRecords = [];
+
+        // 假別天數防呆檢查函數
+        function checkLeaveDayConflict(currentCheckbox) {
+            const currentRow = currentCheckbox.closest('tr');
+            // 獲取同列中所有「天數」假別的 checkbox
+            const dayTypeCheckboxes = currentRow.querySelectorAll('input[type="checkbox"][data-type$="-day"]');
+            // 獲取同列中所有非「天數」假別的輸入框 (小時數、分鐘數、漏打卡)
+            const otherInputsInRow = currentRow.querySelectorAll('input[type="number"], input[name="punch-card-miss"]');
+
+            let checkedDayCount = 0;
+            let currentCheckboxName = currentCheckbox.name;
+            let otherCheckedDayType = '';
+
+            dayTypeCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    checkedDayCount++;
+                    if (checkbox !== currentCheckbox) {
+                        otherCheckedDayType = checkbox.name;
+                    }
+                }
+            });
+
+            if (checkedDayCount > 1) {
+                // 如果同時勾選了多個「天數」假別，則取消當前勾選並提示
+                showToast(`同一天不能同時勾選多種假別的天數！`);
+                currentCheckbox.checked = false; // 取消當前勾選
+            } else if (checkedDayCount === 1 && currentCheckbox.checked) {
+                // 如果只勾選了一個「天數」假別，則禁用並清空其他所有欄位
+                otherInputsInRow.forEach(input => {
+                    input.disabled = true;
+                    if (input.type === 'number') {
+                        input.value = ''; // 清空數字輸入
+                    } else if (input.type === 'checkbox') {
+                        input.checked = false; // 取消勾選漏打卡
+                    }
+                });
+            } else {
+                // 如果沒有任何「天數」假別被勾選 (或者取消勾選了唯一的那個)，則啟用所有其他欄位
+                otherInputsInRow.forEach(input => {
+                    input.disabled = false;
+                });
+            }
+            calculateLeave(); // 重新計算
+        }
+
+
+        function generateTable() {
+            const year = parseInt(document.getElementById("yearInput").value);
+            const month = parseInt(document.getElementById("monthInput").value);
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            let html = '<table><tr><th>日期</th><th>星期</th><th>特休<br>補休<br>(天)</th><th>特休<br>補休<br>(時)</th><th>事假<br>(天)</th><th>事假<br>(時)</th><th>病假<br>(天)</th><th>病假<br>(時)</th><th>遲到扣<br>(分鐘)</th><th>遲到三次五分鐘內<br>(分鐘)</th><th id="punchCardMissColumn">漏打卡</th><th>生理假<br>(時)</th><th>喪假<br>(天)</th><th>喪假<br>(時)</th><th>超時<br>(時)</th></tr>';
+
+            const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);
+                const displayDate = `${month}/${day}`;
+                const dayOfWeek = date.getDay();
+
+                let weekendClass = "";
+                if (dayOfWeek === 6) weekendClass = "saturday";
+                else if (dayOfWeek === 0) weekendClass = "sunday";
+
+                html += `<tr class="weekend-row ${weekendClass}">
+                <td>${displayDate}</td>
+                <td>(${weekDays[dayOfWeek]})</td>
+                <td>
+                <input type="checkbox" name="leave-v" data-type="v-day" value="1" onchange="checkLeaveDayConflict(this)">
+                <input type="hidden" name="leave-v-date" value="${displayDate}">
+                </td>
+                <td><input type="number" name="leave-v" data-type="v-hour" onchange="validateInput(this); calculateLeave();">
+                <input type="hidden" name="leave-v-date" value="${displayDate}">
+                </td>
+                <td>
+                <input type="checkbox" name="leave-p" data-type="p-day" value="1" onchange="checkLeaveDayConflict(this)">
+                <input type="hidden" name="leave-p-date" value="${displayDate}">
+                </td>
+                <td>
+                <input type="number" name="leave-p" data-type="p-hour" onchange="validateInput(this); calculateLeave();">
+                <input type="hidden" name="leave-p-date" value="${displayDate}">
+                </td>
+                <td>
+                <input type="checkbox" name="leave-s" data-type="s-day" value="1" onchange="checkLeaveDayConflict(this)">
+                <input type="hidden" name="leave-s-date" value="${displayDate}">
+                </td>
+                <td>
+                <input type="number" name="leave-s" data-type="s-hour" onchange="validateInput(this); calculateLeave();">
+                <input type="hidden" name="leave-s-date" value="${displayDate}">
+                </td>
+                <td>
+                <input type="number" name="late" data-type="late-min" onchange="validateInput(this); calculateLeave();">
+                <input type="hidden" name="late-date" value="${displayDate}">
+                </td>
+                <td>
+                <input type="number" name="late-no-deduct" data-type="late-no-deduct-min" onchange="validateInput(this); calculateLeave();">
+                <input type="hidden" name="late-no-deduct-date" value="${displayDate}">
+                </td>
+                <td>
+                <div class="checkbox-group">
+                <label><input type="checkbox" name="punch-card-miss" data-type="punch-in" data-date="${displayDate}" onchange="calculateLeave()">上班</label>
+                <label><input type="checkbox" name="punch-card-miss" data-type="punch-out" data-date="${displayDate}" onchange="calculateLeave()">下班</label>
+                </div>
+                </td>
+                <td><input type="number" name="leave-m" data-type="m-hour" onchange="validateInput(this); calculateLeave();">
+                <input type="hidden" name="leave-m-date" value="${displayDate}">
+                </td>
+                <td>
+                <input type="checkbox" name="leave-f" data-type="f-day" value="1" onchange="checkLeaveDayConflict(this)">
+                <input type="hidden" name="leave-f-date" value="${displayDate}">
+                </td>
+                <td>
+                <input type="number" name="leave-f" data-type="f-hour" onchange="validateInput(this); calculateLeave();">
+                <input type="hidden" name="leave-f-date" value="${displayDate}">
+                </td>
+                <td>
+                <input type="number" name="overtime" data-type="overtime-hour" onchange="validateInput(this); calculateLeave();">
+                <input type="hidden" name="overtime-date" value="${displayDate}">
+                </td>                
+                </tr>`;
+            }
+
+            html += '</table>';
+            document.getElementById("formArea").innerHTML = html;
+            document.getElementById("resultsLeave").innerText = '';
+            calculateLeave(); // 產生表格後自動計算
+        }
+
+        function validateInput(input) {
+            let value = parseFloat(input.value) || 0;
+
+            if (value < 0) {
+                showToast("數值不能是負數！");
+                input.value = 0;
+                return;
+            }
+            const dataType = input.getAttribute("data-type");
+            if (dataType.includes("day") && value > 1) {
+                showToast("假別（天）不能超過 1 天！");
+                input.value = 1;
+            }
+            if (dataType.includes("hour") && value > 8) {
+                showToast("每格最多填寫 8 小時！");
+                input.value = 8;
+            }
+        }
+
+        function calculateLeave() {
+            const rows = document.querySelectorAll("#formArea table tr:not(:first-child)");
+            // 清空記錄，避免重複累積
+            leaveRecords = [];
+            sickRecords = [];
+            lateRecords = [];
+            lateNoDeductRecords = [];
+            punchCardMissRecords = [];
+            menstrualRecords = [];
+            vacationRecords = [];
+            funeralRecords = [];
+            overtimeRecords = [];
+            
+            let vDay = 0, vHour = 0, pDay = 0, pHour = 0, sDay = 0, sHour = 0, lateMin = 0, lateNoDeductMin = 0;
+            let punchInCount = 0, punchOutCount = 0;
+            let mHour = 0;
+            let fDay = 0, fHour = 0; // 新增喪假天、時
+            let otHour = 0; // 新增超時時
+            
+            rows.forEach(row => {
+                const date = row.querySelector("td:first-child").innerText;
+                
+                // 獲取所有相關輸入框的值
+                const vDayChecked = row.querySelector("input[data-type='v-day']").checked ? 1 : 0;
+                // 注意：這裡需要檢查 input 是否被 disabled
+                const vHourInput = row.querySelector("input[data-type='v-hour']");
+                const vHourVal = vHourInput.disabled ? 0 : (parseFloat(vHourInput.value) || 0);
+
+                const pDayChecked = row.querySelector("input[data-type='p-day']").checked ? 1 : 0;
+                const pHourInput = row.querySelector("input[data-type='p-hour']");
+                const pHourVal = pHourInput.disabled ? 0 : (parseFloat(pHourInput.value) || 0);
+
+                const sDayChecked = row.querySelector("input[data-type='s-day']").checked ? 1 : 0;
+                const sHourInput = row.querySelector("input[data-type='s-hour']");
+                const sHourVal = sHourInput.disabled ? 0 : (parseFloat(sHourInput.value) || 0);
+
+                const lateMinInput = row.querySelector("input[data-type='late-min']");
+                const lateMinVal = lateMinInput.disabled ? 0 : (parseFloat(lateMinInput.value) || 0);
+
+                const lateNoDeductMinInput = row.querySelector("input[data-type='late-no-deduct-min']");
+                const lateNoDeductMinVal = lateNoDeductMinInput.disabled ? 0 : (parseFloat(lateNoDeductMinInput.value) || 0);
+
+                const punchCardMissCheckboxes = row.querySelectorAll("input[type='checkbox'][name='punch-card-miss']");
+                const punchInVal = punchCardMissCheckboxes[0].disabled ? false : punchCardMissCheckboxes[0].checked;
+                const punchOutVal = punchCardMissCheckboxes[1].disabled ? false : punchCardMissCheckboxes[1].checked;
+
+                const mHourInput = row.querySelector("input[data-type='m-hour']");
+                const mHourVal = mHourInput.disabled ? 0 : (parseFloat(mHourInput.value) || 0);
+                
+                const fDayChecked = row.querySelector("input[data-type='f-day']").checked ? 1 : 0; // 喪假天
+                const fHourInput = row.querySelector("input[data-type='f-hour']");
+                const fHourVal = fHourInput.disabled ? 0 : (parseFloat(fHourInput.value) || 0); // 喪假時
+
+                const otHourInput = row.querySelector("input[data-type='overtime-hour']");
+                const otHourVal = otHourInput.disabled ? 0 : (parseFloat(otHourInput.value) || 0); // 超時時
+                
+                // 累加總數
+                vDay += vDayChecked;
+                vHour += vHourVal;
+                pDay += pDayChecked;
+                pHour += pHourVal;
+                sDay += sDayChecked;
+                sHour += sHourVal;
+                lateMin += lateMinVal;
+                lateNoDeductMin += lateNoDeductMinVal;
+                fDay += fDayChecked;
+                fHour += fHourVal;
+                otHour += otHourVal;
+                
+                // 記錄詳細假別
+                if (vDayChecked) vacationRecords.push({ days: 1, date: date, type: '天' });
+                if (vHourVal > 0) vacationRecords.push({ hours: vHourVal, date: date, type: '小時' });
+                if (pDayChecked) leaveRecords.push({ days: 1, date: date });
+                if (pHourVal > 0) leaveRecords.push({ hours: pHourVal, date: date });
+                if (sDayChecked) sickRecords.push({ days: 1, date: date });
+                if (sHourVal > 0) sickRecords.push({ hours: sHourVal, date: date });
+                if (lateMinVal > 0) lateRecords.push({ minutes: lateMinVal, date: date });
+                if (lateNoDeductMinVal > 0) lateNoDeductRecords.push({ minutes: lateNoDeductMinVal, date: date });
+                if (punchInVal) {
+                    punchInCount++;
+                    punchCardMissRecords.push({ type: '上班', date: date });
+                }
+                if (punchOutVal) {
+                    punchOutCount++;
+                    punchCardMissRecords.push({ type: '下班', date: date });
+                }
+                if (mHourVal > 0) {
+                    menstrualRecords.push({ hours: mHourVal, date: date });
+                    mHour += mHourVal; // 這裡的mHour累加也應該在記錄之外
+                }
+                if (fDayChecked) funeralRecords.push({ days: 1, date: date });
+                if (fHourVal > 0) funeralRecords.push({ hours: fHourVal, date: date });
+                if (otHourVal > 0) overtimeRecords.push({ hours: otHourVal, date: date });
+            });
+
+            const name = document.getElementById("teacherNameLeave").value.trim();
+            const head = name ? `${name}\n` : '';
+
+            let result = '';
+            if (vDay > 0 || vHour > 0) {
+                result += `✅ 特休/補休：${vDay} 天 ${vHour} 小時`;
+                const vacationDetails = vacationRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
+                if (vacationDetails) result += `      ${vacationDetails}\n`;
+                else result += '\n'; // 確保換行
+            }
+
+            const totalBufferCount = lateNoDeductRecords.length + punchInCount + punchOutCount;
+            if (lateNoDeductMin > 0 || punchInCount > 0 || punchOutCount > 0) {
+            let bufferString = `✅ 全勤緩衝：`;
+            const lateDetails = lateNoDeductRecords.map(record => `(${record.date} ${record.minutes}分鐘)`).join('、');
+            const punchCardDetails = punchCardMissRecords.map(record => `(${record.date} ${record.type})`).join('、');
+
+            if (lateNoDeductMin > 0) bufferString += `遲到不扣 ${lateDetails}`;
+            if (punchInCount > 0 || punchOutCount > 0) {
+            if (lateNoDeductMin > 0) bufferString += "，";
+            bufferString += `漏打卡 ${punchCardDetails}`;
+            }
+            if (totalBufferCount > 3) bufferString += " (沒有全勤了⚠️)";
+            result += bufferString + "\n";
+            }
+
+            if (fDay > 0 || fHour > 0) {
+                result += `✅ 喪假：${fDay} 天 ${fHour} 小時`;
+                const funeralDetails = funeralRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
+                if (funeralDetails) result += `      ${funeralDetails}\n`;
+                else result += '\n'; // 確保換行
+            }
+
+            if (otHour > 0) {
+                result += `✅ 超時：${otHour} 小時`;
+                const overtimeDetails = overtimeRecords.map(record => `(${record.date} ${record.hours}小時)`).join('、');
+                if (overtimeDetails) result += `      ${overtimeDetails}\n`;
+                else result += '\n'; // 確保換行
+            }
+
+            if (pDay > 0 || pHour > 0) {
+                result += `✅ 事假：${pDay} 天 ${pHour} 小時`;
+                const leaveDetails = leaveRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
+                if (leaveDetails) result += `      ${leaveDetails}\n`;
+                else result += '\n'; // 確保換行
+            }
+
+            if (sDay > 0 || sHour > 0) {
+                result += `✅ 病假：${sDay} 天 ${sHour} 小時`;
+                const sickDetails = sickRecords.map(record => `(${record.date} ${record.hours || record.days}${record.hours ? '小時' : '天'})`).join('、');
+                if (sickDetails) result += `      ${sickDetails}\n`;
+                else result += '\n'; // 確保換行
+            }
+
+            if (mHour > 0) {
+                result += `✅ 生理假：${mHour} 小時 ${mHour > 8 ? "(超過額度⚠️)" : ""}`;
+                const mDetails = menstrualRecords.map(record => `(${record.date} ${record.hours}小時)`).join('、');
+                if (mDetails) result += `　　${mDetails}\n`;
+                else result += '\n'; // 確保換行
+            }
+
+            if (lateMin > 0) {
+                result += `✅ 遲到：${lateMin} 分鐘`;
+                const lateDetails = lateRecords.map(record => `(${record.date} ${record.minutes}分鐘)`).join('、');
+                if (lateDetails) result += `　　${lateDetails}\n`;
+                else result += '\n'; // 確保換行
+            }
+
+            const inputCashOutDays = parseFloat(document.getElementById("inputCashOutDays").value) || 0;
+            const inputCashOutHours = parseFloat(document.getElementById("inputCashOutHours").value) || 0;
+            if (inputCashOutDays > 0 || inputCashOutHours > 0) {
+                result += `💰 預計折現：${inputCashOutDays} 天 ${inputCashOutHours} 小時\n`;
+            }
+
+            document.getElementById("resultsLeave").innerText = head + result;
+        }
+
+        function copyResultsLeave() {
+            const resultText = document.getElementById("resultsLeave").innerText;
+            navigator.clipboard.writeText(resultText).then(() => {
+                showToast("已複製統計結果！");
+            }, () => {
+                showToast("複製失敗，請手動選取內容！");
+            });
+        }
+
+        function importLeaveResults() {
+            let totalLeaveDays = 0;
+            let totalLeaveHours = 0;
+            leaveRecords.forEach(record => {
+                if (record.days) totalLeaveDays += record.days;
+                if (record.hours) totalLeaveHours += record.hours;
+            });
+
+            let totalSickDays = 0;
+            let totalSickHours = 0;
+            sickRecords.forEach(record => {
+                if (record.days) totalSickDays += record.days;
+                if (record.hours) totalSickHours += record.hours;
+            });
+
+            let totalLateMinutes = 0;
+            lateRecords.forEach(record => {
+                if (record.minutes) totalLateMinutes += record.minutes;
+            });
+
+            let totalMenstrualHours = 0;
+            menstrualRecords.forEach(record => {
+                if (record.hours) totalMenstrualHours += record.hours;
+            });
+
+            document.getElementById("leaveDaysSalary").value = totalLeaveDays;
+            document.getElementById("leaveHoursSalary").value = totalLeaveHours;
+            document.getElementById("sickDaysSalary").value = totalSickDays;
+            document.getElementById("sickHoursSalary").value = totalSickHours;
+            document.getElementById("lateMinutesSalary").value = totalLateMinutes;
+            document.getElementById("menstrualHoursSalary").value = totalMenstrualHours;
+
+            const teacherNameLeave = document.getElementById("teacherNameLeave").value.trim();
+            if (teacherNameLeave) {
+                document.getElementById("nameSalary").value = teacherNameLeave;
+            }
+
+            const inputCashOutDays = parseFloat(document.getElementById("inputCashOutDays").value) || 0;
+            const inputCashOutHours = parseFloat(document.getElementById("inputCashOutHours").value) || 0;
+            document.getElementById("cashOutDaysSalary").value = inputCashOutDays;
+            document.getElementById("cashOutHoursSalary").value = inputCashOutHours;
+
+            showToast("假別統計結果已匯入不計薪計算！");
+        }
+    </script>
+
+
+    <hr>
+
+    <script>
+        function getValue(id) {
+            const val = parseFloat(document.getElementById(id).value);
+            return isNaN(val) ? 0 : val;
+        }
+
+        function calculateSalaryDeduction() {
+            const name = document.getElementById("nameSalary").value.trim();
+            const salary = getValue("salary");
+            const leaveDays = getValue("leaveDaysSalary");
+            const leaveHours = getValue("leaveHoursSalary");
+            const sickDays = getValue("sickDaysSalary");
+            const sickHours = getValue("sickHoursSalary");
+            const lateMinutes = getValue("lateMinutesSalary");
+            const menstrualHours = getValue("menstrualHoursSalary");
+
+            // 從全局變數中獲取詳細記錄
+            const leaveDaysNote = leaveRecords.filter(r => r.days).map(record => `（${record.date} ${record.days}天）`).join('');
+            const leaveHoursNote = leaveRecords.filter(r => r.hours).map(record => `（${record.date} ${record.hours}小時）`).join('');
+            const sickDaysNote = sickRecords.filter(r => r.days).map(record => `（${record.date} ${record.days}天）`).join('');
+            const sickHoursNote = sickRecords.filter(r => r.hours).map(record => `（${record.date} ${record.hours}小時）`).join('');
+            
+            const lateNote = lateRecords.map(record => `（${record.date} ${record.minutes}分鐘）`).join('');
+            const menstrualNote = menstrualRecords.map(record => `（${record.date} ${record.hours}小時）`).join('');
+
+            // vacationRecords 在這裡似乎沒有直接用於扣薪計算，但您可以根據需要添加。
+            // const vacationDaysNote = vacationRecords.filter(r => r.type === "天").map(record => `（${record.date} ${record.days}天）`).join('');
+            // const vacationHoursNote = vacationRecords.filter(r => r.type === "小時").map(record => `（${record.date} ${record.hours}小時）`).join('');
+
+            if (salary <= 0) {
+                document.getElementById("salaryResult").innerText = "⚠️ 請填入原始月薪";
+                return;
+            }
+
+            // 計算原始未取整的扣款金額
+            const rawLeaveDayDeduct = (salary / 30) * leaveDays;
+            const rawLeaveHourDeduct = (salary / 30 / 8) * leaveHours;
+            const rawSickDayDeduct = (salary / 30 / 2) * sickDays;
+            const rawSickHourDeduct = (salary / 30 / 8 / 2) * sickHours;
+            const rawLateDeduct = (salary / 30 / 8 / 60) * lateMinutes;
+            const rawMenstrualDeduct = (salary / 30 / 8 / 2) * menstrualHours;
+
+            // 💰 折現部分（加在 totalDeduct 上面）
+            const cashOutDays = getValue("cashOutDaysSalary");
+            const cashOutHours = getValue("cashOutHoursSalary");
+
+            // 計算原始未取整的折現金額
+            const rawCashOutDayBonus = (salary / 30) * cashOutDays;
+            const rawCashOutHourBonus = (salary / 30 / 8) * cashOutHours;
+            
+            // 最終加總時再進行四捨五入 (或您偏好的進位/捨去方式)
+            const totalDeduct = Math.round(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
+            const totalCashOutBonus = Math.round(rawCashOutDayBonus + rawCashOutHourBonus);
+
+
+            let formula = `${name ? name + "：" : ""}明細如下：\n`;
+
+            // 顯示時仍使用四捨五入後的個別金額，但總和是基於原始值
+            if (leaveDays) formula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元 ${leaveDaysNote}\n`;
+            if (leaveHours) formula += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元 ${leaveHoursNote}\n`;
+            if (sickDays) formula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元 ${sickDaysNote}\n`;
+            if (sickHours) formula += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元 ${sickHoursNote}\n`;
+            if (lateMinutes) formula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元 ${lateNote}\n`;
+            if (menstrualHours) formula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元 ${menstrualNote}\n`;
+
+            formula += `不支薪金額：${totalDeduct} 元\n`;
+            
+            // 💰 顯示折現算式（放在所有 ➖ 扣薪公式之後）
+            if (cashOutDays) formula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
+            if (cashOutHours) formula += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
+            if (cashOutDays || cashOutHours) formula += `折現總金額：${totalCashOutBonus} 元\n`;
+
+            document.getElementById("salaryResult").innerText = formula;
+        }
+
+        function copyResultsSalary() {
+            const text = document.getElementById("salaryResult").innerText;
+            if (!text) {
+                showToast("⚠️ 尚未產生結果");
+                return;
+            }
+            navigator.clipboard.writeText(text)
+                .then(() => showToast("✅ 已複製算式！"))
+                .catch(err => showToast("❌ 複製失敗：" + err));
+        }
+    </script>
+    <hr>
+    <script>   
+        function sendToIframe() {
+         const data = document.getElementById('resultsLeave').innerText;
+         const iframe = document.querySelector('iframe');
+         iframe.contentWindow.postMessage({ type: 'IMPORT_LEAVE_DATA', payload: data }, 'https://zh22331997.github.io');
+        }
+    </script>
+    <script>
+        function showToast(message, duration = 2500) {
+         const toast = document.getElementById('toast');
+         toast.textContent = message;
+         toast.style.opacity = 1;
+         setTimeout(() => {
+         toast.style.opacity = 0;
+         }, duration);
+        }
+    </script>
+   
+</body>
+</html>
