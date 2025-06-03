@@ -531,10 +531,29 @@ function calculateSalaryDeduction() {
     if (cashOutDays > 0 || cashOutHours > 0) formula += `折現總金額：${totalCashOutBonus} 元\n`; // 總折現金額四捨五入
     
     // 計算最終實領薪資
-    formula += `實領薪資：${salary.toLocaleString('zh-TW')} - ${totalDeduct.toLocaleString('zh-TW')} + ${totalCashOutBonus.toLocaleString('zh-TW')} = ${netSalary.toLocaleString('zh-TW')} 元`;
+     let formula = `實領薪資：${salary.toLocaleString('zh-TW')}`;
 
-    document.getElementById("salaryResult").innerText = formula; // 使用innerText以確保純文本輸出
-}
+     // 判斷是否顯示扣款
+     if (totalDeduct > 0) {
+     formula += ` - ${totalDeduct.toLocaleString('zh-TW')}`;
+     } else if (totalDeduct < 0) {
+     // 雖然不常見，但如果扣款是負數（代表加回來），則顯示為加項
+     formula += ` + ${Math.abs(totalDeduct).toLocaleString('zh-TW')}`;
+     }
+
+     // 判斷是否顯示獎金
+     if (totalCashOutBonus > 0) {
+     formula += ` + ${totalCashOutBonus.toLocaleString('zh-TW')}`;
+     } else if (totalCashOutBonus < 0) {
+     // 雖然不常見，但如果獎金是負數（代表扣掉），則顯示為減項
+     formula += ` - ${Math.abs(totalCashOutBonus).toLocaleString('zh-TW')}`; 
+     }
+
+     formula += ` = ${netSalary.toLocaleString('zh-TW')} 元`;
+
+     // 您現在可以使用這個 'formula' 字串來顯示最終結果
+     document.getElementById("salaryResult").innerText = formula; // 使用innerText以確保純文本輸出
+     }
 
 function copyResultsSalary() {
     const resultText = document.getElementById("salaryResult").innerText;
