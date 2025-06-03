@@ -177,8 +177,8 @@
     
     <div class="totals" id="resultsLeave" contenteditable="true"></div>
     <button onclick="copyResultsLeave()">📋 複製結果</button>
-    <button onclick="sendToIframe()">➔ 匯入資料給缺勤分析產生表格</button>
-    <button class="import-button" onclick="importLeaveResults()">➔ 匯入不支薪計算</button>
+    <button style="background-color: #0E9F6E;" onclick="importToAll()">➔ 匯入 假別表格 與 不支薪計算</button>
+
     
     <div style="margin-top: 30px; padding: 15px; background-color: #f7f6f4; border-radius: 16px;">
     <h3 style="margin-bottom: 10px; color: #5a5a5a;">📄 缺勤分析結果</h3>
@@ -627,6 +627,9 @@
 
             showToast("假別統計結果已匯入不計薪計算！");
         }
+
+   
+
     </script>
 
 
@@ -725,6 +728,12 @@
          const iframe = document.querySelector('iframe');
          iframe.contentWindow.postMessage({ type: 'IMPORT_LEAVE_DATA', payload: data }, 'https://zh22331997.github.io');
         }
+        function importToAll() {
+         sendToIframe();
+         importLeaveResults();
+         showToast("✅ 已匯入缺勤分析與不支薪計算");
+        }
+
     </script>
     <script>
         function showToast(message, duration = 2500) {
