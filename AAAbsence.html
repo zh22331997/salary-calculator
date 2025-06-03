@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>假別統計工具</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="buttons.css">
 </head>
 <body>
     <h2>假別登記與統計工具</h2>
@@ -22,25 +21,7 @@
     <div class="totals" id="resultsLeave" contenteditable="true"></div>
     <button class="btn btn-gray" id="copyResultsLeaveBtn">📋 複製結果</button>
     <button class="btn btn-green" id="importToAllBtn">➔ 匯入 假別表格 與 不支薪計算</button>
-    <h3 style="margin-top: 30px;">統計結果(表格)</h3>
-    <table id="summaryTable" style="border-collapse: collapse; width: 100%; font-family: 'Segoe UI', '微軟正黑體', sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background-color: white;">
-        <thead style="background-color: #e7e6e4;">
-            <tr>
-                <th>年月</th>
-                <th>分校</th>
-                <th>姓名</th>
-                <th>假別/類型</th>
-                <th>小計</th>
-                <th>備註</th>
-            </tr>
-        </thead>
-        <tbody id="summaryBody"></tbody>
-    </table>
-    <div class="button-group">
-        <button class="btn btn-gray" id="copySummaryTableBtn">📋 複製表格</button>
-        <button class="btn btn-green" id="exportSummaryCSVBtn">💾 匯出 CSV</button>
-    </div>
-    
+        
     <div style="margin-top: 30px; padding: 15px; background-color: #f7f6f4; border-radius: 16px;">
         <h3 style="margin-bottom: 10px; color: #5a5a5a;">📄 缺勤分析結果</h3>
         <iframe
