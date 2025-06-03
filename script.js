@@ -80,8 +80,10 @@ function checkLeaveDayConflict(currentCheckbox) {
 
     let checkedDayCount = 0;
     dayTypeCheckboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            checkedDayCount++;
+        if (checkbox) { // 確保 checkbox 存在
+            if (checkbox.checked) {
+                checkedDayCount++;
+            }
         }
     });
 
@@ -91,7 +93,7 @@ function checkLeaveDayConflict(currentCheckbox) {
     } else if (checkedDayCount === 1 && currentCheckbox.checked) {
         // 如果只勾選了一個「天數」假別，則禁用並清空其他所有欄位
         otherInputsInRow.forEach(input => {
-            if (input !== currentCheckbox) { // 避免禁用當前被勾選的 checkbox
+            if (input && input !== currentCheckbox) { // 確保 input 存在且不是當前被勾選的 checkbox
                 input.disabled = true;
                 if (input.type === 'number') {
                     input.value = '';
@@ -103,7 +105,9 @@ function checkLeaveDayConflict(currentCheckbox) {
     } else {
         // 如果沒有任何「天數」假別被勾選 (或者取消勾選了唯一的那個)，則啟用所有其他欄位
         otherInputsInRow.forEach(input => {
-            input.disabled = false;
+            if (input) { // 確保 input 存在
+                input.disabled = false;
+            }
         });
     }
     calculateLeave(); // 重新計算
@@ -443,7 +447,7 @@ function calculateSalaryDeduction() {
     const cashOutDays = getValue("cashOutDaysSalary");
     const cashOutHours = getValue("cashOutHoursSalary");
 
-    // 計算不支薪金額（這些是原始、**未四捨五入的精確值**）
+    // 計算不支薪金額（這些是原始、未四捨五入的精確值）
     const rawLeaveDayDeduct = leaveDays * (salary / 30);
     const rawLeaveHourDeduct = leaveHours * (salary / 30 / 8);
     const rawSickDayDeduct = sickDays * (salary / 30 / 2); // 病假半薪
@@ -451,54 +455,39 @@ function calculateSalaryDeduction() {
     const rawLateDeduct = lateMinutes * (salary / 30 / 8 / 60);
     const rawMenstrualDeduct = menstrualHours * (salary / 30 / 8 / 2); // 生理假半薪 (通常)
 
-    // 計算折現金額（這些是原始、**未四捨五入的精確值**）
+    // 計算折現金額（這些是原始、未四捨五入的精確值）
     const rawCashOutDayBonus = cashOutDays * (salary / 30);
     const rawCashOutHourBonus = cashOutHours * (salary / 30 / 8);
 
-    // 這些變數用於在「明細」中**顯示四捨五入後的總和**
-    const totalDeductForDisplay = Math.round(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
-    const totalCashOutBonusForDisplay = Math.round(rawCashOutDayBonus + rawCashOutHourBonus);
+    // 計算「不支薪總共幾元」，最終數字要無條件捨去 (Math.floor)
+    // 這裡的加總使用原始精確值，然後才進行 Math.floor
+    const totalDeduct = Math.floor(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
+    
+    // 計算「折現總共幾元」，最終數字要無條件進位 (Math.ceil)
+    // 這裡的加總使用原始精確值，然後才進行 Math.ceil
+    const totalCashOutBonus = Math.ceil(rawCashOutDayBonus + rawCashOutHourBonus);
 
-    // 計算最終的「實領薪資」，這裡使用所有**原始精確值**進行加總，然後再進行 Math.ceil() 無條件進位
-    const netSalary = Math.ceil(
-        salary - 
-        (rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct) +
-        (rawCashOutDayBonus + rawCashOutHourBonus)
-    );
+    let resultText = `${name ? name + "：" : ""}明細如下：\n`;
 
-    let detailFormula = `${name ? name + "：" : ""}明細如下：\n`;
+    // 顯示個別扣薪明細時，仍使用四捨五入 (Math.round())
+    if (leaveDays > 0) resultText += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元\n`;
+    if (leaveHours > 0) resultText += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元\n`;
+    if (sickDays > 0) resultText += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元\n`;
+    if (sickHours > 0) resultText += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元\n`;
+    if (lateMinutes > 0) resultText += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
+    if (menstrualHours > 0) resultText += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
 
-    // 顯示時仍使用四捨五入後的個別金額 (Math.round())
-    if (leaveDays > 0) detailFormula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元\n`;
-    if (leaveHours > 0) detailFormula += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元\n`;
-    if (sickDays > 0) detailFormula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元\n`;
-    if (sickHours > 0) detailFormula += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元\n`;
-    if (lateMinutes > 0) detailFormula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
-    if (menstrualHours > 0) detailFormula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
+    resultText += `\n**不支薪總共：${totalDeduct.toLocaleString('zh-TW')} 元**\n`; // 顯示無條件捨去後的總額
 
-    detailFormula += `不支薪金額：${totalDeductForDisplay} 元\n`; // 總扣薪金額顯示四捨五入
+    // 💰 顯示折現算式
+    if (cashOutDays > 0) resultText += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
+    if (cashOutHours > 0) resultText += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
+    if (cashOutDays > 0 || cashOutHours > 0) resultText += `**折現總共：${totalCashOutBonus.toLocaleString('zh-TW')} 元**\n`; // 顯示無條件進位後的總額
 
-    // 💰 顯示折現算式（放在所有 ➖ 扣薪公式之後）
-    if (cashOutDays > 0) detailFormula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
-    if (cashOutHours > 0) detailFormula += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
-    if (cashOutDays > 0 || cashOutHours > 0) detailFormula += `折現總金額：${totalCashOutBonusForDisplay} 元\n`; // 總折現金額顯示四捨五入
+    // 移除實領薪資的計算和顯示
 
-    // 計算最終實領薪資的總結部分
-    let summaryFormula = `實領薪資：${salary.toLocaleString('zh-TW')}`;
-    if (totalDeductForDisplay > 0) { // 這裡用於顯示的減項，仍使用四捨五入的值
-        summaryFormula += ` - ${totalDeductForDisplay.toLocaleString('zh-TW')}`;
-    } else if (totalDeductForDisplay < 0) { 
-        summaryFormula += ` + ${Math.abs(totalDeductForDisplay).toLocaleString('zh-TW')}`;
-    }
-    if (totalCashOutBonusForDisplay > 0) { // 這裡用於顯示的加項，仍使用四捨五入的值
-        summaryFormula += ` + ${totalCashOutBonusForDisplay.toLocaleString('zh-TW')}`;
-    } else if (totalCashOutBonusForDisplay < 0) { 
-        summaryFormula += ` - ${Math.abs(totalCashOutBonusForDisplay).toLocaleString('zh-TW')}`;
-    }
-    summaryFormula += ` = ${netSalary.toLocaleString('zh-TW')} 元`; // 最終實領薪資使用精確計算後的值
-
-    // 將兩部分合併顯示
-    document.getElementById("salaryResult").innerText = detailFormula + "\n" + summaryFormula;
+    // 將結果顯示在頁面上
+    document.getElementById("salaryResult").innerText = resultText;
 }
 
 function copyResultsSalary() {
