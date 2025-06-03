@@ -481,84 +481,56 @@ function calculateSalaryDeduction() {
     const sickDays = getValue("sickDaysSalary");
     const sickHours = getValue("sickHoursSalary");
     const lateMinutes = getValue("lateMinutesSalary");
-    const menstrualHours = getValue("menstrualHoursSalary");
+    const menstrualHours = getValue("menstrualHoursSalary"); // 生理假小時
     const cashOutDays = getValue("cashOutDaysSalary");
     const cashOutHours = getValue("cashOutHoursSalary");
 
-    const dailySalary = salary / 30; // 假設一個月30天
-    const hourlySalary = salary / 240; // 假設一個月工作240小時 (30天*8小時/天)
-
-    let deduction = 0;
-    let deductionFormula = [];
-
-    // 事假扣薪 (不計薪)
-    if (leaveDays > 0) {
-        deduction += leaveDays * dailySalary;
-        deductionFormula.push(`${leaveDays}天事假 = ${leaveDays}天 * ${dailySalary.toFixed(2)}元/天 = ${ (leaveDays * dailySalary).toFixed(2)}元`);
-    }
-    if (leaveHours > 0) {
-        deduction += leaveHours * hourlySalary;
-        deductionFormula.push(`${leaveHours}小時事假 = ${leaveHours}小時 * ${hourlySalary.toFixed(2)}元/小時 = ${ (leaveHours * hourlySalary).toFixed(2)}元`);
+    if (salary <= 0) {
+        document.getElementById("salaryResult").innerText = "⚠️ 請填入原始月薪";
+        return;
     }
 
-    // 病假扣薪 (半薪)
-    if (sickDays > 0) {
-        deduction += (sickDays * dailySalary) / 2;
-        deductionFormula.push(`${sickDays}天病假 = (${sickDays}天 * ${dailySalary.toFixed(2)}元/天) / 2 = ${ ((sickDays * dailySalary) / 2).toFixed(2)}元`);
-    }
-    if (sickHours > 0) {
-        deduction += (sickHours * hourlySalary) / 2;
-        deductionFormula.push(`${sickHours}小時病假 = (${sickHours}小時 * ${hourlySalary.toFixed(2)}元/小時) / 2 = ${ ((sickHours * hourlySalary) / 2).toFixed(2)}元`);
-    }
+    // 計算原始未取整的扣款金額 (依照你期望的邏輯)
+    const dailyRate = salary / 30;
+    const hourlyRate = salary / 30 / 8; // 基於每天8小時計算
 
-    // 生理假扣薪 (超過一天部分半薪)
-    // 假設一個月生理假額度為 8 小時（一天）
-    const menstrualDeductibleHours = Math.max(0, menstrualHours - 8);
-    if (menstrualDeductibleHours > 0) {
-        deduction += (menstrualDeductibleHours * hourlySalary) / 2;
-        deductionFormula.push(`超過8小時生理假 = (${menstrualDeductibleHours}小時 * ${hourlySalary.toFixed(2)}元/小時) / 2 = ${ ((menstrualDeductibleHours * hourlySalary) / 2).toFixed(2)}元`);
-    }
+    const rawLeaveDayDeduct = dailyRate * leaveDays;
+    const rawLeaveHourDeduct = hourlyRate * leaveHours;
+    const rawSickDayDeduct = (dailyRate / 2) * sickDays; // 病假半薪
+    const rawSickHourDeduct = (hourlyRate / 2) * sickHours; // 病假半薪
+    const rawLateDeduct = (hourlyRate / 60) * lateMinutes; // 遲到按分鐘扣
+    const rawMenstrualDeduct = (hourlyRate / 2) * menstrualHours; // 生理假半薪
 
-    // 遲到扣薪 (每分鐘)
-    if (lateMinutes > 0) {
-        // 遲到每分鐘扣薪，這裡假設每分鐘扣除的金額是 hourlySalary / 60
-        const deductionPerMinute = hourlySalary / 60;
-        deduction += lateMinutes * deductionPerMinute;
-        deductionFormula.push(`${lateMinutes}分鐘遲到 = ${lateMinutes}分鐘 * ${deductionPerMinute.toFixed(2)}元/分鐘 = ${ (lateMinutes * deductionPerMinute).toFixed(2)}元`);
-    }
+    // 💰 折現部分
+    const rawCashOutDayBonus = dailyRate * cashOutDays;
+    const rawCashOutHourBonus = hourlyRate * cashOutHours;
 
-    // 特休/補休折現
-    let cashOutAmount = 0;
-    if (cashOutDays > 0) {
-        cashOutAmount += cashOutDays * dailySalary;
-        deductionFormula.push(`折現特休/補休 ${cashOutDays}天 = ${cashOutDays}天 * ${dailySalary.toFixed(2)}元/天 = ${ (cashOutDays * dailySalary).toFixed(2)}元`);
-    }
-    if (cashOutHours > 0) {
-        cashOutAmount += cashOutHours * hourlySalary;
-        deductionFormula.push(`折現特休/補休 ${cashOutHours}小時 = ${cashOutHours}小時 * ${hourlySalary.toFixed(2)}元/小時 = ${ (cashOutHours * hourlySalary).toFixed(2)}元`);
-    }
+    // 最終加總時再進行無條件捨去 (Math.floor())
+    const totalDeduct = Math.floor(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
+    const totalCashOutBonus = Math.floor(rawCashOutDayBonus + rawCashOutHourBonus);
 
-    const netSalary = salary - deduction + cashOutAmount;
+    let formula = `${name ? name + "：\n" : ""}明細如下：\n`;
 
-    let resultHtml = `<h3>${name ? name + ' 的 ' : ''}薪資計算結果</h3>`;
-    resultHtml += `<p>原始月薪： ${salary.toLocaleString('zh-TW')} 元</p>`;
-    resultHtml += `<p>平均日薪（原始月薪 / 30天）： ${dailySalary.toFixed(2)} 元</p>`;
-    resultHtml += `<p>平均時薪（原始月薪 / 240小時）： ${hourlySalary.toFixed(2)} 元</p>`;
+    // 顯示時仍使用四捨五入後的個別金額 (這邊維持 Math.round，因為你之前的要求是「顯示時仍使用四捨五入後的個別金額」)
+    if (leaveDays) formula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元\n`;
+    if (leaveHours) formula += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元\n`;
+    if (sickDays) formula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元\n`;
+    if (sickHours) formula += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元\n`;
+    if (lateMinutes) formula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
+    if (menstrualHours) formula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
 
-    if (deductionFormula.length > 0) {
-        resultHtml += `<p>扣薪明細：</p><ul>`;
-        deductionFormula.forEach(item => {
-            resultHtml += `<li>${item}</li>`;
-        });
-        resultHtml += `</ul>`;
-    }
+    formula += `不支薪金額：${totalDeduct} 元\n`;
 
-    resultHtml += `<p>總扣薪金額： ${deduction.toFixed(2)} 元</p>`;
-    resultHtml += `<p>總折現金額： ${cashOutAmount.toFixed(2)} 元</p>`;
-    resultHtml += `<p>實領薪資： ${salary.toLocaleString('zh-TW')} - ${deduction.toFixed(2)} + ${cashOutAmount.toFixed(2)} = <strong style="color: red;">${netSalary.toFixed(2).toLocaleString('zh-TW')}</strong> 元</p>`;
+    // 💰 顯示折現算式（放在所有 ➖ 扣薪公式之後）
+    if (cashOutDays) formula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
+    if (cashOutHours) formula += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
+    if (cashOutDays || cashOutHours) formula += `折現總金額：${totalCashOutBonus} 元\n`;
+    
+    // 計算最終實領薪資
+    const netSalary = salary - totalDeduct + totalCashOutBonus;
+    formula += `實領薪資：${salary.toLocaleString('zh-TW')} - ${totalDeduct.toLocaleString('zh-TW')} + ${totalCashOutBonus.toLocaleString('zh-TW')} = <strong style="color: red;">${netSalary.toLocaleString('zh-TW')}</strong> 元`;
 
-
-    document.getElementById("salaryResult").innerHTML = resultHtml;
+    document.getElementById("salaryResult").innerText = formula; // 使用innerText以避免HTML標籤混淆
 }
 
 function copyResultsSalary() {
