@@ -474,94 +474,46 @@ function exportSummaryCSV() {
 }
 
 function calculateSalaryDeduction() {
-    const name = document.getElementById("nameSalary").value.trim();
-    const salary = getValue("salary");
-    const leaveDays = getValue("leaveDaysSalary");
-    const leaveHours = getValue("leaveHoursSalary");
-    const sickDays = getValue("sickDaysSalary");
-    const sickHours = getValue("sickHoursSalary");
-    const lateMinutes = getValue("lateMinutesSalary");
-    const menstrualHours = getValue("menstrualHoursSalary"); // 生理假小時
-    const cashOutDays = getValue("cashOutDaysSalary");
-    const cashOutHours = getValue("cashOutHoursSalary");
+    // ... 獲取所有輸入值的程式碼 ...
 
-    if (salary <= 0) {
-        document.getElementById("salaryResult").innerText = "⚠️ 請填入原始月薪";
-        return;
-    }
-
-    // 計算原始未取整的扣款金額 (依照你期望的邏輯)
-    const dailyRate = salary / 30;
-    const hourlyRate = salary / 30 / 8; // 基於每天8小時計算
-
-    const rawLeaveDayDeduct = dailyRate * leaveDays;
-    const rawLeaveHourDeduct = hourlyRate * leaveHours;
-    const rawSickDayDeduct = (dailyRate / 2) * sickDays; // 病假半薪
-    const rawSickHourDeduct = (hourlyRate / 2) * sickHours; // 病假半薪
-    const rawLateDeduct = (hourlyRate / 60) * lateMinutes; // 遲到按分鐘扣
-    const rawMenstrualDeduct = (hourlyRate / 2) * menstrualHours; // 生理假半薪
-
-    // 💰 折現部分
-    const rawCashOutDayBonus = dailyRate * cashOutDays;
-    const rawCashOutHourBonus = hourlyRate * cashOutHours;
-
-    // 總扣薪金額和總折現金額使用四捨五入 (Math.round())
+    const salary = getValue("salary"); // 原始月薪
     const totalDeduct = Math.round(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
     const totalCashOutBonus = Math.round(rawCashOutDayBonus + rawCashOutHourBonus);
+    const netSalary = Math.ceil(salary - totalDeduct + totalCashOutBonus);
 
-    // 計算最終實領薪資
-    // 實領薪水若有小數就無條件進位 (Math.ceil())
-    const netSalary = Math.ceil(salary - totalDeduct + totalCashOutBonus); 
-    
-    let formula = `${name ? name + "：" : ""}明細如下：\n`;
+    let detailFormula = `${name ? name + "：" : ""}明細如下：\n`;
 
     // 顯示時仍使用四捨五入後的個別金額 (Math.round())
-    if (leaveDays > 0) formula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元\n`;
-    if (leaveHours > 0) formula += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元\n`;
-    if (sickDays > 0) formula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元\n`;
-    if (sickHours > 0) formula += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元\n`;
-    if (lateMinutes > 0) formula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
-    if (menstrualHours > 0) formula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
+    if (leaveDays > 0) detailFormula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元\n`;
+    if (leaveHours > 0) detailFormula += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元\n`;
+    if (sickDays > 0) detailFormula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元\n`;
+    if (sickHours > 0) detailFormula += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元\n`;
+    if (lateMinutes > 0) detailFormula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
+    if (menstrualHours > 0) detailFormula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
 
-    formula += `不支薪金額：${totalDeduct} 元\n`; // 總扣薪金額四捨五入
+    detailFormula += `不支薪金額：${totalDeduct} 元\n`; // 總扣薪金額四捨五入
 
     // 💰 顯示折現算式（放在所有 ➖ 扣薪公式之後）
-    if (cashOutDays > 0) formula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
-    if (cashOutHours > 0) formula += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
-    if (cashOutDays > 0 || cashOutHours > 0) formula += `折現總金額：${totalCashOutBonus} 元\n`; // 總折現金額四捨五入
-    
-    // 計算最終實領薪資
-     let formula = `實領薪資：${salary.toLocaleString('zh-TW')}`;
+    if (cashOutDays > 0) detailFormula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
+    if (cashOutHours > 0) detailFormula += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
+    if (cashOutDays > 0 || cashOutHours > 0) detailFormula += `折現總金額：${totalCashOutBonus} 元\n`; // 總折現金額四捨五入
 
-     // 判斷是否顯示扣款
-     if (totalDeduct > 0) {
-     formula += ` - ${totalDeduct.toLocaleString('zh-TW')}`;
-     } else if (totalDeduct < 0) {
-     // 雖然不常見，但如果扣款是負數（代表加回來），則顯示為加項
-     formula += ` + ${Math.abs(totalDeduct).toLocaleString('zh-TW')}`;
-     }
+    // 計算最終實領薪資的總結部分
+    let summaryFormula = `實領薪資：${salary.toLocaleString('zh-TW')}`;
+    if (totalDeduct > 0) {
+        summaryFormula += ` - ${totalDeduct.toLocaleString('zh-TW')}`;
+    } else if (totalDeduct < 0) { // 雖然不常見，但如果扣款是負數（代表加回來），則顯示為加項
+        summaryFormula += ` + ${Math.abs(totalDeduct).toLocaleString('zh-TW')}`;
+    }
+    if (totalCashOutBonus > 0) {
+        summaryFormula += ` + ${totalCashOutBonus.toLocaleString('zh-TW')}`;
+    } else if (totalCashOutBonus < 0) { // 雖然不常見，但如果獎金是負數（代表扣掉），則顯示為減項
+        summaryFormula += ` - ${Math.abs(totalCashOutBonus).toLocaleString('zh-TW')}`;
+    }
+    summaryFormula += ` = ${netSalary.toLocaleString('zh-TW')} 元`;
 
-     // 判斷是否顯示獎金
-     if (totalCashOutBonus > 0) {
-     formula += ` + ${totalCashOutBonus.toLocaleString('zh-TW')}`;
-     } else if (totalCashOutBonus < 0) {
-     // 雖然不常見，但如果獎金是負數（代表扣掉），則顯示為減項
-     formula += ` - ${Math.abs(totalCashOutBonus).toLocaleString('zh-TW')}`; 
-     }
-
-     formula += ` = ${netSalary.toLocaleString('zh-TW')} 元`;
-
-     // 您現在可以使用這個 'formula' 字串來顯示最終結果
-     document.getElementById("salaryResult").innerText = formula; // 使用innerText以確保純文本輸出
-     }
-
-function copyResultsSalary() {
-    const resultText = document.getElementById("salaryResult").innerText;
-    navigator.clipboard.writeText(resultText).then(() => {
-        showToast(MESSAGES.COPY_SUCCESS);
-    }, () => {
-        showToast(MESSAGES.COPY_FAIL);
-    });
+    // 將兩部分合併顯示
+    document.getElementById("salaryResult").innerText = detailFormula + "\n" + summaryFormula;
 }
 
 
