@@ -9,44 +9,7 @@ label {
     margin-right: 0.5em;
 }
 
-/* 統一的按鈕樣式 */
-.btn {
-    padding: 0.5em 1.2em;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    margin: 0.3em;
-}
-
-/* 藍色主題按鈕 */
-.btn-blue {
-    background-color: #3c82f6;
-}
-.btn-blue:hover {
-    background-color: #2563eb;
-    transform: translateY(-2px);
-}
-
-/* 綠色主題按鈕 */
-.btn-green {
-    background-color: #10b981;
-}
-.btn-green:hover {
-    background-color: #0e9f6e;
-    transform: translateY(-2px);
-}
-
-/* 灰色按鈕（例如複製、次要功能） */
-.btn-gray {
-    background-color: #6b7280;
-}
-.btn-gray:hover {
-    background-color: #4b5563;
-    transform: translateY(-2px);
-}
+/* 這裡已經沒有按鈕相關的 CSS 了 */
 
 table {
     table-layout: fixed; /* 固定欄寬 */
