@@ -276,7 +276,7 @@ function calculateLeave() {
             const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
             return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
         }).join('、');
-        if (vacationDetails) result += `      ${vacationDetails}\n`;
+        if (vacationDetails) result += `      ${vacationDetails}\n`;
         else result += '\n';
     }
 
@@ -308,7 +308,7 @@ function calculateLeave() {
             const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
             return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
         }).join('、');
-        if (funeralDetails) result += `      ${funeralDetails}\n`;
+        if (funeralDetails) result += `      ${funeralDetails}\n`;
         else result += '\n';
     }
 
@@ -318,7 +318,7 @@ function calculateLeave() {
             const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
             return `(${record.date} ${weekday} ${record.hours}小時)`;
         }).join('、');
-        if (overtimeDetails) result += `      ${overtimeDetails}\n`;
+        if (overtimeDetails) result += `      ${overtimeDetails}\n`;
         else result += '\n';
     }
 
@@ -328,7 +328,7 @@ function calculateLeave() {
             const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
             return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
         }).join('、');
-        if (leaveDetails) result += `      ${leaveDetails}\n`;
+        if (leaveDetails) result += `      ${leaveDetails}\n`;
         else result += '\n';
     }
 
@@ -338,7 +338,7 @@ function calculateLeave() {
             const weekday = getChineseWeekday(record.date).replace(/[()]/g, '');
             return `(${record.date} ${weekday} ${record.hours || record.days}${record.hours ? '小時' : '天'})`;
         }).join('、');
-        if (sickDetails) result += `      ${sickDetails}\n`;
+        if (sickDetails) result += `      ${sickDetails}\n`;
         else result += '\n';
     }
 
@@ -431,12 +431,40 @@ function importLeaveResults() {
 }
 
 function calculateSalaryDeduction() {
-    // ... 獲取所有輸入值的程式碼 ...
+    // 獲取所有輸入值
+    const name = document.getElementById("nameSalary").value.trim();
+    const salary = getValue("salary");
+    const leaveDays = getValue("leaveDaysSalary");
+    const leaveHours = getValue("leaveHoursSalary");
+    const sickDays = getValue("sickDaysSalary");
+    const sickHours = getValue("sickHoursSalary");
+    const menstrualHours = getValue("menstrualHoursSalary");
+    const lateMinutes = getValue("lateMinutesSalary");
+    const cashOutDays = getValue("cashOutDaysSalary");
+    const cashOutHours = getValue("cashOutHoursSalary");
 
-    const salary = getValue("salary"); // 原始月薪
-    const totalDeduct = Math.round(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
-    const totalCashOutBonus = Math.round(rawCashOutDayBonus + rawCashOutHourBonus);
-    const netSalary = Math.ceil(salary - totalDeduct + totalCashOutBonus);
+    // 計算不支薪金額（這些是原始、**未四捨五入的精確值**）
+    const rawLeaveDayDeduct = leaveDays * (salary / 30);
+    const rawLeaveHourDeduct = leaveHours * (salary / 30 / 8);
+    const rawSickDayDeduct = sickDays * (salary / 30 / 2); // 病假半薪
+    const rawSickHourDeduct = sickHours * (salary / 30 / 8 / 2); // 病假半薪
+    const rawLateDeduct = lateMinutes * (salary / 30 / 8 / 60);
+    const rawMenstrualDeduct = menstrualHours * (salary / 30 / 8 / 2); // 生理假半薪 (通常)
+
+    // 計算折現金額（這些是原始、**未四捨五入的精確值**）
+    const rawCashOutDayBonus = cashOutDays * (salary / 30);
+    const rawCashOutHourBonus = cashOutHours * (salary / 30 / 8);
+
+    // 這些變數用於在「明細」中**顯示四捨五入後的總和**
+    const totalDeductForDisplay = Math.round(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
+    const totalCashOutBonusForDisplay = Math.round(rawCashOutDayBonus + rawCashOutHourBonus);
+
+    // 計算最終的「實領薪資」，這裡使用所有**原始精確值**進行加總，然後再進行 Math.ceil() 無條件進位
+    const netSalary = Math.ceil(
+        salary - 
+        (rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct) +
+        (rawCashOutDayBonus + rawCashOutHourBonus)
+    );
 
     let detailFormula = `${name ? name + "：" : ""}明細如下：\n`;
 
@@ -448,29 +476,38 @@ function calculateSalaryDeduction() {
     if (lateMinutes > 0) detailFormula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
     if (menstrualHours > 0) detailFormula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
 
-    detailFormula += `不支薪金額：${totalDeduct} 元\n`; // 總扣薪金額四捨五入
+    detailFormula += `不支薪金額：${totalDeductForDisplay} 元\n`; // 總扣薪金額顯示四捨五入
 
     // 💰 顯示折現算式（放在所有 ➖ 扣薪公式之後）
     if (cashOutDays > 0) detailFormula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
     if (cashOutHours > 0) detailFormula += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
-    if (cashOutDays > 0 || cashOutHours > 0) detailFormula += `折現總金額：${totalCashOutBonus} 元\n`; // 總折現金額四捨五入
+    if (cashOutDays > 0 || cashOutHours > 0) detailFormula += `折現總金額：${totalCashOutBonusForDisplay} 元\n`; // 總折現金額顯示四捨五入
 
     // 計算最終實領薪資的總結部分
     let summaryFormula = `實領薪資：${salary.toLocaleString('zh-TW')}`;
-    if (totalDeduct > 0) {
-        summaryFormula += ` - ${totalDeduct.toLocaleString('zh-TW')}`;
-    } else if (totalDeduct < 0) { // 雖然不常見，但如果扣款是負數（代表加回來），則顯示為加項
-        summaryFormula += ` + ${Math.abs(totalDeduct).toLocaleString('zh-TW')}`;
+    if (totalDeductForDisplay > 0) { // 這裡用於顯示的減項，仍使用四捨五入的值
+        summaryFormula += ` - ${totalDeductForDisplay.toLocaleString('zh-TW')}`;
+    } else if (totalDeductForDisplay < 0) { 
+        summaryFormula += ` + ${Math.abs(totalDeductForDisplay).toLocaleString('zh-TW')}`;
     }
-    if (totalCashOutBonus > 0) {
-        summaryFormula += ` + ${totalCashOutBonus.toLocaleString('zh-TW')}`;
-    } else if (totalCashOutBonus < 0) { // 雖然不常見，但如果獎金是負數（代表扣掉），則顯示為減項
-        summaryFormula += ` - ${Math.abs(totalCashOutBonus).toLocaleString('zh-TW')}`;
+    if (totalCashOutBonusForDisplay > 0) { // 這裡用於顯示的加項，仍使用四捨五入的值
+        summaryFormula += ` + ${totalCashOutBonusForDisplay.toLocaleString('zh-TW')}`;
+    } else if (totalCashOutBonusForDisplay < 0) { 
+        summaryFormula += ` - ${Math.abs(totalCashOutBonusForDisplay).toLocaleString('zh-TW')}`;
     }
-    summaryFormula += ` = ${netSalary.toLocaleString('zh-TW')} 元`;
+    summaryFormula += ` = ${netSalary.toLocaleString('zh-TW')} 元`; // 最終實領薪資使用精確計算後的值
 
     // 將兩部分合併顯示
     document.getElementById("salaryResult").innerText = detailFormula + "\n" + summaryFormula;
+}
+
+function copyResultsSalary() {
+    const resultText = document.getElementById("salaryResult").innerText;
+    navigator.clipboard.writeText(resultText).then(() => {
+        showToast(MESSAGES.COPY_SUCCESS);
+    }, () => {
+        showToast(MESSAGES.COPY_FAIL);
+    });
 }
 
 
@@ -486,8 +523,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('importToAllBtn').addEventListener('click', importToAll);
     document.getElementById('calculateSalaryDeductionBtn').addEventListener('click', calculateSalaryDeduction);
     document.getElementById('copyResultsSalaryBtn').addEventListener('click', copyResultsSalary);
-    // document.getElementById('copySummaryTableBtn').addEventListener('click', copySummaryTable); // 已移除
-    // document.getElementById('exportSummaryCSVBtn').addEventListener('click', exportSummaryCSV); // 已移除
 
     // 假別統計區塊的輸入框
     document.getElementById('teacherNameLeave').addEventListener('input', calculateLeave);
