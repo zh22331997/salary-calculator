@@ -15,20 +15,45 @@
             margin-right: 0.5em;
         }
 
-        button {
-            padding: 0.5em 1em;
-            background-color: #3c82f6;
-            border: none;
-            color: white;
-            border-radius: 6px;
-            font-size: 1em;
-            cursor: pointer;
-            margin-left: 1em;
-        }
+        /* 統一的按鈕樣式 */
+.btn {
+  padding: 0.5em 1.2em;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin: 0.3em;
+}
 
-        button:hover {
-            background-color: #2563eb;
-        }
+/* 藍色主題按鈕 */
+.btn-blue {
+  background-color: #3c82f6;
+}
+.btn-blue:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+/* 綠色主題按鈕 */
+.btn-green {
+  background-color: #10b981;
+}
+.btn-green:hover {
+  background-color: #0e9f6e;
+  transform: translateY(-2px);
+}
+
+/* 灰色按鈕（例如複製、次要功能） */
+.btn-gray {
+  background-color: #6b7280;
+}
+.btn-gray:hover {
+  background-color: #4b5563;
+  transform: translateY(-2px);
+}
+
 
         table {  
             table-layout: fixed;
@@ -112,31 +137,11 @@
             font-weight: bold;
         }
 
-        .saturday {
-            background-color: #e6f7ff;
-        }
-
-        .sunday {
-            background-color: #ffe6e6;
-        }
 
         tr.weekend-row:hover {
             background-color: #A29093;
         }
 
-        .import-button {
-            margin-top: 10px;
-            padding: 8px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .import-button:hover {
-            background-color: #45a049;
-        }
 
         .date-input {
             width: 80px;
@@ -170,14 +175,19 @@
 
     <label>年份：<input type="number" id="yearInput" value="" min="2000" max="2100"></label>
     <label>月份（1~12）：<input type="number" id="monthInput" value="5" min="1" max="12"></label>
-    <button onclick="generateTable()">產生日期表</button>
+    <button class="btn btn-blue" onclick="generateTable()">產生日期表</button>
 
     <div id="formArea"></div>
     <h3>統計結果（空白處點一下，再按複製）：</h3>
     
     <div class="totals" id="resultsLeave" contenteditable="true"></div>
-    <button onclick="copyResultsLeave()">📋 複製結果</button>
-    <button style="background-color: #0E9F6E;" onclick="importToAll()">➔ 匯入 假別表格 與 不支薪計算</button>
+    <button class="btn btn-gray" onclick="copyResultsLeave()">📋 複製結果</button>
+    <button class="btn btn-green" onclick="importToAll()">➔ 匯入 假別表格 與 不支薪計算</button>
+    
+
+
+
+
 
     
     <div style="margin-top: 30px; padding: 15px; background-color: #f7f6f4; border-radius: 16px;">
@@ -238,9 +248,13 @@
     <label>折現（小時）：</label>
     <input type="number" id="cashOutHoursSalary" style="width: 60px" placeholder="0"><br>
 
-    <button onclick="calculateSalaryDeduction()">計算不支薪</button><br><br>
+    <button class="btn btn-green" onclick="calculateSalaryDeduction()">計算不支薪</button><br><br>
     <div id="salaryResult"></div>
-    <button onclick="copyResultsSalary()">📋 複製算式</button>
+    <button class="btn btn-gray" onclick="copyResultsSalary()">📋 複製算式</button>
+    
+
+
+
 
     <script>
         document.getElementById("yearInput").value = new Date().getFullYear();
