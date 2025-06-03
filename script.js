@@ -481,7 +481,7 @@ function calculateSalaryDeduction() {
     const sickDays = getValue("sickDaysSalary");
     const sickHours = getValue("sickHoursSalary");
     const lateMinutes = getValue("lateMinutesSalary");
-    const menstrualHours = getValue("menstrualHoursSalary");
+    const menstrualHours = getValue("menstrualHoursSalary"); // 生理假小時
     const cashOutDays = getValue("cashOutDaysSalary");
     const cashOutHours = getValue("cashOutHoursSalary");
 
@@ -505,75 +505,46 @@ function calculateSalaryDeduction() {
     const rawCashOutDayBonus = dailyRate * cashOutDays;
     const rawCashOutHourBonus = hourlyRate * cashOutHours;
 
-    // 最終加總時進行無條件捨去 (Math.floor())
+    // 最終加總時再進行無條件捨去 (Math.floor())
     const totalDeduct = Math.floor(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
     const totalCashOutBonus = Math.floor(rawCashOutDayBonus + rawCashOutHourBonus);
 
-    // 格式化輸出
-    let resultHtml = `<h3>${name ? name + ' 的 ' : ''}薪資計算結果</h3>`;
-    resultHtml += `<p>原始月薪： ${salary.toLocaleString('zh-TW')} 元</p>`;
-    resultHtml += `<p>平均日薪（原始月薪 / 30天）： ${dailyRate.toFixed(2)} 元</p>`;
-    resultHtml += `<p>平均時薪（原始月薪 / 240小時）： ${hourlyRate.toFixed(2)} 元</p>`;
-
-    let deductionFormula = [];
-
-    // 各項扣薪明細（顯示時使用四捨五入）
-    if (leaveDays > 0) {
-        deductionFormula.push(`<li>➖事假 ${leaveDays}天 = ${leaveDays}天 × ${dailyRate.toFixed(2)}元/天 = ${Math.round(rawLeaveDayDeduct).toLocaleString('zh-TW')}元</li>`);
-    }
-    if (leaveHours > 0) {
-        deductionFormula.push(`<li>➖事假 ${leaveHours}小時 = ${leaveHours}小時 × ${hourlyRate.toFixed(2)}元/小時 = ${Math.round(rawLeaveHourDeduct).toLocaleString('zh-TW')}元</li>`);
-    }
-    if (sickDays > 0) {
-        deductionFormula.push(`<li>➖病假 ${sickDays}天 = (${sickDays}天 × ${dailyRate.toFixed(2)}元/天) / 2 = ${Math.round(rawSickDayDeduct).toLocaleString('zh-TW')}元</li>`);
-    }
-    if (sickHours > 0) {
-        deductionFormula.push(`<li>➖病假 ${sickHours}小時 = (${sickHours}小時 × ${hourlyRate.toFixed(2)}元/小時) / 2 = ${Math.round(rawSickHourDeduct).toLocaleString('zh-TW')}元</li>`);
-    }
-    if (menstrualHours > 0) { // 生理假半薪
-        deductionFormula.push(`<li>➖生理假 ${menstrualHours}小時 = (${menstrualHours}小時 × ${hourlyRate.toFixed(2)}元/小時) / 2 = ${Math.round(rawMenstrualDeduct).toLocaleString('zh-TW')}元</li>`);
-    }
-    if (lateMinutes > 0) { // 遲到按分鐘扣
-        const deductionPerMinute = hourlyRate / 60;
-        deductionFormula.push(`<li>➖遲到 ${lateMinutes}分鐘 = ${lateMinutes}分鐘 × ${deductionPerMinute.toFixed(2)}元/分鐘 = ${Math.round(rawLateDeduct).toLocaleString('zh-TW')}元</li>`);
-    }
-
-    if (deductionFormula.length > 0) {
-        resultHtml += `<p>扣薪明細：</p><ul>`;
-        deductionFormula.forEach(item => {
-            resultHtml += item;
-        });
-        resultHtml += `</ul>`;
-    }
-
-    resultHtml += `<p>總扣薪金額： ${totalDeduct.toLocaleString('zh-TW')} 元</p>`;
+    // 實領薪資也採用無條件捨去，以符合最終結果的呈現方式
+    const netSalary = Math.floor(salary - totalDeduct + totalCashOutBonus); 
     
-    // 折現明細 (顯示時使用四捨五入)
-    let cashOutFormula = [];
-    if (cashOutDays > 0) {
-        cashOutFormula.push(`<li>➕折現 ${cashOutDays}天 = ${cashOutDays}天 × ${dailyRate.toFixed(2)}元/天 = ${Math.round(rawCashOutDayBonus).toLocaleString('zh-TW')}元</li>`);
-    }
-    if (cashOutHours > 0) {
-        cashOutFormula.push(`<li>➕折現 ${cashOutHours}小時 = ${cashOutHours}小時 × ${hourlyRate.toFixed(2)}元/小時 = ${Math.round(rawCashOutHourBonus).toLocaleString('zh-TW')}元</li>`);
-    }
+    // 構建結果字符串
+    let formula = `${name ? name + "：" : ""}明細如下：\n`;
 
-    if (cashOutFormula.length > 0) {
-        resultHtml += `<p>折現明細：</p><ul>`;
-        cashOutFormula.forEach(item => {
-            resultHtml += item;
-        });
-        resultHtml += `</ul>`;
-    }
-    resultHtml += `<p>總折現金額： ${totalCashOutBonus.toLocaleString('zh-TW')} 元</p>`;
+    // 顯示時仍使用四捨五入後的個別金額
+    if (leaveDays) formula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元\n`;
+    if (leaveHours) formula += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元\n`;
+    if (sickDays) formula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元\n`;
+    if (sickHours) formula += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元\n`;
+    if (lateMinutes) formula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元\n`;
+    if (menstrualHours) formula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元\n`;
 
+    formula += `不支薪金額：${totalDeduct} 元\n`;
 
+    // 💰 顯示折現算式（放在所有 ➖ 扣薪公式之後）
+    if (cashOutDays) formula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
+    if (cashOutHours) formula += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
+    if (cashOutDays || cashOutHours) formula += `折現總金額：${totalCashOutBonus} 元\n`;
+    
     // 計算最終實領薪資
-    const netSalary = salary - totalDeduct + totalCashOutBonus;
-    resultHtml += `<p>實領薪資： ${salary.toLocaleString('zh-TW')} - ${totalDeduct.toLocaleString('zh-TW')} + ${totalCashOutBonus.toLocaleString('zh-TW')} = <strong style="color: red;">${netSalary.toLocaleString('zh-TW')}</strong> 元</p>`;
+    formula += `實領薪資：${salary.toLocaleString('zh-TW')} - ${totalDeduct.toLocaleString('zh-TW')} + ${totalCashOutBonus.toLocaleString('zh-TW')} = ${netSalary.toLocaleString('zh-TW')} 元`;
 
-
-    document.getElementById("salaryResult").innerHTML = resultHtml;
+    document.getElementById("salaryResult").innerText = formula; // 使用innerText確保純文本輸出
 }
+
+function copyResultsSalary() {
+    const resultText = document.getElementById("salaryResult").innerText; // 複製純文本內容
+    navigator.clipboard.writeText(resultText).then(() => {
+        showToast(MESSAGES.COPY_SUCCESS);
+    }, () => {
+        showToast(MESSAGES.COPY_FAIL);
+    });
+}
+
 
 // ====== 初始化設定和事件監聽 ======
 document.addEventListener('DOMContentLoaded', function() {
