@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>匯出缺勤明細</title>
-  <style>
+<style>
   :root {
     all: initial;
     font-family: "Segoe UI", "微軟正黑體", sans-serif;
@@ -19,98 +19,104 @@
     font-size: 16px;
   }
 
-    h2 {
-      color: #6b6d76; /* 莫蘭迪深灰紫 */
-      border-left: 6px solid #9a9cab; /* 莫蘭迪藍灰 */
-      padding-left: 12px;
-      margin-bottom: 20px;
-    }
+  h2 {
+    color: #6b6d76; /* 莫蘭迪深灰紫 */
+    border-left: 6px solid #9a9cab; /* 莫蘭迪藍灰 */
+    padding-left: 12px;
+    margin-bottom: 20px;
+  }
 
-    label {
-      display: block;
-      margin: 15px 0 5px;
-      font-weight: 600;
-      color: #5e5e5e;
-    }
+  label {
+    display: block;
+    margin: 15px 0 5px;
+    font-weight: 600;
+    color: #5e5e5e;
+  }
 
-    input, select, textarea, button {
-      font-size: 1em;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+  input, select, textarea, button {
+    font-size: 1em;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    background-color: #fdfdfd;
+  }
+
+  input[type="month"] {
+    width: 200px;
+  }
+
+  select#branch {
+    width: 200px;
+  }
+
+  textarea#input {
+    max-width: none;
+    width: 90%;
+  }
+
+  textarea {
+    height: 200px;
+    resize: vertical;
+  }
+
+  button {
+    background-color: #b8b7b3; /* 莫蘭迪灰杏 */
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-right: 10px;
+    width: auto;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: #9f9d97; /* 深一階 */
+  }
+
+  .button-group {
+    margin-top: 15px;
+  }
+
+  /* ✅ 表格修復與優化區塊 */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: auto;
+    margin-top: 25px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    font-size: 0.95em;
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    font-family: inherit;
+    color: #4a4a4a;
+  }
+
+  th {
+    background-color: #e7e6e4;
+    font-weight: bold;
+    color: #5e5e5e;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f5f4f2;
+  }
+
+  @media (max-width: 600px) {
+    input, select, textarea {
       width: 100%;
-      max-width: 400px;
-      box-sizing: border-box;
-      background-color: #fdfdfd;
     }
+  }
+</style>
 
-    input[type="month"] {
-      width: 200px;
-    }
-
-    select#branch {
-      width: 200px;
-    }
-
-    textarea#input {
-      max-width: none;
-      width: 90%;
-    }
-
-    textarea {
-      height: 200px;
-      resize: vertical;
-    }
-
-    button {
-      background-color: #b8b7b3; /* 莫蘭迪灰杏 */
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      margin-top: 10px;
-      margin-right: 10px;
-      width: auto;
-      transition: background-color 0.3s;
-    }
-
-    button:hover {
-      background-color: #9f9d97; /* 深一階 */
-    }
-
-    .button-group {
-      margin-top: 15px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 25px;
-      background-color: #fff;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: left;
-    }
-
-    th {
-      background-color: #e7e6e4; /* 莫蘭迪白灰 */
-      font-weight: bold;
-      color: #5e5e5e;
-    }
-
-    tr:nth-child(even) {
-      background-color: #f5f4f2;
-    }
-
-    @media (max-width: 600px) {
-      input, select, textarea {
-        width: 100%;
-      }
-    }
-  </style>
 </head>
 <body>
     
