@@ -1,9 +1,12 @@
+
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>匯出缺勤明細</title>
+  <title>匯出缺勤明細</title> 
 <style>
+  /*可辨識0.5小時跟遲到漏打卡*/
   body {
     font-family: "Segoe UI", "微軟正黑體", sans-serif;
     background-color: #f3f1f0; /* 淺暖灰粉 */
@@ -175,60 +178,65 @@ function analyzeData() {
     return;
   }
 
-  const sections = raw.split(/(?=^[^\s：]{1,10}\s*$)/m); // 按名字切段
-
+  const sections = raw.split(/(?=^[^\s：]{1,10}\s*$)/m); // 依老師名切段
   sections.forEach(block => {
     const lines = block.trim().split('\n');
     const name = lines.shift().trim();
     const content = lines.join('\n');
 
-    // 預備特殊統計用的變數
     let lateTotal = 0, lateCount = 0, lateDetails = [];
     let lateNDTotal = 0, lateNDCount = 0, lateNDDetails = [];
     let punchDetails = [];
 
     const rows = content.split(/✅/).map(r => r.trim()).filter(Boolean);
     rows.forEach(row => {
-      const match = row.match(/^(.+?)：\s*(.+?)\s*([（(）)].*?)?$/);
+      const match = row.match(/^(.+?)[:：]\s*(.+?)\s*([（(）)].*?)?$/); //容許半形:
       if (!match) return;
 
       const type = match[1].trim();
       const subtotal = match[2].trim();
       const notesText = match[3] || '';
 
-      // 處理特殊類別
+      // ✅ 全勤緩衝 → 遲到(不扣) + 漏打卡
       if (type === '全勤緩衝') {
-        const ndMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2})\s*(\d+)分鐘[）)]/g)];
-        ndMatches.forEach(m => {
-          lateNDTotal += parseInt(m[2]);
-          lateNDCount++;
-          lateNDDetails.push(`${m[1]} ${m[2]}分鐘`);
-        });
+      // 1. 處理所有括號內容
+      const brackets = [...notesText.matchAll(/[（(](.+?)[）)]/g)];
 
-        const punchMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2})\s*(上班|下班)[）)]/g)];
-        punchMatches.forEach(m => {
-          punchDetails.push(`${m[1]} ${m[2]}`);
-        });
-        return; // 全勤緩衝不進一般表格
-      }
+      brackets.forEach(m => {
+      const entry = m[1]; // 整段例如：5/8 四 2分鐘 or 5/9 五 上班
 
+      if (/分鐘/.test(entry)) {
+      const minutes = parseInt(entry.match(/(\d+)分鐘/)?.[1] || '0');
+      lateNDTotal += minutes;
+      lateNDCount++;
+      lateNDDetails.push(entry);
+    } else if (/上班|下班/.test(entry)) {
+      punchDetails.push(entry);
+    }
+  });
+
+  return; // 這筆不進一般假別表格
+}
+
+
+      // ✅ 遲到 → 遲到(要扣)
       if (type === '遲到') {
-        const lateMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2})\s*(\d+)分鐘[）)]/g)];
+        const lateMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2}\s*.+?分鐘)[）)]/g)];
         lateMatches.forEach(m => {
-          lateTotal += parseInt(m[2]);
+          const minutes = parseInt(m[1].match(/(\d+)分鐘/)?.[1] || '0');
+          lateTotal += minutes;
           lateCount++;
-          lateDetails.push(`${m[1]} ${m[2]}分鐘`);
+          lateDetails.push(m[1]);
         });
-        return; // 遲到不進一般表格
+        return; // 遲到不進一般假別表格
       }
 
-      if (type === '預計折現' || type === '超時') {
-        return; // 忽略
-      }
+      // ❌ 忽略
+      if (type === '預計折現' || type === '超時') return;
 
-      // 一般假別
-      const noteMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2})\s*([\d.]+(?:天|小時|分鐘))[）)]/g)];
-      const cleanNotes = noteMatches.map(m => `${m[1]} ${m[2]}`).join('、');
+      // ✅ 一般假別
+      const noteMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2}\s*.+?(?:天|小時|分鐘))[）)]/g)];
+      const cleanNotes = noteMatches.map(m => m[1].trim()).join('、');
 
       tbody.innerHTML += `
         <tr>
@@ -241,7 +249,7 @@ function analyzeData() {
         </tr>`;
     });
 
-    // 額外補上特殊類型的統計列
+    // ✅ 輸出三大統計項目
     if (lateNDCount > 0) {
       tbody.innerHTML += `
         <tr>
@@ -279,6 +287,7 @@ function analyzeData() {
     }
   });
 }
+
 
 
 
