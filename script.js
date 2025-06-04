@@ -393,6 +393,10 @@ function importToAll() {
     const inputCashOutDays = parseFloat(document.getElementById("inputCashOutDays").value) || 0;
     const inputCashOutHours = parseFloat(document.getElementById("inputCashOutHours").value) || 0;
     
+    // 從主頁面獲取年月
+    const year = parseInt(document.getElementById("yearInput").value);
+    const month = parseInt(document.getElementById("monthInput").value);
+
     // 獲取 resultsLeave 的內容 (假別統計結果)
     const resultsLeave = document.getElementById("resultsLeave").innerText;
 
@@ -402,26 +406,27 @@ function importToAll() {
         teacherName: teacherName,
         cashOutDays: inputCashOutDays,
         cashOutHours: inputCashOutHours,
-        leaveStats: resultsLeave // 這裡傳遞的是整個結果文字，iframe 會把它放進 textarea
+        leaveStats: resultsLeave, // 這裡傳遞的是整個結果文字，iframe 會把它放進 textarea
+        // ✨ 新增這兩行來傳遞年月資訊 ✨
+        year: year,
+        month: month
     };
 
     // 找到 iframe
-    const iframe = document.getElementById('uploadAbsencesIframe'); // **請確認你的 iframe 的 ID 是 'uploadAbsencesIframe'**
+    const iframe = document.getElementById('uploadAbsencesIframe');
 
     // 檢查 iframe 是否存在且已載入
     if (iframe && iframe.contentWindow) {
         // 使用 postMessage 發送資料
-        // 第二個參數是目標來源，用於安全目的，必須與 iframe 的實際來源匹配
-        iframe.contentWindow.postMessage(dataToSend, 'https://zh22331997.github.io');
+        iframe.contentWindow.postMessage(dataToSend, 'https://zh22331997.github.io'); 
         console.log("📤 主頁面：已成功發送訊息到 iframe");
         console.log("📤 主頁面：發送的資料：", dataToSend);
-        showToast("✅ 資料已匯入外部表格！"); // 給個提示，讓使用者知道資料發送了
+        showToast("✅ 資料已匯入外部表格！");
     } else {
         console.warn("⚠️ 主頁面：找不到 iframe 或 contentWindow 不可用，無法發送資料。");
         showToast("⚠️ 無法匯入外部表格，請檢查 iframe。");
     }
 }
-
 function importLeaveResults() {
     let totalLeaveDays = 0;
     let totalLeaveHours = 0;
