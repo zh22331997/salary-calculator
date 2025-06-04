@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -213,8 +214,8 @@ function analyzeData() {
       } else if (type === '預計折現' || type === '超時') {
         continue;
       } else {
-        const cleanNotes = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*([\d天小時分鐘]+)\)/g)]
-          .map(m => `${m[1]} ${m[2]}`).join('、');
+       const cleanNotes = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})\s*([\d.]+(?:天|小時|分鐘))\)/g)]
+       .map(m => `${m[1]} ${m[2]}`).join('、');
         tbody.innerHTML += `
           <tr>
             <td>${ym}</td>
