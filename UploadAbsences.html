@@ -1,383 +1,397 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>匯出缺勤明細</title>
-  <style>
-    body {
-      font-family: "Segoe UI", "微軟正黑體", sans-serif;
-      background-color: #f3f1f0; /* 淺暖灰粉 */
-      padding: 30px;
-      color: #4a4a4a; /* 柔灰黑 */
-    }
+  <meta charset="UTF-8">
+  <title>匯出缺勤明細</title>
+  <style>
+    body {
+      font-family: "Segoe UI", "微軟正黑體", sans-serif;
+      background-color: #f3f1f0; /* 淺暖灰粉 */
+      padding: 30px;
+      color: #4a4a4a; /* 柔灰黑 */
+    }
 
-    h2 {
-      color: #6b6d76; /* 莫蘭迪深灰紫 */
-      border-left: 6px solid #9a9cab; /* 莫蘭迪藍灰 */
-      padding-left: 12px;
-      margin-bottom: 20px;
-    }
+    h2 {
+      color: #6b6d76; /* 莫蘭迪深灰紫 */
+      border-left: 6px solid #9a9cab; /* 莫蘭迪藍灰 */
+      padding-left: 12px;
+      margin-bottom: 20px;
+    }
 
-    label {
-      display: block;
-      margin: 15px 0 5px;
-      font-weight: 600;
-      color: #5e5e5e;
-    }
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      font-weight: 600;
+      color: #5e5e5e;
+    }
 
-    input, select, textarea, button {
-      font-size: 1em;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      width: 100%;
-      max-width: 400px;
-      box-sizing: border-box;
-      background-color: #fdfdfd;
-    }
+    input, select, textarea, button {
+      font-size: 1em;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 100%;
+      max-width: 400px;
+      box-sizing: border-box;
+      background-color: #fdfdfd;
+    }
 
-    input[type="month"] {
-      width: 200px;
-    }
+    input[type="month"] {
+      width: 200px;
+    }
 
-    select#branch {
-      width: 200px;
-    }
+    select#branch {
+      width: 200px;
+    }
 
-    textarea#input {
-      max-width: none;
-      width: 90%;
-    }
+    textarea#input {
+      max-width: none;
+      width: 90%;
+    }
 
-    textarea {
-      height: 200px;
-      resize: vertical;
-    }
+    textarea {
+      height: 200px;
+      resize: vertical;
+    }
 
-    button {
-      background-color: #b8b7b3; /* 莫蘭迪灰杏 */
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      margin-top: 10px;
-      margin-right: 10px;
-      width: auto;
-      transition: background-color 0.3s;
-    }
+    button {
+      background-color: #b8b7b3; /* 莫蘭迪灰杏 */
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+      margin-right: 10px;
+      width: auto;
+      transition: background-color 0.3s;
+    }
 
-    button:hover {
-      background-color: #9f9d97; /* 深一階 */
-    }
+    button:hover {
+      background-color: #9f9d97; /* 深一階 */
+    }
 
-    .button-group {
-      margin-top: 15px;
-    }
+    .button-group {
+      margin-top: 15px;
+    }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 25px;
-      background-color: #fff;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 25px;
+      background-color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
 
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: left;
-    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
 
-    th {
-      background-color: #e7e6e4; /* 莫蘭迪白灰 */
-      font-weight: bold;
-      color: #5e5e5e;
-    }
+    th {
+      background-color: #e7e6e4; /* 莫蘭迪白灰 */
+      font-weight: bold;
+      color: #5e5e5e;
+    }
 
-    tr:nth-child(even) {
-      background-color: #f5f4f2;
-    }
+    tr:nth-child(even) {
+      background-color: #f5f4f2;
+    }
 
-    @media (max-width: 600px) {
-      input, select, textarea {
-        width: 100%;
-      }
-    }
-  </style>
+    @media (max-width: 600px) {
+      input, select, textarea {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h2>匯出缺勤明細</h2>
-  <label for="month">📅 年月：</label>
-  <input type="month" id="month" required>
-  <label for="branch">🏫 選擇分校：</label>
-  <select id="branch">
-    <option value="永平校">永平校</option>
-    <option value="永和校">永和校</option>
-    <option value="秀朗校">秀朗校</option>
-    <option value="清水校">清水校</option>
-    <option value="江翠校">江翠校</option>
-  </select>
-  <label for="input">📋 貼上老師的出缺勤資料：</label>
-  <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
-  <div class="button-group">
-    <button onclick="analyzeData()">🔍 分析資料</button>
-    <button onclick="copyTable()">📄 複製整張表格</button>
-    <button onclick="exportCSV()">💾 匯出 CSV</button>
-  </div>
-  <table id="outputTable">
-    <thead>
-      <tr>
-        <th>年月</th>
-        <th>分校</th>
-        <th>姓名</th>
-        <th>假別/類型</th>
-        <th>小計</th>
-        <th>備註</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <h2>匯出缺勤明細</h2>
+  <label for="month">📅 年月：</label>
+  <input type="month" id="month" required>
+  <label for="branch">🏫 選擇分校：</label>
+  <select id="branch">
+    <option value="永平校">永平校</option>
+    <option value="永和校">永和校</option>
+    <option value="秀朗校">秀朗校</option>
+    <option value="清水校">清水校</option>
+    <option value="江翠校">江翠校</option>
+  </select>
+  <label for="input">📋 貼上老師的出缺勤資料：</label>
+  <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
+  <div class="button-group">
+    <button onclick="analyzeData()">🔍 分析資料</button>
+    <button onclick="copyTable()">📄 複製整張表格</button>
+    <button onclick="exportCSV()">💾 匯出 CSV</button>
+  </div>
+  <table id="outputTable">
+    <thead>
+      <tr>
+        <th>年月</th>
+        <th>分校</th>
+        <th>姓名</th>
+        <th>假別/類型</th>
+        <th>小計</th>
+        <th>備註</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 <script>
+// ✨ 新增的 DOMContentLoaded 監聽器，確保頁面元素載入後再設置月份預設值 ✨
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // getMonth() 回傳 0-11，並補零
+    document.getElementById('month').value = `${year}-${month}`;
+});
+
 window.addEventListener('message', function(event) {
-    console.log("✅ 收到訊息來自：", event.origin);
-    console.log("✅ 資料內容：", event.data);
+    console.log("✅ 收到訊息來自：", event.origin);
+    console.log("✅ 資料內容：", event.data);
 
-    // 安全檢查：確保訊息來自預期的來源 (你的主頁面所在的網域)
-    if (!event.origin.startsWith('https://zh22331997.github.io')) {
-        console.warn('收到來自非預期來源的訊息:', event.origin);
-        return;
-    }
+    // 安全檢查：確保訊息來自預期的來源 (你的主頁面所在的網域)
+    if (!event.origin.startsWith('https://zh22331997.github.io')) {
+        console.warn('收到來自非預期來源的訊息:', event.origin);
+        return;
+    }
 
-    // 檢查訊息類型是否與主頁面發送的 'importLeaveData' 一致
-    // 注意：這裡將 'IMPORT_LEAVE_DATA' 改為 'importLeaveData'
-    if (event.data && event.data.type === 'importLeaveData') {
-        // 直接使用 event.data 來獲取資料，因為主頁面發送的就是一個包含所有屬性的物件
-        const receivedData = event.data;
+    // 檢查訊息類型是否與主頁面發送的 'importLeaveData' 一致
+    if (event.data && event.data.type === 'importLeaveData') {
+        const receivedData = event.data;
 
-        // 假別統計結果 (resultsLeave) 是你在主頁面中作為 'leaveStats' 發送的
-        const targetInput = document.getElementById('input');
-        if (targetInput) {
-            // 將整個假別統計結果文字直接填入 textarea
-            // 你可能需要根據你希望的格式調整這裡，
-            // 例如，將 teacherName, cashOutDays, cashOutHours 也加入到這個 textarea 的值中
-            let fullTextToImport = '';
-            if (receivedData.teacherName) {
-                fullTextToImport += receivedData.teacherName + '\n';
-            }
-            if (receivedData.leaveStats) {
-                fullTextToImport += receivedData.leaveStats;
-            }
-            // 你也可以考慮把 cashOutDays 和 cashOutHours 轉換成文字格式加進來
-            if (receivedData.cashOutDays > 0 || receivedData.cashOutHours > 0) {
-                 fullTextToImport += `💰 預計折現：${receivedData.cashOutDays} 天 ${receivedData.cashOutHours} 小時\n`;
-            }
-
-            targetInput.value = fullTextToImport;
-            console.log("✅ 成功寫入 input！");
-            // 寫入後，可以考慮自動觸發分析功能
-            // analyzeData(); // 如果你想自動分析，可以取消這行的註釋
-        } else {
-            console.warn("⚠️ 找不到 id='input' 的欄位！");
+        // ✨ 新增：更新 iframe 頁面的年月輸入框 ✨
+        const monthInput = document.getElementById('month'); // 注意這裡的 ID 是 'month'，不是 'monthInput'
+        if (monthInput && receivedData.year && receivedData.month) {
+            // input type="month" 需要 YYYY-MM 格式
+            const formattedMonth = receivedData.month.toString().padStart(2, '0');
+            monthInput.value = `${receivedData.year}-${formattedMonth}`;
+            console.log(`✅ 已更新年月至：${monthInput.value}`);
+        } else if (!monthInput) {
+             console.warn("⚠️ 找不到 id='month' 的年月輸入欄位！");
         }
-    }
+
+
+        // 假別統計結果 (resultsLeave) 是你在主頁面中作為 'leaveStats' 發送的
+        const targetInput = document.getElementById('input');
+        if (targetInput) {
+            let fullTextToImport = '';
+            if (receivedData.teacherName) {
+                fullTextToImport += receivedData.teacherName + '\n';
+            }
+            if (receivedData.leaveStats) {
+                fullTextToImport += receivedData.leaveStats;
+            }
+            if (receivedData.cashOutDays > 0 || receivedData.cashOutHours > 0) {
+                 fullTextToImport += `💰 預計折現：${receivedData.cashOutDays} 天 ${receivedData.cashOutHours} 小時\n`;
+            }
+
+            targetInput.value = fullTextToImport;
+            console.log("✅ 成功寫入 input！");
+            // 寫入後，可以考慮自動觸發分析功能
+            // analyzeData(); // 如果你想自動分析，可以取消這行的註釋
+        } else {
+            console.warn("⚠️ 找不到 id='input' 的欄位！");
+        }
+    }
 });
 
 // 以下是 analyzeData, copyTable, exportCSV 函數，請確保這些函數也一併保留
 function analyzeData() {
-    const ym = document.getElementById('month').value;
-    const branch = document.getElementById('branch').value;
-    const raw = document.getElementById('input').value.trim();
-    const tbody = document.querySelector('#outputTable tbody');
-    tbody.innerHTML = '';
+    const ym = document.getElementById('month').value;
+    const branch = document.getElementById('branch').value;
+    const raw = document.getElementById('input').value.trim();
+    const tbody = document.querySelector('#outputTable tbody');
+    tbody.innerHTML = '';
 
-    if (!ym || !raw) {
-        alert('請輸入年月與分校');
-        return;
-    }
+    if (!ym || !raw) {
+        alert('請輸入年月與分校');
+        return;
+    }
 
-    // 修改姓名分離方式，避免名稱中包含冒號導致錯誤
-    // sections 現在包含每個老師的完整數據塊
-    const sections = raw.split(/(?=\n^[^\s：]{1,10}\s*$)/m); // 匹配以新行開頭，不含冒號的短語
+    // 修改姓名分離方式，避免名稱中包含冒號導致錯誤
+    // sections 現在包含每個老師的完整數據塊
+    const sections = raw.split(/(?=\n^[^\s：]{1,10}\s*$)/m); // 匹配以新行開頭，不含冒號的短語
 
-    sections.forEach(block => {
-        const lines = block.trim().split('\n');
-        const name = lines.shift().trim(); // 第一行是姓名
-        const content = lines.join('\n'); // 剩餘內容是假別數據
+    sections.forEach(block => {
+        const lines = block.trim().split('\n');
+        const name = lines.shift().trim(); // 第一行是姓名
+        const content = lines.join('\n'); // 剩餘內容是假別數據
 
-        // 主體正則表達式：更強健的匹配，重點是確保能識別「假別名稱：小計 備註」
-        // [^：]+?：非貪婪匹配假別名稱，直到遇到冒號
-        // ([\d天小時分鐘 ]*)：小計，現在是可選的，且更寬鬆
-        // (.*?)：備註，匹配從「小計」之後到行尾的所有內容，非貪婪
-        // (?:\s|$)/gm：確保行尾或空白斷點，使匹配不會吃到下一行
-        const regex = /^(?:✅|💰)?\s*([^：]+?)\s*：\s*([\d天小時分鐘 ]*)\s*(.*?)(?:\s*$|\n(?=(?:✅|💰)?\s*[^：]+?\s*：))/gm;
-        let match;
+        // 主體正則表達式：更強健的匹配，重點是確保能識別「假別名稱：小計 備註」
+        // [^：]+?：非貪婪匹配假別名稱，直到遇到冒號
+        // ([\d天小時分鐘 ]*)：小計，現在是可選的，且更寬鬆
+        // (.*?)：備註，匹配從「小計」之後到行尾的所有內容，非貪婪
+        // (?:\s|$)/gm：確保行尾或空白斷點，使匹配不會吃到下一行
+        const regex = /^(?:✅|💰)?\s*([^：]+?)\s*：\s*([\d天小時分鐘 ]*)\s*(.*?)(?:\s*$|\n(?=(?:✅|💰)?\s*[^：]+?\s*：))/gm;
+        let match;
 
-        let lateTotal = 0, lateCount = 0, lateDetails = [];
-        let lateNDTotal = 0, lateNDCount = 0, lateNDDetails = [];
-        let punchDetails = [];
+        let lateTotal = 0, lateCount = 0, lateDetails = [];
+        let lateNDTotal = 0, lateNDCount = 0, lateNDDetails = [];
+        let punchDetails = [];
 
-        // 對每行假別資料進行分析
-        while ((match = regex.exec(content)) !== null) {
-            const type = match[1].trim(); // 假別名稱
-            const subtotal = (match[2] || '').trim(); // 小計
-            let notes = match[3] || ''; // 備註原始字串
-            notes = notes.trim(); // 去除前後空白
+        // 對每行假別資料進行分析
+        while ((match = regex.exec(content)) !== null) {
+            const type = match[1].trim(); // 假別名稱
+            const subtotal = (match[2] || '').trim(); // 小計
+            let notes = match[3] || ''; // 備註原始字串
+            notes = notes.trim(); // 去除前後空白
 
-            // 備註格式化：彈性處理有括號和無括號的備註
-            let formattedNotes = '';
-            const bracketContents = [...notes.matchAll(/\(([^)]+)\)/g)].map(m => m[1].trim());
-            if (bracketContents.length > 0) {
-                formattedNotes = bracketContents.join('、');
-            } else {
-                // 如果沒有括號，直接使用原始 notes，並將多個空白壓縮成一個
-                formattedNotes = notes.replace(/\s+/g, ' ').trim();
-            }
+            // 備註格式化：彈性處理有括號和無括號的備註
+            let formattedNotes = '';
+            const bracketContents = [...notes.matchAll(/\(([^)]+)\)/g)].map(m => m[1].trim());
+            if (bracketContents.length > 0) {
+                formattedNotes = bracketContents.join('、');
+            } else {
+                // 如果沒有括號，直接使用原始 notes，並將多個空白壓縮成一個
+                formattedNotes = notes.replace(/\s+/g, ' ').trim();
+            }
 
-            if (type === '全勤緩衝') {
-                // 遲到不扣：匹配日期和分鐘數，允許中間有非數字和非右括號的字元
-                const lateNDMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})[^\d\)]*?(\d+)分鐘\)/g)];
-                lateNDMatches.forEach(m => {
-                    lateNDTotal += parseInt(m[2]);
-                    lateNDCount++;
-                    lateNDDetails.push(`${m[1]} ${m[2]}分鐘`);
-                });
+            if (type === '全勤緩衝') {
+                // 遲到不扣：匹配日期和分鐘數，允許中間有非數字和非右括號的字元
+                const lateNDMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})[^\d\)]*?(\d+)分鐘\)/g)];
+                lateNDMatches.forEach(m => {
+                    lateNDTotal += parseInt(m[2]);
+                    lateNDCount++;
+                    lateNDDetails.push(`${m[1]} ${m[2]}分鐘`);
+                });
 
-                // 漏打卡：匹配日期和上班/下班，允許中間有非右括號的字元
-                const punchMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})[^\)]*?(上班|下班)\)/g)];
-                punchMatches.forEach(m => punchDetails.push(`${m[1]} ${m[2]}`));
+                // 漏打卡：匹配日期和上班/下班，允許中間有非右括號的字元
+                const punchMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})[^\)]*?(上班|下班)\)/g)];
+                punchMatches.forEach(m => punchDetails.push(`${m[1]} ${m[2]}`));
 
-            } else if (type === '遲到') {
-                // 遲到：匹配日期和分鐘數，允許中間有非數字和非右括號的字元
-                const lateMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})[^\d\)]*?(\d+)分鐘\)/g)];
-                lateMatches.forEach(m => {
-                    lateTotal += parseInt(m[2]);
-                    lateCount++;
-                    lateDetails.push(`${m[1]} ${m[2]}分鐘`);
-                });
-            } else if (type === '預計折現' || type === '超時') {
-                continue; // 忽略「預計折現」和「超時」
-            } else {
-                // 其他假別
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${ym}</td>
-                        <td>${branch}</td>
-                        <td>${name}</td>
-                        <td>${type}</td>
-                        <td>${subtotal}</td>
-                        <td>${formattedNotes}</td>
-                    </tr>`;
-            }
-        }
+            } else if (type === '遲到') {
+                // 遲到：匹配日期和分鐘數，允許中間有非數字和非右括號的字元
+                const lateMatches = [...notes.matchAll(/\((\d{1,2}\/\d{1,2})[^\d\)]*?(\d+)分鐘\)/g)];
+                lateMatches.forEach(m => {
+                    lateTotal += parseInt(m[2]);
+                    lateCount++;
+                    lateDetails.push(`${m[1]} ${m[2]}分鐘`);
+                });
+            } else if (type === '預計折現' || type === '超時') {
+                continue; // 忽略「預計折現」和「超時」
+            } else {
+                // 其他假別
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${ym}</td>
+                        <td>${branch}</td>
+                        <td>${name}</td>
+                        <td>${type}</td>
+                        <td>${subtotal}</td>
+                        <td>${formattedNotes}</td>
+                    </tr>`;
+            }
+        }
 
-        // 處理特殊「遲到(不扣)」、「遲到⚠️」、「漏打卡」的總計行
-        if (lateNDCount > 0) {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${ym}</td>
-                    <td>${branch}</td>
-                    <td>${name}</td>
-                    <td>遲到(不扣)</td>
-                    <td>${lateNDTotal}分鐘 (${lateNDCount} 次)</td>
-                    <td>${lateNDDetails.join('、')}</td>
-                </tr>`;
-        }
-        if (lateCount > 0) {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${ym}</td>
-                    <td>${branch}</td>
-                    <td>${name}</td>
-                    <td>遲到⚠️</td>
-                    <td>${lateTotal}分鐘 (${lateCount} 次)</td>
-                    <td>${lateDetails.join('、')}</td>
-                </tr>`;
-        }
-        if (punchDetails.length > 0) {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${ym}</td>
-                    <td>${branch}</td>
-                    <td>${name}</td>
-                    <td>漏打卡</td>
-                    <td>${punchDetails.length} 次</td>
-                    <td>${punchDetails.join('、')}</td>
-                </tr>`;
-        }
-    });
+        // 處理特殊「遲到(不扣)」、「遲到⚠️」、「漏打卡」的總計行
+        if (lateNDCount > 0) {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${ym}</td>
+                    <td>${branch}</td>
+                    <td>${name}</td>
+                    <td>遲到(不扣)</td>
+                    <td>${lateNDTotal}分鐘 (${lateNDCount} 次)</td>
+                    <td>${lateNDDetails.join('、')}</td>
+                </tr>`;
+        }
+        if (lateCount > 0) {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${ym}</td>
+                    <td>${branch}</td>
+                    <td>${name}</td>
+                    <td>遲到⚠️</td>
+                    <td>${lateTotal}分鐘 (${lateCount} 次)</td>
+                    <td>${lateDetails.join('、')}</td>
+                </tr>`;
+        }
+        if (punchDetails.length > 0) {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${ym}</td>
+                    <td>${branch}</td>
+                    <td>${name}</td>
+                    <td>漏打卡</td>
+                    <td>${punchDetails.length} 次</td>
+                    <td>${punchDetails.join('、')}</td>
+                </tr>`;
+        }
+    });
 }
 
 function copyTable() {
-    const table = document.getElementById('outputTable');
-    if (table.querySelectorAll('tbody tr').length === 0) {
-        const warningNotice = document.createElement('div');
-        warningNotice.textContent = '⚠️ 尚未有資料，請先分析後再複製！';
-        warningNotice.style.position = 'fixed';
-        warningNotice.style.top = '50%';
-        warningNotice.style.left = '20%';
-        warningNotice.style.transform = 'translateY(-50%)';
-        warningNotice.style.backgroundColor = '#d9534f';
-        warningNotice.style.color = 'white';
-        warningNotice.style.padding = '12px 24px';
-        warningNotice.style.borderRadius = '10px';
-        warningNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-        warningNotice.style.zIndex = '9999';
-        document.body.appendChild(warningNotice);
-        setTimeout(() => warningNotice.remove(), 2500);
-        return;
-    }
+    const table = document.getElementById('outputTable');
+    if (table.querySelectorAll('tbody tr').length === 0) {
+        const warningNotice = document.createElement('div');
+        warningNotice.textContent = '⚠️ 尚未有資料，請先分析後再複製！';
+        warningNotice.style.position = 'fixed';
+        warningNotice.style.top = '50%';
+        warningNotice.style.left = '20%';
+        warningNotice.style.transform = 'translateY(-50%)';
+        warningNotice.style.backgroundColor = '#d9534f';
+        warningNotice.style.color = 'white';
+        warningNotice.style.padding = '12px 24px';
+        warningNotice.style.borderRadius = '10px';
+        warningNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+        warningNotice.style.zIndex = '9999';
+        document.body.appendChild(warningNotice);
+        setTimeout(() => warningNotice.remove(), 2500);
+        return;
+    }
 
-    const range = document.createRange();
-    range.selectNode(table);
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
+    const range = document.createRange();
+    range.selectNode(table);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
 
-    try {
-        document.execCommand('copy');
-        const copiedNotice = document.createElement('div');
-        copiedNotice.textContent = '✅ 表格已複製！';
-        copiedNotice.style.position = 'fixed';
-        copiedNotice.style.top = '50%';
-        copiedNotice.style.left = '20%';
-        copiedNotice.style.transform = 'translateY(-50%)';
-        copiedNotice.style.backgroundColor = '#6b6d76';
-        copiedNotice.style.color = 'white';
-        copiedNotice.style.padding = '10px 20px';
-        copiedNotice.style.borderRadius = '10px';
-        copiedNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-        copiedNotice.style.zIndex = '9999';
-        document.body.appendChild(copiedNotice);
-        setTimeout(() => copiedNotice.remove(), 2000);
+    try {
+        document.execCommand('copy');
+        const copiedNotice = document.createElement('div');
+        copiedNotice.textContent = '✅ 表格已複製！';
+        copiedNotice.style.position = 'fixed';
+        copiedNotice.style.top = '50%';
+        copiedNotice.style.left = '20%';
+        copiedNotice.style.transform = 'translateY(-50%)';
+        copiedNotice.style.backgroundColor = '#6b6d76';
+        copiedNotice.style.color = 'white';
+        copiedNotice.style.padding = '10px 20px';
+        copiedNotice.style.borderRadius = '10px';
+        copiedNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+        copiedNotice.style.zIndex = '9999';
+        document.body.appendChild(copiedNotice);
+        setTimeout(() => copiedNotice.remove(), 2000);
 
-    } catch (err) {
-        alert('複製失敗，請手動選取表格再複製。');
-    }
-    selection.removeAllRanges();
+    } catch (err) {
+        alert('複製失敗，請手動選取表格再複製。');
+    }
+    selection.removeAllRanges();
 }
 
 function exportCSV() {
-    const ym = document.getElementById('month').value;
-    const branch = document.getElementById('branch').value;
-    const table = document.getElementById('outputTable');
-    const rows = Array.from(table.querySelectorAll('tr'));
-    const csv = [];
+    const ym = document.getElementById('month').value;
+    const branch = document.getElementById('branch').value;
+    const table = document.getElementById('outputTable');
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const csv = [];
 
-    rows.forEach(row => {
-        const cols = Array.from(row.querySelectorAll('th, td')).map(col =>
-            '"' + col.innerText.replace(/"/g, '""') + '"'
-        );
-        csv.push(cols.join(','));
-    });
+    rows.forEach(row => {
+        const cols = Array.from(row.querySelectorAll('th, td')).map(col =>
+            '"' + col.innerText.replace(/"/g, '""') + '"'
+        );
+        csv.push(cols.join(','));
+    });
 
-    const csvContent = "\uFEFF" + csv.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const filename = `遲到缺勤明細_${branch}_${ym}.csv`;
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const csvContent = "\uFEFF" + csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const filename = `遲到缺勤明細_${branch}_${ym}.csv`;
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 </script>
 </body>
