@@ -4,12 +4,20 @@
   <meta charset="UTF-8">
   <title>匯出缺勤明細</title>
   <style>
-    body {
-      font-family: "Segoe UI", "微軟正黑體", sans-serif;
-      background-color: #f3f1f0; /* 淺暖灰粉 */
-      padding: 30px;
-      color: #4a4a4a; /* 柔灰黑 */
-    }
+  :root {
+    all: initial;
+    font-family: "Segoe UI", "微軟正黑體", sans-serif;
+  }
+
+  body {
+    all: unset;
+    display: block;
+    font-family: "Segoe UI", "微軟正黑體", sans-serif;
+    background-color: #f3f1f0;
+    padding: 30px;
+    color: #4a4a4a;
+    font-size: 16px;
+  }
 
     h2 {
       color: #6b6d76; /* 莫蘭迪深灰紫 */
@@ -105,6 +113,7 @@
   </style>
 </head>
 <body>
+    
   <h2>匯出缺勤明細</h2>
   <label for="month">📅 年月：</label>
   <input type="month" id="month" required>
