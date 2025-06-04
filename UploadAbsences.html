@@ -20,8 +20,8 @@
   }
 
   h2 {
-    color: #6b6d76; /* 莫蘭迪深灰紫 */
-    border-left: 6px solid #9a9cab; /* 莫蘭迪藍灰 */
+    color: #6b6d76;
+    border-left: 6px solid #9a9cab;
     padding-left: 12px;
     margin-bottom: 20px;
   }
@@ -63,7 +63,7 @@
   }
 
   button {
-    background-color: #b8b7b3; /* 莫蘭迪灰杏 */
+    background-color: #b8b7b3;
     color: #fff;
     border: none;
     cursor: pointer;
@@ -74,20 +74,20 @@
   }
 
   button:hover {
-    background-color: #9f9d97; /* 深一階 */
+    background-color: #9f9d97;
   }
 
   .button-group {
     margin-top: 15px;
   }
 
-  /* ✅ 表格修復與優化區塊 */
+  /* ✅ 表格修正關鍵設定 */
   table {
     border-collapse: collapse;
     width: 100%;
-    table-layout: auto;
-    margin-top: 25px;
+    table-layout: fixed; /* 強制平均分配欄位寬度，避免歪斜 */
     background-color: #fff;
+    margin-top: 25px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     font-size: 0.95em;
   }
@@ -97,7 +97,9 @@
     padding: 10px;
     text-align: left;
     font-family: inherit;
-    color: #4a4a4a;
+    vertical-align: top;
+    word-break: break-word;       /* 長字斷行 */
+    white-space: normal;          /* 自動換行 */
   }
 
   th {
@@ -114,8 +116,13 @@
     input, select, textarea {
       width: 100%;
     }
+
+    table {
+      font-size: 14px;
+    }
   }
 </style>
+
 
 </head>
 <body>
