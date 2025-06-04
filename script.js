@@ -385,8 +385,41 @@ function copyResultsLeave() {
 }
 
 function importToAll() {
+    // 1. 先執行本地匯入 (匯入到不計薪計算器)
     importLeaveResults();
-    // 匯入表格的功能如果還沒實現，可以考慮在這裡呼叫相關函數
+
+    // 2. 接著，將資料發送到 iframe (UploadAbsences.html)
+    const teacherName = document.getElementById("teacherNameLeave").value.trim();
+    const inputCashOutDays = parseFloat(document.getElementById("inputCashOutDays").value) || 0;
+    const inputCashOutHours = parseFloat(document.getElementById("inputCashOutHours").value) || 0;
+    
+    // 獲取 resultsLeave 的內容 (假別統計結果)
+    const resultsLeave = document.getElementById("resultsLeave").innerText;
+
+    // 構建要發送的資料物件，與 UploadAbsences.html 中期望的格式一致
+    const dataToSend = {
+        type: 'importLeaveData', // **這個 type 必須與 iframe 接收時的 type 匹配**
+        teacherName: teacherName,
+        cashOutDays: inputCashOutDays,
+        cashOutHours: inputCashOutHours,
+        leaveStats: resultsLeave // 這裡傳遞的是整個結果文字，iframe 會把它放進 textarea
+    };
+
+    // 找到 iframe
+    const iframe = document.getElementById('uploadAbsencesIframe'); // **請確認你的 iframe 的 ID 是 'uploadAbsencesIframe'**
+
+    // 檢查 iframe 是否存在且已載入
+    if (iframe && iframe.contentWindow) {
+        // 使用 postMessage 發送資料
+        // 第二個參數是目標來源，用於安全目的，必須與 iframe 的實際來源匹配
+        iframe.contentWindow.postMessage(dataToSend, 'https://zh22331997.github.io');
+        console.log("📤 主頁面：已成功發送訊息到 iframe");
+        console.log("📤 主頁面：發送的資料：", dataToSend);
+        showToast("✅ 資料已匯入外部表格！"); // 給個提示，讓使用者知道資料發送了
+    } else {
+        console.warn("⚠️ 主頁面：找不到 iframe 或 contentWindow 不可用，無法發送資料。");
+        showToast("⚠️ 無法匯入外部表格，請檢查 iframe。");
+    }
 }
 
 function importLeaveResults() {
