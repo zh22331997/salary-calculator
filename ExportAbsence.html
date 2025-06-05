@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <title>匯出缺勤明細</title> 
 <style>
-  /*可辨識0.5小時+遲到漏打卡+辨識星期+自動選年月+記住分校+提醒先按分析鈕+上傳GOOLE-SHEET按鈕v3*/
+  /*可辨識0.5小時+遲到漏打卡+辨識星期+自動選年月+記住分校+提醒先按分析鈕+上傳GOOLE-SHEET按鈕v4*/
   body {
     font-family: "Segoe UI", "微軟正黑體", sans-serif;
     background-color: #f3f1f0; /* 淺暖灰粉 */
@@ -125,13 +125,13 @@
   </select>
 
   <label for="input">📋 貼上老師的出缺勤資料：</label>
-  <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「✅假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
+  <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
 
   <div class="button-group">
     <button onclick="analyzeData()">🔍 分析資料</button>
     <button id="copyBtn" onclick="copyTable()">📄 複製整張表格</button>
     <button onclick="exportCSV()">💾 匯出 CSV</button>
-    <button onclick="submitToGoogle()">別按.還沒弄好🚀 上傳</button>
+    <button onclick="submitToGoogle()">先別按 還沒完成🚀 上傳至所屬分校的 Google線上檔案</button>
 
 
   </div>
@@ -440,7 +440,7 @@ function exportCSV() {
     return;
   }
 
-  submitToGoogleSheetForm(rows, branch);
+  submitToGoogleForm(rows, branch);
 }
 
 </script>
