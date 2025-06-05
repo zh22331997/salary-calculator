@@ -125,13 +125,13 @@
   </select>
 
   <label for="input">📋 貼上老師的出缺勤資料：</label>
-  <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
+  <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「✅假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
 
   <div class="button-group">
     <button onclick="analyzeData()">🔍 分析資料</button>
     <button id="copyBtn" onclick="copyTable()">📄 複製整張表格</button>
     <button onclick="exportCSV()">💾 匯出 CSV</button>
-    <button onclick="submitToGoogle()">未完成🚀 上傳所屬分校 Google線上檔案</button>
+    <button onclick="submitToGoogle()">未完成🚀 上傳分校表單</button>
 
 
   </div>
