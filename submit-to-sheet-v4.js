@@ -115,31 +115,4 @@ function submitToGoogleForm(rows, branch) {
   console.log(`📤 已啟動送出 ${rows.length} 筆資料至 ${branch}`);
 }
 
-// 🔔 toast 提示功能
-function showToast(message, type = 'success') {
-  const toast = document.createElement('div');
-  toast.textContent = message;
-  toast.style.position = 'fixed';
-  toast.style.bottom = '40px';
-  toast.style.left = '40px';
-  toast.style.backgroundColor =
-    type === 'error' ? 'rgba(201, 76, 76, 0.9)' :
-    type === 'info' ? 'rgba(123, 146, 164, 0.9)' :
-    'rgba(107, 109, 118, 0.9)';
-  toast.style.color = '#fff';
-  toast.style.padding = '10px 18px';
-  toast.style.borderRadius = '8px';
-  toast.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
-  toast.style.zIndex = '9999';
-  toast.style.fontSize = '15px';
-  toast.style.opacity = '0';
-  toast.style.transition = 'opacity 0.3s ease-in-out';
 
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.style.opacity = '1');
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
