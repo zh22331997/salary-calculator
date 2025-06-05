@@ -168,7 +168,7 @@
     <label>💰預計折現補休（時）：<input type="number" id="inputCashOutHours" style="width:60px;" placeholder="0" oninput="calculateLeave()"></label></br>
 
     <label>年份：<input type="number" id="yearInput" value="" min="2000" max="2100"></label>
-    <label>月份（1~12）：<input type="number" id="monthInput" value="5" min="1" max="12"></label>
+    <label>月份（1~12）：<input type="number" id="monthInput" value="" min="1" max="12"></label>
     <button class="btn btn-blue" onclick="generateTable()">產生日期表</button>
 
     <div id="formArea"></div>
@@ -639,8 +639,33 @@
 
             showToast("假別統計結果已匯入不計薪計算！");
         }
+        
+ 
+    function showToast(message, duration = 2500) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.opacity = 1;
+        setTimeout(() => {
+            toast.style.opacity = 0;
+        }, duration);
+    }
 
-   
+    window.addEventListener("DOMContentLoaded", () => {
+    let now = new Date();
+    let prevMonth = now.getMonth(); // 0 = 一月, 所以這裡的 prevMonth 其實已經是上個月，這邊是自動帶入上個月的日期表
+
+    if (prevMonth === 0) {
+        document.getElementById("monthInput").value = 12;
+        document.getElementById("yearInput").value = now.getFullYear() - 1;
+    } else {
+        document.getElementById("monthInput").value = prevMonth;
+        document.getElementById("yearInput").value = now.getFullYear();
+    }
+
+    generateTable();
+});
+
+  
 
     </script>
 
