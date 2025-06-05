@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <title>匯出缺勤明細</title> 
 <style>
-  /*可辨識0.5小時+遲到漏打卡+辨識星期+記住上次選的分校+依據資料選月份*/
+  /*可辨識0.5小時+遲到漏打卡+辨識星期+自動選年月+記住分校+提醒先按分析鈕*/
   body {
     font-family: "Segoe UI", "微軟正黑體", sans-serif;
     background-color: #f3f1f0; /* 淺暖灰粉 */
@@ -129,7 +129,7 @@
 
   <div class="button-group">
     <button onclick="analyzeData()">🔍 分析資料</button>
-    <button onclick="copyTable()">📄 複製整張表格</button>
+    <button id="copyBtn" onclick="copyTable()">📄 複製整張表格</button>
     <button onclick="exportCSV()">💾 匯出 CSV</button>
   </div>
 
@@ -221,27 +221,22 @@ function analyzeData() {
 
       // ✅ 全勤緩衝 → 遲到(不扣) + 漏打卡
       if (type === '全勤緩衝') {
-      // 1. 處理所有括號內容
-      const brackets = [...notesText.matchAll(/[（(](.+?)[）)]/g)];
+        const brackets = [...notesText.matchAll(/[（(](.+?)[）)]/g)];
+        brackets.forEach(m => {
+          const entry = m[1];
+          if (/分鐘/.test(entry)) {
+            const minutes = parseInt(entry.match(/(\d+)分鐘/)?.[1] || '0');
+            lateNDTotal += minutes;
+            lateNDCount++;
+            lateNDDetails.push(entry);
+          } else if (/上班|下班/.test(entry)) {
+            punchDetails.push(entry);
+          }
+        });
+        return; // 不進表格
+      }
 
-      brackets.forEach(m => {
-      const entry = m[1]; // 整段例如：5/8 四 2分鐘 or 5/9 五 上班
-
-      if (/分鐘/.test(entry)) {
-      const minutes = parseInt(entry.match(/(\d+)分鐘/)?.[1] || '0');
-      lateNDTotal += minutes;
-      lateNDCount++;
-      lateNDDetails.push(entry);
-    } else if (/上班|下班/.test(entry)) {
-      punchDetails.push(entry);
-    }
-  });
-
-  return; // 這筆不進一般假別表格
-}
-
-
-      // ✅ 遲到 → 遲到(要扣)
+      // ✅ 遲到 → 扣薪
       if (type === '遲到') {
         const lateMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2}\s*.+?分鐘)[）)]/g)];
         lateMatches.forEach(m => {
@@ -250,7 +245,7 @@ function analyzeData() {
           lateCount++;
           lateDetails.push(m[1]);
         });
-        return; // 遲到不進一般假別表格
+        return; // 不進表格
       }
 
       // ❌ 忽略
@@ -271,7 +266,7 @@ function analyzeData() {
         </tr>`;
     });
 
-    // ✅ 輸出三大統計項目
+    // ✅ 遲到(不扣)
     if (lateNDCount > 0) {
       tbody.innerHTML += `
         <tr>
@@ -284,6 +279,7 @@ function analyzeData() {
         </tr>`;
     }
 
+    // ✅ 遲到⚠️
     if (lateCount > 0) {
       tbody.innerHTML += `
         <tr>
@@ -296,6 +292,7 @@ function analyzeData() {
         </tr>`;
     }
 
+    // ✅ 漏打卡
     if (punchDetails.length > 0) {
       tbody.innerHTML += `
         <tr>
@@ -308,35 +305,39 @@ function analyzeData() {
         </tr>`;
     }
   });
+
+  
 }
+
 
 
 
 
 function copyTable() {
   const table = document.getElementById('outputTable');
-  
+  const tbody = table.querySelector('tbody');
+
   // 加入資料是否為空的防呆
-  if (table.querySelectorAll('tbody tr').length === 0) {
-  const warningNotice = document.createElement('div');
-  warningNotice.textContent = '⚠️ 尚未有資料，請先分析後再複製！';
-  warningNotice.style.position = 'fixed';
-  warningNotice.style.top = '50%';
-  warningNotice.style.left = '20%';
-  warningNotice.style.transform = 'translateY(-50%)';
-  warningNotice.style.backgroundColor = '#d9534f';  // 鮮紅提示
-  warningNotice.style.color = 'white';
-  warningNotice.style.padding = '12px 24px';
-  warningNotice.style.borderRadius = '10px';
-  warningNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-  warningNotice.style.zIndex = '9999';
-  warningNotice.style.fontSize = '16px';
-  document.body.appendChild(warningNotice);
-  setTimeout(() => warningNotice.remove(), 2500);
-  return;
-}
+  if (!tbody || tbody.rows.length === 0) {
+    const warningNotice = document.createElement('div');
+    warningNotice.textContent = '⚠️ 尚未有資料，請先分析後再複製！';
+    warningNotice.style.position = 'fixed';
+    warningNotice.style.top = '50%';
+    warningNotice.style.left = '20%';
+    warningNotice.style.transform = 'translateY(-50%)';
+    warningNotice.style.backgroundColor = '#d9534f';
+    warningNotice.style.color = 'white';
+    warningNotice.style.padding = '12px 24px';
+    warningNotice.style.borderRadius = '10px';
+    warningNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+    warningNotice.style.zIndex = '9999';
+    warningNotice.style.fontSize = '16px';
+    document.body.appendChild(warningNotice);
+    setTimeout(() => warningNotice.remove(), 2500);
+    return;
+  }
 
-
+  // 其餘維持原樣
   const range = document.createRange();
   range.selectNode(table);
   const selection = window.getSelection();
@@ -346,22 +347,21 @@ function copyTable() {
   try {
     document.execCommand('copy');
 
-    // ✅ 浮出式提示訊息：垂直置中、偏左
-   const copiedNotice = document.createElement('div');
-   copiedNotice.textContent = '✅ 表格已複製！';
-   copiedNotice.style.position = 'fixed';
-   copiedNotice.style.top = '50%';
-   copiedNotice.style.left = '20%';
-   copiedNotice.style.transform = 'translateY(-50%)';
-   copiedNotice.style.backgroundColor = '#6b6d76';
-   copiedNotice.style.color = 'white';
-   copiedNotice.style.padding = '10px 20px';
-   copiedNotice.style.borderRadius = '10px';
-   copiedNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
-   copiedNotice.style.zIndex = '9999';
-   copiedNotice.style.fontSize = '16px';
-   document.body.appendChild(copiedNotice);
-   setTimeout(() => copiedNotice.remove(), 2000);
+    const copiedNotice = document.createElement('div');
+    copiedNotice.textContent = '✅ 表格已複製！';
+    copiedNotice.style.position = 'fixed';
+    copiedNotice.style.top = '50%';
+    copiedNotice.style.left = '20%';
+    copiedNotice.style.transform = 'translateY(-50%)';
+    copiedNotice.style.backgroundColor = '#6b6d76';
+    copiedNotice.style.color = 'white';
+    copiedNotice.style.padding = '10px 20px';
+    copiedNotice.style.borderRadius = '10px';
+    copiedNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+    copiedNotice.style.zIndex = '9999';
+    copiedNotice.style.fontSize = '16px';
+    document.body.appendChild(copiedNotice);
+    setTimeout(() => copiedNotice.remove(), 2000);
 
   } catch (err) {
     alert('複製失敗，請手動選取表格再複製。');
@@ -370,10 +370,34 @@ function copyTable() {
   selection.removeAllRanges();
 }
 
+
 function exportCSV() {
   const ym = document.getElementById('month').value;
   const branch = document.getElementById('branch').value;
   const table = document.getElementById('outputTable');
+  const tbody = table.querySelector('tbody');
+
+  // 防呆檢查：若表格內容為空，跳出警告並停止
+  if (tbody.querySelectorAll('tr').length === 0) {
+    const warningNotice = document.createElement('div');
+    warningNotice.textContent = '⚠️ 尚未分析資料，請先按「分析資料」後再匯出！';
+    warningNotice.style.position = 'fixed';
+    warningNotice.style.top = '50%';
+    warningNotice.style.left = '20%';
+    warningNotice.style.transform = 'translateY(-50%)';
+    warningNotice.style.backgroundColor = '#d9534f';  // 鮮紅提示
+    warningNotice.style.color = 'white';
+    warningNotice.style.padding = '12px 24px';
+    warningNotice.style.borderRadius = '10px';
+    warningNotice.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+    warningNotice.style.zIndex = '9999';
+    warningNotice.style.fontSize = '16px';
+    document.body.appendChild(warningNotice);
+    setTimeout(() => warningNotice.remove(), 2500);
+    return;
+  }
+
+  // 以下為原有匯出邏輯
   const rows = Array.from(table.querySelectorAll('tr'));
   const csv = [];
 
@@ -394,6 +418,7 @@ function exportCSV() {
   link.click();
   document.body.removeChild(link);
 }
+
 </script>
 
 </body>
