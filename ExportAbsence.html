@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <title>匯出缺勤明細</title> 
 <style>
-  /*可辨識0.5小時+遲到漏打卡+辨識星期*/
+  /*可辨識0.5小時+遲到漏打卡+辨識星期+記住上次選的分校+依據資料選月份*/
   body {
     font-family: "Segoe UI", "微軟正黑體", sans-serif;
     background-color: #f3f1f0; /* 淺暖灰粉 */
@@ -148,10 +148,21 @@
   </table>
 
 <script>
-window.addEventListener('message', function(event) {
-  console.log("✅ 收到訊息來自：", event.origin);
-  console.log("✅ 資料內容：", event.data);
+window.addEventListener("DOMContentLoaded", () => {
+  // ✅ 自動載入上次選擇的分校
+  const lastBranch = localStorage.getItem("lastBranch");
+  if (lastBranch) {
+    document.getElementById("branch").value = lastBranch;
+  }
 
+  // ✅ 當使用者變更分校，記住選擇
+  document.getElementById("branch").addEventListener("change", function() {
+    localStorage.setItem("lastBranch", this.value);
+  });
+});
+
+
+window.addEventListener('message', function(event) {
   if (!event.origin.startsWith('https://zh22331997.github.io')) return;
 
   if (event.data.type === 'IMPORT_LEAVE_DATA') {
@@ -160,11 +171,22 @@ window.addEventListener('message', function(event) {
     if (targetField) {
       targetField.value = importedData;
       console.log("✅ 成功寫入 input！");
+
+      // ✅ 自動推算匯入資料中的「月」，帶入 input#month
+      const firstDateMatch = importedData.match(/(\d{1,2})\/(\d{1,2})/);  // 擷取像 5/3 的資料
+      if (firstDateMatch) {
+        const year = new Date().getFullYear();
+        const month = firstDateMatch[1].padStart(2, '0');
+        document.getElementById('month').value = `${year}-${month}`;
+        console.log("📅 自動帶入月份：", `${year}-${month}`);
+      }
+
     } else {
       console.warn("⚠️ 找不到 id='input' 的欄位！");
     }
   }
 });
+
 
 function analyzeData() {
   const ym = document.getElementById('month').value;
