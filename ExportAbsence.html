@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>匯出缺勤明細</title> 
 <style>
-  /*可辨識0.5小時+遲到漏打卡+辨識星期+自動選年月+記住分校+提醒先按分析鈕+上傳GOOLE-SHEET按鈕v4*/
+  /*可辨識0.5小時+遲到漏打卡+辨識星期+自動選年月+記住分校+提醒先按分析鈕+失敗上傳GOOLE-SHEET按鈕v4*/
   body {
     font-family: "Segoe UI", "微軟正黑體", sans-serif;
     background-color: #f3f1f0; /* 淺暖灰粉 */
@@ -108,7 +108,7 @@
 <body>
 
   <h2>匯出缺勤明細</h2>
-  <label for="month">📅 年月：</label>
+  <label for="month">📅 年月：  (匯入的話，會自動選取)</label>
   <input type="month" id="month" required>
   <label for="branch">🏫 選擇分校：</label>
   <select id="branch">
@@ -126,7 +126,7 @@
     <button onclick="analyzeData()">🔍 分析資料</button>
     <button id="copyBtn" onclick="copyTable()">📄 複製整張表格</button>
     <button onclick="exportCSV()">💾 匯出 CSV</button>
-    <button onclick="submitToGoogle()">先別按未完成🚀 上傳Google</button>
+    <button onclick="submitToGoogle()">(勿按.未好)🚀 上傳Google</button>
   </div>
 
   <table id="outputTable">
