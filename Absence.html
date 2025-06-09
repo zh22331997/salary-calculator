@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>假別統計工具</title>
     <style>
-        /*假別統一(算卡)統一按鈕+有星期+自動選上個月+自動生成日期表*/
+        /*假別統一(算卡)統一按鈕+有星期+自動選上個月+切換月份自動更新表格*/
         body {
             font-family: "Segoe UI", "微軟正黑體", sans-serif;
             background-color:#D4DCDB;
@@ -168,8 +168,8 @@
     <label>💰預計折現補休（時）：<input type="number" id="inputCashOutHours" style="width:60px;" placeholder="0" oninput="calculateLeave()"></label></br>
 
     <label>年份：<input type="number" id="yearInput" value="" min="2000" max="2100"></label>
-    <label>月份（1~12）：<input type="number" id="monthInput" value="" min="1" max="12"></label>
-    <button class="btn btn-blue" onclick="generateTable()">產生日期表</button>
+    <label>月份（1~12）：<input type="number" id="monthInput" value="" min="1" max="12"></label>切換月份，日期表會自動更新
+
 
     <div id="formArea"></div>
     <h3>統計結果（空白處點一下，再按複製）：</h3>
@@ -650,9 +650,9 @@
         }, duration);
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
+   window.addEventListener("DOMContentLoaded", () => {
     let now = new Date();
-    let prevMonth = now.getMonth(); // 0 = 一月, 所以這裡的 prevMonth 其實已經是上個月，這邊是自動帶入上個月的日期表
+    let prevMonth = now.getMonth(); // 0 = 一月
 
     if (prevMonth === 0) {
         document.getElementById("monthInput").value = 12;
@@ -663,6 +663,10 @@
     }
 
     generateTable();
+
+    // ⭐️ 加入這兩行以自動切換月份時重新產生表格
+    document.getElementById("yearInput").addEventListener("change", generateTable);
+    document.getElementById("monthInput").addEventListener("change", generateTable);
 });
 
   
