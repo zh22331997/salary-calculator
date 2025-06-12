@@ -2,9 +2,9 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>假別統計工具</title>
+    <title>假別統計工具*</title>
     <style>
-        /*假別統一(算卡)統一按鈕+刪星期+自動選上個月+切換月份自動更新表格+單位簡化時分*/
+        /*假別統一(算卡)統一按鈕+刪星期+單位簡化+自動選上個月+切換月份自動更新表格+防止滑鼠改到數字*/
         body {
             font-family: "Segoe UI", "微軟正黑體", sans-serif;
             background-color:#D4DCDB;
@@ -671,6 +671,14 @@
     // ⭐️ 加入這兩行以自動切換月份時重新產生表格
     document.getElementById("yearInput").addEventListener("change", generateTable);
     document.getElementById("monthInput").addEventListener("change", generateTable);
+
+     // ✅ 禁止滾輪改變數字輸入框的值
+    document.addEventListener('wheel', function(e) {
+        if (document.activeElement.type === 'number' &&
+            document.activeElement === document.querySelector(':focus')) {
+            document.activeElement.blur(); // 移除 focus 避免數值被改動
+        }
+    }, { passive: false });
 });
 
   
