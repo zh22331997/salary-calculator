@@ -1,4 +1,6 @@
-<!DOCTYPE html> 
+
+我想修改讓統計結果去掉星期幾
+<!DOCTYPE html>  
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -507,12 +509,10 @@
 
     // 🔁 修改現有備註格式的 map：
     function formatEntry(e, unit) {
-        return `(${e.date} ${e.weekday} ${e[unit]}${unit === 'minutes' ? '分鐘' : unit === 'hours' ? '小時' : '天'})`;
-    }
-                //if (mHourVal > 0) {
-                    //menstrualRecords.push({ hours: mHourVal, date: date });
-                    //mHour += mHourVal; // 這裡的mHour累加也應該在記錄之外
-                //}
+    return `(${e.date} ${e[unit]}${unit === 'minutes' ? '分' : unit === 'hours' ? '時' : '天'})`;
+}
+
+    //上方是統計結果我去掉星期幾，小時改成H
                 
   
             const name = document.getElementById("teacherNameLeave").value.trim();
@@ -520,7 +520,7 @@
 
             let result = '';
             if (vDay > 0 || vHour > 0) {
-                result += `✅ 特休/補休：${vDay} 天 ${vHour} 小時`;
+                result += `✅ 特休/補休：${vDay} 天 ${vHour} 時`;
                 const vacationDetails = vacationRecords.map(e => formatEntry(e, e.hours !== undefined ? 'hours' : 'days')).join('、');
                 if (vacationDetails) result += `      ${vacationDetails}\n`;
                 else result += '\n'; // 確保換行
@@ -529,7 +529,7 @@
             const totalBufferCount = lateNoDeductRecords.length + punchInCount + punchOutCount;
             if (lateNoDeductRecords.length > 0 || punchCardMissRecords.length > 0) {
             let bufferString = `✅ 全勤緩衝：`;
-            const lateDetails = lateNoDeductRecords.map(record => `(${record.date} ${record.minutes}分鐘)`).join('、');
+            const lateDetails = lateNoDeductRecords.map(record => `(${record.date} ${record.minutes}分)`).join('、');
             const punchCardDetails = punchCardMissRecords.map(record => `(${record.date} ${record.type})`).join('、');
 
             if (lateNoDeductMin > 0) bufferString += `遲到不扣 ${lateDetails}`;
@@ -542,42 +542,42 @@
             }
 
             if (fDay > 0 || fHour > 0) {
-                result += `✅ 喪假：${fDay} 天 ${fHour} 小時`;
+                result += `✅ 喪假：${fDay} 天 ${fHour} 時`;
                 const funeralDetails = funeralRecords.map(e => formatEntry(e, e.hours !== undefined ? 'hours' : 'days')).join('、');
                 if (funeralDetails) result += `      ${funeralDetails}\n`;
                 else result += '\n'; // 確保換行
             }
 
             if (otHour > 0) {
-                result += `✅ 超時：${otHour} 小時`;
+                result += `✅ 超時：${otHour} 時`;
                 const overtimeDetails = overtimeRecords.map(e => formatEntry(e, 'hours')).join('、');
                 if (overtimeDetails) result += `      ${overtimeDetails}\n`;
                 else result += '\n'; // 確保換行
             }
 
             if (pDay > 0 || pHour > 0) {
-                result += `✅ 事假：${pDay} 天 ${pHour} 小時`;
+                result += `✅ 事假：${pDay} 天 ${pHour} 時`;
                 const leaveDetails = leaveRecords.map(e => formatEntry(e, e.hours !== undefined ? 'hours' : 'days')).join('、');
                 if (leaveDetails) result += `      ${leaveDetails}\n`;
                 else result += '\n'; // 確保換行
             }
 
             if (sDay > 0 || sHour > 0) {
-                result += `✅ 病假：${sDay} 天 ${sHour} 小時`;
+                result += `✅ 病假：${sDay} 天 ${sHour} 時`;
                 const sickDetails = sickRecords.map(e => formatEntry(e, e.hours !== undefined ? 'hours' : 'days')).join('、');
                 if (sickDetails) result += `      ${sickDetails}\n`;
                 else result += '\n'; // 確保換行
             }
 
             if (mHour > 0) {
-                result += `✅ 生理假：${mHour} 小時 ${mHour > 8 ? "(超過額度⚠️)" : ""}`;
+                result += `✅ 生理假：${mHour} 時 ${mHour > 8 ? "(超過額度⚠️)" : ""}`;
                 const mDetails = menstrualRecords.map(e => formatEntry(e, 'hours')).join('、');
                 if (mDetails) result += `　　${mDetails}\n`;
                 else result += '\n'; // 確保換行
             }
 
             if (lateMin > 0) {
-                result += `✅ 遲到：${lateMin} 分鐘`;
+                result += `✅ 遲到：${lateMin} 分`;
                 const lateDetails = lateRecords.map(e => formatEntry(e, 'minutes')).join('、');
                 if (lateDetails) result += `　　${lateDetails}\n`;
                 else result += '\n'; // 確保換行
@@ -586,7 +586,7 @@
             const inputCashOutDays = parseFloat(document.getElementById("inputCashOutDays").value) || 0;
             const inputCashOutHours = parseFloat(document.getElementById("inputCashOutHours").value) || 0;
             if (inputCashOutDays > 0 || inputCashOutHours > 0) {
-                result += `✅ 預計折現：${inputCashOutDays} 天 ${inputCashOutHours} 小時\n`;
+                result += `✅ 預計折現：${inputCashOutDays} 天 ${inputCashOutHours} 時\n`;
             }
 
             document.getElementById("resultsLeave").innerText = head + result;
@@ -700,12 +700,12 @@
 
             // 從全局變數中獲取詳細記錄
             const leaveDaysNote = leaveRecords.filter(r => r.days).map(record => `（${record.date} ${record.days}天）`).join('');
-            const leaveHoursNote = leaveRecords.filter(r => r.hours).map(record => `（${record.date} ${record.hours}小時）`).join('');
+            const leaveHoursNote = leaveRecords.filter(r => r.hours).map(record => `（${record.date} ${record.hours}時）`).join('');
             const sickDaysNote = sickRecords.filter(r => r.days).map(record => `（${record.date} ${record.days}天）`).join('');
-            const sickHoursNote = sickRecords.filter(r => r.hours).map(record => `（${record.date} ${record.hours}小時）`).join('');
+            const sickHoursNote = sickRecords.filter(r => r.hours).map(record => `（${record.date} ${record.hours}時）`).join('');
             
-            const lateNote = lateRecords.map(record => `（${record.date} ${record.minutes}分鐘）`).join('');
-            const menstrualNote = menstrualRecords.map(record => `（${record.date} ${record.hours}小時）`).join('');
+            const lateNote = lateRecords.map(record => `（${record.date} ${record.minutes}分）`).join('');
+            const menstrualNote = menstrualRecords.map(record => `（${record.date} ${record.hours}時）`).join('');
 
             // vacationRecords 在這裡似乎沒有直接用於扣薪計算，但您可以根據需要添加。
             // const vacationDaysNote = vacationRecords.filter(r => r.type === "天").map(record => `（${record.date} ${record.days}天）`).join('');
@@ -741,17 +741,17 @@
 
             // 顯示時仍使用四捨五入後的個別金額，但總和是基於原始值
             if (leaveDays) formula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元 ${leaveDaysNote}\n`;
-            if (leaveHours) formula += `➖事假 ${leaveHours}小時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元 ${leaveHoursNote}\n`;
+            if (leaveHours) formula += `➖事假 ${leaveHours}時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元 ${leaveHoursNote}\n`;
             if (sickDays) formula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元 ${sickDaysNote}\n`;
-            if (sickHours) formula += `➖病假 ${sickHours}小時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元 ${sickHoursNote}\n`;
-            if (lateMinutes) formula += `➖遲到 ${lateMinutes}分鐘 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元 ${lateNote}\n`;
-            if (menstrualHours) formula += `➖生理假 ${menstrualHours}小時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元 ${menstrualNote}\n`;
+            if (sickHours) formula += `➖病假 ${sickHours}時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元 ${sickHoursNote}\n`;
+            if (lateMinutes) formula += `➖遲到 ${lateMinutes}分 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元 ${lateNote}\n`;
+            if (menstrualHours) formula += `➖生理假 ${menstrualHours}時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元 ${menstrualNote}\n`;
 
             formula += `不支薪金額：${totalDeduct} 元\n`;
             
             // 💰 顯示折現算式（放在所有 ➖ 扣薪公式之後）
             if (cashOutDays) formula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
-            if (cashOutHours) formula += `➕折現 ${cashOutHours}小時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
+            if (cashOutHours) formula += `➕折現 ${cashOutHours}時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
             if (cashOutDays || cashOutHours) formula += `折現總金額：${totalCashOutBonus} 元\n`;
 
             document.getElementById("salaryResult").innerText = formula;
