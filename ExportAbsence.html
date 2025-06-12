@@ -123,8 +123,7 @@
   <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「✅假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
 
   <div class="button-group">
-    <button onclick="analyzeData()">🔍 分析資料</button>
-    <button id="copyBtn" onclick="copyTable()">📄 複製整張表格</button>
+    <button onclick="analyzeAndCopy()">🔍 分析資料並複製表格</button> 
     <button onclick="exportCSV()">💾 匯出 CSV</button>
     <button onclick="submitToGoogle()">(勿按.未好)🚀 上傳Google</button>
   </div>
@@ -231,8 +230,8 @@ function analyzeData() {
         const brackets = [...notesText.matchAll(/[（(](.+?)[）)]/g)];
         brackets.forEach(m => {
           const entry = m[1];
-          if (/分鐘/.test(entry)) {
-            const minutes = parseInt(entry.match(/(\d+)分鐘/)?.[1] || '0');
+          if (/分/.test(entry)) {
+            const minutes = parseInt(entry.match(/(\d+)分/)?.[1] || '0');
             lateNDTotal += minutes;
             lateNDCount++;
             lateNDDetails.push(entry);
@@ -245,9 +244,9 @@ function analyzeData() {
 
       // ✅ 遲到 → 扣薪
       if (type === '遲到') {
-        const lateMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2}\s*.+?分鐘)[）)]/g)];
+        const lateMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2}\s*.+?分)[）)]/g)];
         lateMatches.forEach(m => {
-          const minutes = parseInt(m[1].match(/(\d+)分鐘/)?.[1] || '0');
+          const minutes = parseInt(m[1].match(/(\d+)分/)?.[1] || '0');
           lateTotal += minutes;
           lateCount++;
           lateDetails.push(m[1]);
@@ -259,7 +258,7 @@ function analyzeData() {
       if (type === '預計折現' || type === '超時') return;
 
       // ✅ 一般假別
-      const noteMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2}\s*.+?(?:天|小時|分鐘))[）)]/g)];
+      const noteMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2}\s*.+?(?:天|時|分))[）)]/g)];
       const cleanNotes = noteMatches.map(m => m[1].trim()).join('、');
 
       tbody.innerHTML += `
@@ -281,7 +280,7 @@ function analyzeData() {
           <td>${branch}</td>
           <td>${name}</td>
           <td>遲到(不扣)</td>
-          <td>${lateNDTotal}分鐘 (${lateNDCount} 次)</td>
+          <td>${lateNDTotal}分 (${lateNDCount} 次)</td>
           <td>${lateNDDetails.join('、')}</td>
         </tr>`;
     }
@@ -294,7 +293,7 @@ function analyzeData() {
           <td>${branch}</td>
           <td>${name}</td>
           <td>遲到⚠️</td>
-          <td>${lateTotal}分鐘 (${lateCount} 次)</td>
+          <td>${lateTotal}分 (${lateCount} 次)</td>
           <td>${lateDetails.join('、')}</td>
         </tr>`;
     }
@@ -415,8 +414,14 @@ function analyzeData() {
       toast.style.backgroundColor = bgColors[type] || bgColors.info;
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 3000);
-    }
-        function copyTable() {
+     }
+
+function analyzeAndCopy() {
+  analyzeData();
+  setTimeout(copyTable, 100); // 等待分析完才複製
+}
+
+function copyTable() {
       const table = document.getElementById('outputTable');
       const tbody = table.querySelector('tbody');
       if (!tbody || tbody.rows.length === 0) {
