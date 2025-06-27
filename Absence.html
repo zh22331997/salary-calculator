@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>  
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <title>假別統計工具*</title>
     <style>
-        /*假別統一(算卡)統一按鈕+刪星期+單位簡化+自動選上個月+切換月份自動更新表格+防止滑鼠改到數字*/
+        /*假別統一(算卡)統一按鈕+刪星期+單位簡化+自動選上個月+切換月份自動更新表格+防止滑鼠改到數字+修正生理假未統計*/
         body {
             font-family: "Segoe UI", "微軟正黑體", sans-serif;
             background-color:#D4DCDB;
@@ -481,6 +482,7 @@
         sHour += sHourVal;
         lateMin += lateMinVal;
         lateNoDeductMin += lateNoDeductMinVal;
+        mHour += mHourVal;
         fDay += fDayChecked;
         fHour += fHourVal;
         otHour += otHourVal;
