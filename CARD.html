@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>名牌產生器 - 正華學苑</title>
+  <style>
+    body {
+      font-family: "Noto Sans TC", sans-serif;
+      padding: 20px;
+    }
+    label {
+      display: inline-block;
+      margin-right: 15px;
+      margin-bottom: 10px;
+    }
+    #preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .badge {
+      width: calc(100% / 2 - 10px);
+      height: 360px;
+      border: 1px dashed #ccc;
+      box-sizing: border-box;
+      padding: 10px;
+      position: relative;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .badge-content {
+      position: relative;
+      z-index: 1;
+    }
+    .badge h3 {
+      margin: 5px 0;
+      text-align: center;
+    }
+    .badge p {
+      margin: 4px 0;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    @media print {
+      body { padding: 0; }
+      .badge { page-break-inside: avoid; }
+      button, input, label { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <h2>正華學苑 名牌產生器</h2>
+
+  <label>分校名稱：<input type="text" id="branch" value="正華學苑－清水分校"></label>
+  <label>活動名稱：<input type="text" id="event" value="初咪體驗農場"></label>
+  <label>帶隊主任：<input type="text" id="leader" value="Andy 0936-111-699"></label>
+
+  <br><br>
+  <input type="file" id="upload" accept=".xlsx,.csv" />
+  <button onclick="window.print()">列印名牌</button>
+  <button onclick="downloadWord()">下載 Word</button>
+  <div id="preview"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.3.2/docx.umd.min.js"></script>
+  <script>
+    const upload = document.getElementById("upload");
+    let currentData = [];
+
+    upload.addEventListener("change", handleFile);
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, { type: "binary" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        currentData = json;
+        generateBadges(json);
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    function generateBadges(data) {
+      const container = document.getElementById("preview");
+      container.innerHTML = "";
+      const branch = document.getElementById("branch").value;
+      const event = document.getElementById("event").value;
+      const leader = document.getElementById("leader").value;
+
+      data.forEach(row => {
+        const badge = document.createElement("div");
+        badge.className = "badge";
+        badge.innerHTML = `
+          <div class="badge-content">
+            <h3>${branch}</h3>
+            <p>活動名稱：${event}</p>
+            <p>學生姓名：${row["姓名"] || ""}</p>
+            <p>車次組別：${row["車次"] || ""}</p>
+            <p>帶隊老師：${row["帶隊老師"] || ""}</p>
+            <p>帶隊主任：${leader}<br>妃文 0978-821-500</p>
+          </div>
+        `;
+        container.appendChild(badge);
+      });
+    }
+
+    async function downloadWord() {
+      const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, PageBreak } = window.docx;
+      const doc = new Document();
+      const branch = document.getElementById("branch").value;
+      const event = document.getElementById("event").value;
+      const leader = document.getElementById("leader").value;
+
+      const sections = [];
+      const badgesPerPage = 8;
+
+      for (let pageStart = 0; pageStart < currentData.length; pageStart += badgesPerPage) {
+        const badgeRows = [];
+        for (let i = 0; i < 4; i++) {
+          const rowCells = [];
+          for (let j = 0; j < 2; j++) {
+            const index = pageStart + i * 2 + j;
+            if (index < currentData.length) {
+              const row = currentData[index];
+              const cellContent = new Paragraph({
+                children: [
+                  new TextRun({ text: branch, bold: true, size: 28 }),
+                  new TextRun("
+活動名稱：" + event),
+                  new TextRun("
+學生姓名：" + (row["姓名"] || "")),
+                  new TextRun("
+車次組別：" + (row["車次"] || "")),
+                  new TextRun("
+帶隊老師：" + (row["帶隊老師"] || "")),
+                  new TextRun("
+帶隊主任：" + leader + " / 妃文 0978-821-500")
+                ],
+                alignment: AlignmentType.LEFT
+              });
+              rowCells.push(new TableCell({
+                children: [cellContent],
+                width: { size: 50, type: WidthType.PERCENTAGE },
+              }));
+            } else {
+              rowCells.push(new TableCell({
+                children: [new Paragraph("")],
+                width: { size: 50, type: WidthType.PERCENTAGE },
+              }));
+            }
+          }
+          badgeRows.push(new TableRow({ children: rowCells }));
+        }
+
+        sections.push({
+          children: [
+            new Table({
+              rows: badgeRows,
+              width: { size: 100, type: WidthType.PERCENTAGE }
+            })
+          ]
+        });
+      }
+
+      doc.addSection({ children: [] });
+      sections.forEach((s, idx) => {
+        doc.addSection({ children: s.children });
+      });
+
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "名牌.docx";
+      a.click();
+      URL.revokeObjectURL(url);
+    } = window.docx;
+      const doc = new Document();
+      const branch = document.getElementById("branch").value;
+      const event = document.getElementById("event").value;
+      const leader = document.getElementById("leader").value;
+
+      const rows = [];
+      for (let i = 0; i < currentData.length; i++) {
+        const row = currentData[i];
+        const cellContent = new Paragraph({
+          children: [
+            new TextRun({ text: branch, bold: true, size: 28 }),
+            new TextRun("\n活動名稱：" + event),
+            new TextRun("\n學生姓名：" + (row["姓名"] || "")),
+            new TextRun("\n車次組別：" + (row["車次"] || "")),
+            new TextRun("\n帶隊老師：" + (row["帶隊老師"] || "")),
+            new TextRun("\n帶隊主任：" + leader + " / 妃文 0978-821-500")
+          ],
+          alignment: AlignmentType.LEFT
+        });
+
+        rows.push(new TableCell({
+          children: [cellContent],
+          width: { size: 50, type: WidthType.PERCENTAGE },
+        }));
+
+        if (i % 2 === 1 || i === currentData.length - 1) {
+          doc.addSection({
+            children: [
+              new Table({
+                rows: [new TableRow({ children: rows.splice(0, 2) })],
+                width: { size: 100, type: WidthType.PERCENTAGE }
+              })
+            ]
+          });
+        }
+      }
+
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "名牌.docx";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
