@@ -110,41 +110,33 @@
     }
 
     async function downloadWord() {
-      const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, PageBreak } = window.docx;
+      const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } = window.docx;
       const doc = new Document();
       const branch = document.getElementById("branch").value;
       const event = document.getElementById("event").value;
       const leader = document.getElementById("leader").value;
 
-      const sections = [];
-      const badgesPerPage = 8;
-
-      for (let pageStart = 0; pageStart < currentData.length; pageStart += badgesPerPage) {
+      for (let i = 0; i < currentData.length; i += 8) {
         const badgeRows = [];
-        for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
           const rowCells = [];
-          for (let j = 0; j < 2; j++) {
-            const index = pageStart + i * 2 + j;
+          for (let k = 0; k < 2; k++) {
+            const index = i + j * 2 + k;
             if (index < currentData.length) {
               const row = currentData[index];
-              const cellContent = new Paragraph({
+              const paragraph = new Paragraph({
                 children: [
                   new TextRun({ text: branch, bold: true, size: 28 }),
-                  new TextRun("
-活動名稱：" + event),
-                  new TextRun("
-學生姓名：" + (row["姓名"] || "")),
-                  new TextRun("
-車次組別：" + (row["車次"] || "")),
-                  new TextRun("
-帶隊老師：" + (row["帶隊老師"] || "")),
-                  new TextRun("
-帶隊主任：" + leader + " / 妃文 0978-821-500")
+                  new TextRun("\n活動名稱：" + event),
+                  new TextRun("\n學生姓名：" + (row["姓名"] || "")),
+                  new TextRun("\n車次組別：" + (row["車次"] || "")),
+                  new TextRun("\n帶隊老師：" + (row["帶隊老師"] || "")),
+                  new TextRun("\n帶隊主任：" + leader + " / 妃文 0978-821-500")
                 ],
                 alignment: AlignmentType.LEFT
               });
               rowCells.push(new TableCell({
-                children: [cellContent],
+                children: [paragraph],
                 width: { size: 50, type: WidthType.PERCENTAGE },
               }));
             } else {
@@ -156,8 +148,7 @@
           }
           badgeRows.push(new TableRow({ children: rowCells }));
         }
-
-        sections.push({
+        doc.addSection({
           children: [
             new Table({
               rows: badgeRows,
@@ -165,56 +156,6 @@
             })
           ]
         });
-      }
-
-      doc.addSection({ children: [] });
-      sections.forEach((s, idx) => {
-        doc.addSection({ children: s.children });
-      });
-
-      const blob = await Packer.toBlob(doc);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "名牌.docx";
-      a.click();
-      URL.revokeObjectURL(url);
-    } = window.docx;
-      const doc = new Document();
-      const branch = document.getElementById("branch").value;
-      const event = document.getElementById("event").value;
-      const leader = document.getElementById("leader").value;
-
-      const rows = [];
-      for (let i = 0; i < currentData.length; i++) {
-        const row = currentData[i];
-        const cellContent = new Paragraph({
-          children: [
-            new TextRun({ text: branch, bold: true, size: 28 }),
-            new TextRun("\n活動名稱：" + event),
-            new TextRun("\n學生姓名：" + (row["姓名"] || "")),
-            new TextRun("\n車次組別：" + (row["車次"] || "")),
-            new TextRun("\n帶隊老師：" + (row["帶隊老師"] || "")),
-            new TextRun("\n帶隊主任：" + leader + " / 妃文 0978-821-500")
-          ],
-          alignment: AlignmentType.LEFT
-        });
-
-        rows.push(new TableCell({
-          children: [cellContent],
-          width: { size: 50, type: WidthType.PERCENTAGE },
-        }));
-
-        if (i % 2 === 1 || i === currentData.length - 1) {
-          doc.addSection({
-            children: [
-              new Table({
-                rows: [new TableRow({ children: rows.splice(0, 2) })],
-                width: { size: 100, type: WidthType.PERCENTAGE }
-              })
-            ]
-          });
-        }
       }
 
       const blob = await Packer.toBlob(doc);
