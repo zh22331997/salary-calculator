@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>天數加減計算機（顯示不足）</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      max-width: 600px;
+      margin: auto;
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+    }
+    input[type="number"] {
+      width: 80px;
+      padding: 0.5em;
+      font-size: 1em;
+      margin-right: 1em;
+    }
+    #result {
+      margin-top: 2em;
+      font-size: 1.2em;
+      border: 2px dashed #0a5;
+      background-color: #eaffea;
+      padding: 1em;
+      color: #054;
+    }
+    .warning {
+      background-color: #fff3f3;
+      border-color: #d33;
+      color: #a00;
+    }
+  </style>
+</head>
+<body>
+  <h1>📅 天數計算機（1 天 = 8 小時）</h1>
+
+  <h3>🔢 原始總時數</h3>
+  <label>
+    <input type="number" id="days1" placeholder="天"> 天
+    <input type="number" id="hours1" placeholder="時"> 小時
+  </label>
+
+  <h3>➖ 扣除時數</h3>
+  <label>
+    <input type="number" id="days2" placeholder="天"> 天
+    <input type="number" id="hours2" placeholder="時"> 小時
+  </label>
+
+  <h3>➕ 加回時數</h3>
+  <label>
+    <input type="number" id="days3" placeholder="天"> 天
+    <input type="number" id="hours3" placeholder="時"> 小時
+  </label>
+
+  <div id="result">請輸入資料</div>
+
+  <script>
+    const ids = [
+      "days1", "hours1",
+      "days2", "hours2",
+      "days3", "hours3"
+    ];
+    const inputs = ids.map(id => document.getElementById(id));
+    const result = document.getElementById("result");
+
+    inputs.forEach(input => input.addEventListener("input", calculate));
+
+    function calculate() {
+      const d1 = parseInt(document.getElementById("days1").value) || 0;
+      const h1 = parseInt(document.getElementById("hours1").value) || 0;
+      const d2 = parseInt(document.getElementById("days2").value) || 0;
+      const h2 = parseInt(document.getElementById("hours2").value) || 0;
+      const d3 = parseInt(document.getElementById("days3").value) || 0;
+      const h3 = parseInt(document.getElementById("hours3").value) || 0;
+
+      const total1 = d1 * 8 + h1; // 原始
+      const total2 = d2 * 8 + h2; // 扣除
+      const total3 = d3 * 8 + h3; // 加回
+
+      let final = total1 - total2 + total3;
+
+      if (final < 0) {
+        const shortage = Math.abs(final);
+        const shortageDays = Math.floor(shortage / 8);
+        const shortageHours = shortage % 8;
+        result.classList.add("warning");
+        result.textContent = `⚠️ 時數不足：差 ${shortageDays} 天 ${shortageHours} 小時`;
+        return;
+      }
+
+      const resultDays = Math.floor(final / 8);
+      const resultHours = final % 8;
+
+      result.classList.remove("warning");
+      result.textContent = `🧮 結果：${resultDays} 天 ${resultHours} 小時`;
+    }
+  </script>
+</body>
+</html>
