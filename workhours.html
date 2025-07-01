@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>工作時數計算機</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      max-width: 600px;
+      margin: auto;
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+    }
+    input[type="text"] {
+      width: 150px;
+      padding: 0.5em;
+      font-size: 1em;
+    }
+    #result {
+      margin-top: 2em;
+      font-size: 1.2em;
+      border: 2px dashed #0a5;
+      background-color: #eaffea;
+      padding: 1em;
+      color: #054;
+    }
+  </style>
+</head>
+<body>
+  <h1>🕒 自動計算工作時數</h1>
+
+  <label for="startInput">上班打卡時間（格式：0830 或 08:30）：</label>
+  <input type="text" id="startInput" placeholder="例如 0830">
+
+  <label for="endInput">下班打卡時間（格式：1730 或 17:30）：</label>
+  <input type="text" id="endInput" placeholder="例如 1730">
+
+  <div id="result">請輸入時間</div>
+
+  <script>
+    const startInput = document.getElementById("startInput");
+    const endInput = document.getElementById("endInput");
+    const result = document.getElementById("result");
+
+    startInput.addEventListener("input", handleInputFormat);
+    endInput.addEventListener("input", handleInputFormat);
+
+    function handleInputFormat(e) {
+      const input = e.target;
+      let raw = input.value.replace(/[^\d]/g, ""); // 移除非數字
+      if (raw.length >= 3 && raw.length <= 4) {
+        let h = raw.slice(0, raw.length - 2);
+        let m = raw.slice(-2);
+        input.value = `${h.padStart(2, "0")}:${m}`;
+      }
+      autoCalculate();
+    }
+
+    function parseTime(timeStr) {
+      const match = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+      if (!match) return null;
+      const h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      return d;
+    }
+
+    function roundUpToNextHalfHour(date) {
+      const newDate = new Date(date);
+      const m = newDate.getMinutes();
+      if (m === 0 || m === 30) return newDate;
+      if (m < 30) {
+        newDate.setMinutes(30, 0, 0);
+      } else {
+        newDate.setHours(newDate.getHours() + 1);
+        newDate.setMinutes(0, 0, 0);
+      }
+      return newDate;
+    }
+
+    function roundDownToPreviousHalfHour(date) {
+      const newDate = new Date(date);
+      const m = newDate.getMinutes();
+      newDate.setMinutes(m >= 30 ? 30 : 0, 0, 0);
+      return newDate;
+    }
+
+    function autoCalculate() {
+      const startTime = parseTime(startInput.value.trim());
+      const endTime = parseTime(endInput.value.trim());
+
+      if (!startTime || !endTime) {
+        result.textContent = "請輸入正確的時間格式（例如 0830 或 08:30）";
+        return;
+      }
+
+      const roundedStart = roundUpToNextHalfHour(startTime);
+      const roundedEnd = roundDownToPreviousHalfHour(endTime);
+
+      if (roundedEnd <= roundedStart) {
+        result.textContent = "下班時間需晚於上班時間。";
+        return;
+      }
+
+      const diffMs = roundedEnd - roundedStart;
+      const hours = diffMs / (1000 * 60 * 60);
+      result.textContent = `實際工作時數為：${hours.toFixed(2)} 小時（${format(roundedStart)} ～ ${format(roundedEnd)}）`;
+    }
+
+    function format(date) {
+      const h = String(date.getHours()).padStart(2, "0");
+      const m = String(date.getMinutes()).padStart(2, "0");
+      return `${h}:${m}`;
+    }
+  </script>
+</body>
+</html>
