@@ -3,7 +3,7 @@
 <html lang="zh-TW">
 <head>
  <meta charset="UTF-8" />
- <title>正華名牌產生器v2</title>
+ <title>正華名牌產生器</title>
  <meta name="viewport" content="width=device-width, initial-scale=1" />
  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
  <style>
@@ -320,7 +320,27 @@
     page-break-inside: avoid !important;
    }
   }
- 
+ .error-line {
+  background-color: #ffecec;
+  border-left: 4px solid red;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 0.95em;
+  color: #a00;
+}
+.error-summary {
+  color: #b30000;
+  font-weight: bold;
+  margin-top: 8px;
+}
+.success-summary {
+  color: #007700;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
 
 
  </style>
@@ -370,11 +390,12 @@ function generateCards() {
   container.innerHTML = ""; // 清空舊名牌
 
   const lines = input.split(/\r?\n/);
-  document.getElementById("errorMsg").textContent = ""; // 清空錯誤訊息
+  const errorContainer = document.getElementById("errorMsg");
+errorContainer.innerHTML = ""; // ✅ 完全清空所有錯誤訊息
   let errorCount = 0;
 
- const pattern4 = /^(\S+)\t(第\s*\S+\s*車(?:次)?)\t(第\S+桌)\t(.+?)(09\d{2}-?\d{3}-?\d{3})$/;
-const pattern3 = /^(\S+)\t(第\s*\S+\s*車(?:次)?)\t(.+?)(09\d{2}-?\d{3}-?\d{3})$/;
+ const pattern4 = /^(\S+)\t(第\s*\S+\s*車(?:次)?)\t(第\S+桌)\t(.+?)\s*(09\d{2}-?\d{3}-?\d{3})$/;
+const pattern3 = /^(\S+)\t(第\s*\S+\s*車(?:次)?)\t(.+?)\s*(09\d{2}-?\d{3}-?\d{3})$/;
 
 for (const [index, line] of lines.entries()) {
   if (line.trim() === "") continue;
@@ -393,11 +414,14 @@ for (const [index, line] of lines.entries()) {
   } else {
     match = cleanedLine.match(pattern3); // 再試三欄格式
     if (!match) {
-      document.getElementById("errorMsg").innerHTML += 
-        `⚠️ 第 ${index + 1} 行格式錯誤：<code>${line}</code><br>`;
-      errorCount++;
-      continue;
-    }
+  const errorDiv = document.createElement("div");
+  errorDiv.className = "error-line";
+  errorDiv.innerText = `第 ${index + 1} 行格式錯誤：${line}`;
+  document.getElementById("errorMsg").appendChild(errorDiv);
+  errorCount++;
+  continue;
+}
+
     name = match[1];
     const car = match[2].replace(/\s+/g, '');
     group = `${car}`; // 沒有桌次
@@ -428,16 +452,29 @@ for (const [index, line] of lines.entries()) {
 
 
 
-  // ✅ 放在 for 迴圈之後！
-  if (errorCount > 0) {
-    document.getElementById("errorMsg").textContent =
-      `⚠️ 有 ${errorCount} 筆資料格式不正確，請確認是否缺漏欄位（至少需姓名、車次、老師）。`;
-  }
-    // ✅ 總名牌數量顯示（不管有沒有錯都會顯示）
-  const count = container.childElementCount;
-  document.getElementById("errorMsg").textContent += 
-    `\n✅ 共成功產生 ${count} 張名牌。`;
+ 
+// ✅ 放在 for 迴圈之後！
+// 放在 for 迴圈之後！
+const count = container.childElementCount;
+
+if (count > 0) {
+  const successMsg = document.createElement("div");
+  successMsg.className = "success-summary";
+  successMsg.innerHTML = `✅ 共成功產生 ${count} 張名牌。`;
+  errorContainer.appendChild(successMsg);
 }
+
+if (errorCount > 0) {
+  const summary = document.createElement("div");
+  summary.className = "error-summary";
+  summary.style.marginTop = "8px";
+  summary.innerHTML = `⚠️ 共 ${errorCount} 筆資料格式不正確，請檢查上方錯誤。`;
+  errorContainer.appendChild(summary);
+}
+
+
+}
+
 
 </script>
 </body>
