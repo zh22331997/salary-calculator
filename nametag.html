@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -319,7 +320,27 @@
     page-break-inside: avoid !important;
    }
   }
- 
+ .error-line {
+  background-color: #ffecec;
+  border-left: 4px solid red;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 0.95em;
+  color: #a00;
+}
+.error-summary {
+  color: #b30000;
+  font-weight: bold;
+  margin-top: 8px;
+}
+.success-summary {
+  color: #007700;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
 
 
  </style>
@@ -341,8 +362,14 @@
   <input type="text" id="director" value="OO主任0900-123-456" />
 
   <h3>📚 學生資料</h3>
-  <p>請複製EXCEL貼上：<code>姓名[空格]車次桌次[空格]帶隊老師及電話</code>，不用標題，也不一定要桌次。</p>
-  <textarea id="inputArea" placeholder="王小明 第A車次第1桌 Tina老師 0900-111222" rows="8"></textarea>
+  <p><p style="font-size: 0.9em; color: #555;">
+  ✅ 請從 Excel 貼上三欄或四欄：<code>姓名【Tab】車次【Tab】（桌次）【Tab】老師與電話</code><br>
+  系統會自動判斷是否有桌次，車次可寫「第3車」或「第3車次」，都能辨識。<br>
+  <strong>一定要從 Excel 複製 資料 貼上</strong>，請勿自己直接輸入資料在這個網頁，它有可能會判讀錯誤。
+</p>
+<textarea id="inputArea" placeholder="例如
+王小明　第1車次　第1桌　Tina老師 0900-111-222
+張飛   第3車    第8桌   Ann0911-111111" rows="8"></textarea>
 
   <div>
    <button onclick="generateCards()">生成名牌</button>
@@ -363,57 +390,91 @@ function generateCards() {
   container.innerHTML = ""; // 清空舊名牌
 
   const lines = input.split(/\r?\n/);
-  document.getElementById("errorMsg").textContent = ""; // 清空錯誤訊息
+  const errorContainer = document.getElementById("errorMsg");
+errorContainer.innerHTML = ""; // ✅ 完全清空所有錯誤訊息
   let errorCount = 0;
 
-  for (const [index, line] of lines.entries()) {
-    if (line.trim() === "") continue;
+ const pattern4 = /^(\S+)\t(第\s*\S+\s*車(?:次)?)\t(第\S+桌)\t(.+?)\s*(09\d{2}-?\d{3}-?\d{3})$/;
+const pattern3 = /^(\S+)\t(第\s*\S+\s*車(?:次)?)\t(.+?)\s*(09\d{2}-?\d{3}-?\d{3})$/;
 
-    const parts = line.trim().split(/\s+/);
-    if (parts.length < 3) {
-      console.warn(`⚠️ 第 ${index + 1} 行格式錯誤：${line}`);
-      errorCount++;
-      continue;
-    }
+for (const [index, line] of lines.entries()) {
+  if (line.trim() === "") continue;
 
-    const name = parts[0];
-    const phoneRegex = /^09\d{2}-?\d{6}$/;
-    let phoneIndex = parts.findLastIndex(p => phoneRegex.test(p));
-    if (phoneIndex === -1) phoneIndex = parts.length - 1;
+  const cleanedLine = line.replace(/[\u3000\u00A0]/g, ' ').trim();
+  let match = cleanedLine.match(pattern4); // 先試四欄格式
+  let group = "", name = "", leader = "", teacherPhone = "", teacherName = "";
 
-    const leaderStart = Math.max(1, phoneIndex - 1);  // 至少從第 1 個開始，不會跑到姓名
-    const leader = parts.slice(leaderStart).join(" ");
-
-    const group = parts.slice(1, phoneIndex - 1).join(" ");
-
-    const card = document.createElement("div");
-    card.className = "name-card";
-    card.innerHTML = `
-      <div class="card-bg"></div> <!-- 新增這行 -->
-      <div class="card-header-top">
-        <span>正華學苑</span><span>${school}</span>
-      </div>
-      <div class="card-event">${event}</div>
-      <div class="card-name">${name}</div>
-      <div class="card-group">${group}</div>
-      <div class="card-footer">
-        <div>帶隊老師：${leader}</div>
-        <div>帶隊主任：${director}</div>
-      </div>
-    `;
-    container.appendChild(card);
-  }
-
-  // ✅ 放在 for 迴圈之後！
-  if (errorCount > 0) {
-    document.getElementById("errorMsg").textContent =
-      `⚠️ 有 ${errorCount} 筆資料格式不正確，請確認是否缺漏欄位（至少需姓名、車次、老師）。`;
-  }
-    // ✅ 總名牌數量顯示（不管有沒有錯都會顯示）
-  const count = container.childElementCount;
-  document.getElementById("errorMsg").textContent += 
-    `\n✅ 共成功產生 ${count} 張名牌。`;
+  if (match) {
+    name = match[1];
+    const car = match[2].replace(/\s+/g, '');
+    const table = match[3].replace(/\s+/g, '');
+    group = `${car} ${table}`;
+    teacherName = match[4].trim();
+    teacherPhone = match[5];
+  } else {
+    match = cleanedLine.match(pattern3); // 再試三欄格式
+    if (!match) {
+  const errorDiv = document.createElement("div");
+  errorDiv.className = "error-line";
+  errorDiv.innerText = `第 ${index + 1} 行格式錯誤：${line}`;
+  document.getElementById("errorMsg").appendChild(errorDiv);
+  errorCount++;
+  continue;
 }
+
+    name = match[1];
+    const car = match[2].replace(/\s+/g, '');
+    group = `${car}`; // 沒有桌次
+    teacherName = match[3].trim();
+    teacherPhone = match[4];
+  }
+
+  leader = `${teacherName} ${teacherPhone}`;
+
+  const card = document.createElement("div");
+  card.className = "name-card";
+  card.innerHTML = `
+    <div class="card-bg"></div>
+    <div class="card-header-top">
+      <span>正華學苑</span><span>${school}</span>
+    </div>
+    <div class="card-event">${event}</div>
+    <div class="card-name">${name}</div>
+    <div class="card-group">${group}</div>
+    <div class="card-footer">
+      <div>帶隊老師：${leader}</div>
+      <div>帶隊主任：${director}</div>
+    </div>
+  `;
+  container.appendChild(card);
+}
+
+
+
+
+ 
+// ✅ 放在 for 迴圈之後！
+// 放在 for 迴圈之後！
+const count = container.childElementCount;
+
+if (count > 0) {
+  const successMsg = document.createElement("div");
+  successMsg.className = "success-summary";
+  successMsg.innerHTML = `✅ 共成功產生 ${count} 張名牌。`;
+  errorContainer.appendChild(successMsg);
+}
+
+if (errorCount > 0) {
+  const summary = document.createElement("div");
+  summary.className = "error-summary";
+  summary.style.marginTop = "8px";
+  summary.innerHTML = `⚠️ 共 ${errorCount} 筆資料格式不正確，請檢查上方錯誤。`;
+  errorContainer.appendChild(summary);
+}
+
+
+}
+
 
 </script>
 </body>
