@@ -3,7 +3,7 @@
 <html lang="zh-TW">
 <head>
  <meta charset="UTF-8" />
- <title>正華名牌產生器v2</title>
+ <title>正華戶外活動名牌產生器v3</title>
  <meta name="viewport" content="width=device-width, initial-scale=1" />
  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
  <style>
@@ -113,9 +113,9 @@
   .card-container {
    display: flex;
    flex-wrap: wrap;
-   gap: 0.8cm;
-   justify-content: center; /* 讓名牌水平置中 */
-   margin-top: 2rem;
+   gap: 0;
+   justify-content: flex-start !important; /* 讓名牌靠左置中 */
+   margin-top:0;
   }
 
   .name-card {
@@ -124,13 +124,13 @@
    box-sizing: border-box;
    background: white;
    border: 1px solid #aaa;
-   border-radius: 6px;
+   border-radius: 0;
    padding: 0.25cm;
    overflow: hidden;
    page-break-inside: avoid;
    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
    flex: none; /* 讓 width 屬性直接控制名牌寬度 */
-   margin-bottom: 0.8cm; /* 為每個名牌增加底部外邊距，避免太擠 */
+   margin-bottom: 0; /* 為每個名牌增加底部外邊距，避免太擠 */
 
    display: flex;
    flex-direction: column;
@@ -151,7 +151,7 @@
    font-weight: 700;
    color: #333;
    margin-top: 0;
-   margin-bottom: 0.05cm;
+   margin-bottom: 0;
    
    position: relative; /* 確保文字層次在浮水印之上 */
    z-index: 1; /* 比浮水印的 z-index 高 */
@@ -279,7 +279,7 @@
     left: auto !important;
     padding: 0 !important;
     margin: 0 !important; /* 移除 container 自己的 margin */
-    gap: 0.8cm !important;
+    gap: 0 !important;
     justify-content: center !important; /* 列印時也讓名牌在容器內水平置中 */
     flex-wrap: wrap !important; /* 允許換行 */
     width: 100% !important; /* 確保 card-container 佔滿可用寬度，以便內部名牌置中 */
@@ -296,8 +296,9 @@
     flex-direction: column !important;
     justify-content: space-between !important;
     align-items: center !important;
+    border-radius: 0 !important;
     text-align: center !important;
-    margin-bottom: 0.8cm !important; /* 列印時也保持底部外邊距 */
+    margin-bottom: 0 !important; /* 列印時也保持底部外邊距 */
     position: relative !important;
     overflow: hidden !important;
    }
@@ -311,10 +312,10 @@
     position: relative !important;
     z-index: 1 !important;
    }
-   /* 強制分頁：每 8 張名牌後換頁 */
-   .name-card:nth-child(8n+8) {
-    page-break-after: always !important;
-   }
+   /* 強制分頁：每 10 張名牌後換頁 */
+   .name-card:nth-child(10n+10) {
+  page-break-after: always !important;
+  }
    /* 防止名牌在列印時被分割 */
    .name-card {
     page-break-inside: avoid !important;
@@ -347,6 +348,7 @@
 </head>
 <body>
  <div class="container">
+  <h1>正華戶外活動名牌產生器v3</h1>
   <h2>📋 活動設定</h2>
   <div class="row">
    <div class="col">
