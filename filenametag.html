@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>正華資料夾名條產生器</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    @font-face {
+      font-family: 'XiaolaiMonoSC';
+      src: url('https://cdn.jsdelivr.net/gh/zh22331997/salary-calculator/ttf_XiaolaiMonoSC-Regular.ttf') format('truetype');
+    }
+
+    body {
+      font-family: 'XiaolaiMonoSC', 'Noto Sans TC', sans-serif;
+      background: #ffffff;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .input-area {
+      max-width: 600px;
+      margin: 0 auto 30px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .input-area label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    .input-area input,
+    .input-area textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      font-family: 'XiaolaiMonoSC', sans-serif;
+    }
+
+    .input-area button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+
+
+.namecard {
+  width: 63mm;
+  height: 42mm;  /* 讓七列剛剛好容納 */
+  margin: 0;
+  padding: 3mm 0 0 0;
+  border: 1px solid #000;
+  box-sizing: border-box;
+  text-align: center;
+  page-break-inside: avoid;
+}
+
+
+
+#output {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+    .output-page {
+  width: 100%;
+  font-size: 0;
+  page-break-after: always;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+   .line1 {
+  font-size: 13pt;
+  font-weight: normal;
+}
+
+.class {
+  font-size: 12pt;
+  font-weight: normal;
+  margin: 1mm 0;
+}
+
+.line2 {
+  font-size: 12pt;
+  font-weight: normal;
+  margin: 1mm 0;
+}
+
+.name {
+  font-size: 18pt;
+  font-weight: bold;
+  display: inline-block;
+  text-align: left;
+  line-height: 1.2;
+}
+
+  .name-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: 6mm; /* ⭐ 加上這行：LOGO與姓名之間的距離 */
+  margin-top: 2mm;
+  max-width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+.logo {
+  max-height: 12mm;  /* 原為 18mm → 縮小 1/3 */
+  max-width: 16mm;   /* 略微壓縮寬度 */
+  object-fit: contain;
+  display: block;
+}
+
+
+
+
+
+
+ @media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  .input-area, h1, #printBtn {
+    display: none !important;
+  }
+
+  .output-page {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    page-break-after: always;
+  }
+
+  .namecard {
+    page-break-inside: avoid;
+  }
+}
+
+
+
+  </style>
+</head>
+<body>
+  <h1>正華資料夾名條產生器</h1>
+
+  <div class="input-area">
+    <label>（第一列）營隊名稱</label>
+    <input type="text" id="line1" placeholder="例：2025正華夏令營" value="2025正華夏令營">
+
+    <label>（第二列）副標題</label>
+    <input type="text" id="line2" placeholder="例：學習單收納夾" value="學習單收納夾">
+
+    <label>（第三、四列）從 Excel 貼上班級與姓名資料</label>
+    <textarea id="rawData" rows="6" placeholder="例：中大B班   林小明
+中大A班  林小華"></textarea>
+
+    <button onclick="generateNamecards()">產生名條</button>
+    <button id="printBtn" onclick="window.print()" style="display: none;">列印名牌</button>
+
+
+  </div>
+
+  <div id="output"></div>
+
+  <script>
+function generateNamecards() {
+  const line1 = document.getElementById('line1').value;
+  const line2 = document.getElementById('line2').value;
+  const raw = document.getElementById('rawData').value.trim();
+  const output = document.getElementById('output');
+
+  output.innerHTML = ''; // 清空舊內容
+
+  const rows = raw.split('\n');
+  let page = createNewPage();
+  output.appendChild(page);
+
+  rows.forEach((row, index) => {
+    const [className, name] = row.split('\t');
+    if (className && name) {
+      const card = document.createElement('div');
+      card.className = 'namecard';
+      card.innerHTML = `
+        <div class="line1">${line1}</div>
+        <div class="class">${className}</div>
+        <div class="line2">${line2}</div>
+        <div class="name-row">
+          <img class="logo" src="https://github.com/zh22331997/salary-calculator/blob/main/2019%20zh%20logo.png?raw=true" alt="logo">
+          <div class="name">${name}</div>
+        </div>
+      `;
+      page.appendChild(card);
+
+      if ((index + 1) % 18 === 0 && index + 1 !== rows.length) {
+        page = createNewPage();
+        output.appendChild(page);
+      }
+    }
+  });
+
+  // ✅ 修正的位置：forEach 執行完之後再顯示列印按鈕
+  document.getElementById('printBtn').style.display = 'inline-block';
+
+  function createNewPage() {
+    const div = document.createElement('div');
+    div.className = 'output-page';
+    return div;
+  }
+}
+
+  </script>
+</body>
+</html>
