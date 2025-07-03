@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+ <meta charset="UTF-8" />
+ <title>正華戶外活動名牌產生器v3</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1" />
+ <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+ <style>
+  /* 全局樣式 */
+  body {
+   font-family: 'Noto Sans TC', "Microsoft JhengHei", sans-serif;
+   background: #f0f2f5;
+   margin: 0;
+   padding: 0;
+   display: flex;
+   justify-content: center;
+   align-items: flex-start;
+   min-height: 100vh;
+  }
+
+  /* 主要內容容器 */
+  .container {
+   background: #ffffff;
+   padding: 2rem;
+   margin: 2rem 1rem;
+   border-radius: 12px;
+   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+   max-width: 960px;
+   width: 100%;
+   box-sizing: border-box;
+  }
+
+  h2, h3 {
+   color: #333;
+   border-bottom: 2px solid #e0e0e0;
+   padding-bottom: 0.5rem;
+   margin-top: 1.5rem;
+   margin-bottom: 1rem;
+  }
+
+  input, textarea {
+   width: calc(100% - 1rem);
+   padding: 0.75rem;
+   margin-bottom: 1rem;
+   border-radius: 8px;
+   border: 1px solid #ccc;
+   font-size: 16px;
+   box-sizing: border-box;
+   transition: border-color 0.3s ease;
+  }
+
+  input:focus, textarea:focus {
+   border-color: #6a9aff;
+   outline: none;
+  }
+
+  label {
+   font-weight: bold;
+   margin-top: 1rem;
+   display: block;
+   color: #555;
+   margin-bottom: 0.5rem;
+  }
+
+  .row {
+   display: flex;
+   gap: 1.5rem;
+   flex-wrap: wrap;
+  }
+
+  .col {
+   flex: 1;
+   min-width: 280px;
+  }
+
+  button {
+   padding: 0.8rem 1.5rem;
+   font-size: 17px;
+   border: none;
+   border-radius: 8px;
+   cursor: pointer;
+   background-color: #4e73df;
+   color: white;
+   margin-right: 0.8rem;
+   margin-top: 1rem;
+   transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  button:hover {
+   background-color: #2e59d9;
+   transform: translateY(-2px);
+  }
+
+  button:active {
+   transform: translateY(0);
+  }
+
+  p {
+   color: #666;
+   font-size: 0.95rem;
+   line-height: 1.5;
+  }
+
+  code {
+   background-color: #f0f0f0;
+   padding: 2px 5px;
+   border-radius: 4px;
+   font-family: monospace;
+  }
+
+  /* --- 名牌顯示樣式 --- */
+  .card-container {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 0;
+   justify-content: flex-start !important; /* 讓名牌靠左置中 */
+   margin-top:0;
+  }
+
+  .name-card {
+   width: 8.5cm; /* 名牌寬度 */
+   height: 5.5cm; /* 名牌高度 */
+   box-sizing: border-box;
+   background: white;
+   border: 1px solid #aaa;
+   border-radius: 0;
+   padding: 0.25cm;
+   overflow: hidden;
+   page-break-inside: avoid;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+   flex: none; /* 讓 width 屬性直接控制名牌寬度 */
+   margin-bottom: 0; /* 為每個名牌增加底部外邊距，避免太擠 */
+
+   display: flex;
+   flex-direction: column;
+   justify-content: space-between;
+   align-items: center;
+   text-align: center; /* 確保名牌內的文字水平置中 */
+
+   position: relative; /* 確保偽元素能相對於名牌定位 */
+   overflow: hidden; /* 防止浮水印超出名牌邊界 */
+  }
+
+    /* 名牌頂部資訊 */
+  .card-header-top {
+   width: 100%;
+   display: flex;
+   justify-content: center;
+   font-size: 11.5pt;
+   font-weight: 700;
+   color: #333;
+   margin-top: 0;
+   margin-bottom: 0;
+   
+   position: relative; /* 確保文字層次在浮水印之上 */
+   z-index: 1; /* 比浮水印的 z-index 高 */
+   
+  }
+  .card-header-top span:first-child {
+   margin-right: 0.4em;
+  }
+
+  /* 活動名稱 */
+  .card-event {
+   width: 100%;
+   font-size: 13pt;
+   font-weight: 900;
+   color: #000;
+   margin-bottom: 0.2cm;
+   line-height: 1.2;
+   position: relative; /* 確保文字層次在浮水印之上 */
+   z-index: 1; /* 比浮水印的 z-index 高 */
+   
+  }
+
+  /* 學生姓名 */
+  .card-name {
+   font-size: 24pt;
+   font-weight: 900;
+   color: #333;
+   line-height: 1.1;
+   margin-bottom: 0.05cm;
+   position: relative; /* 確保文字層次在浮水印之上 */
+   z-index: 1; /* 比浮水印的 z-index 高 */
+  }
+
+  /* 車次組別 */
+  .card-group {
+   font-size: 14pt;
+   font-weight: 700;
+   color: #555;
+   margin-bottom: 0; /* 移除底部外邊距 */
+   line-height: 1.2;
+   position: relative; /* 確保文字層次在浮水印之上 */
+   z-index: 1; /* 比浮水印的 z-index 高 */
+  }
+
+  /* 老師主任資訊區 */
+  .card-footer {
+   width: 100%;
+   font-size: 11pt; /* 重要的調整！統一字體大小 */
+   color: #444;
+   line-height: 1.3;
+   text-align: center; /* 讓底部文字置中 */
+   padding-left: 0.2cm;
+   padding-right: 0.2cm;
+   margin-top: 0; /* 移除頂部外邊距 */
+   margin-bottom: 0;
+   position: relative; /* 確保文字層次在浮水印之上 */
+   z-index: 1; /* 比浮水印的 z-index 高 */
+  }
+  .card-footer div {
+      margin-bottom: 0.05cm;
+      /* 字型和字體大小由 .card-footer 統一控制，不再單獨設置 */
+  }
+  .card-footer div:last-child {
+      margin-bottom: 0;
+  }
+  /* 移除 .card-footer span.phone 的獨立樣式，使其繼承父層 */
+  /* .card-footer span.phone {
+    font-size: 8pt;
+    color: #666;
+    word-wrap: break-word;
+  } */
+  /* 列印時浮水印樣式 (這是新的區塊) */
+   .name-card::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 80% !important; /* 確保列印時寬度生效 */
+    height: 80% !important; /* 確保列印時高度生效 */
+    background-image: url('https://github.com/zh22331997/salary-calculator/blob/main/2019%20zh%20logo.png?raw=true') !important; /* **請確保此處是您的 LOGO 圖片網址！** */
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    opacity: 0.1 !important; /* 調整透明度 */
+    z-index: 0 !important;
+    pointer-events: none !important;
+   }
+
+  /* --- 列印樣式 --- */
+  @media print {
+   @page { size: A4 portrait; margin: 0.8cm; }
+   /* 重要的修改：將除了 .card-container 之外的所有內容隱藏 */
+   body > *:not(.container) {
+    display: none !important;
+   }
+   .container > *:not(.card-container) {
+    display: none !important;
+   }
+   /* 確保 card-container 本身及其內容是可見的 */
+   .card-container, .card-container * {
+    visibility: visible;
+    /* print media 下的 flex 佈局需要重新確認 */
+    /* 這裡為了確保名牌內文字和名牌整體置中，再次確認相關屬性 */
+   }
+   .container { /* 列印時讓 container 變為沒有邊距和陰影的普通容器 */
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+    display: flex !important; /* 讓 container 在列印時也使用 flexbox */
+    justify-content: center !important; /* 將 card-container 水平置中 */
+   }
+  
+  .name-card::before {
+    opacity: 0.1 !important;
+  }
+
+
+   .card-container {
+    position: static !important; /* 移除任何可能影響定位的設定 */
+    top: auto !important;
+    left: auto !important;
+    padding: 0 !important;
+    margin: 0 !important; /* 移除 container 自己的 margin */
+    gap: 0 !important;
+    justify-content: center !important; /* 列印時也讓名牌在容器內水平置中 */
+    flex-wrap: wrap !important; /* 允許換行 */
+    width: 100% !important; /* 確保 card-container 佔滿可用寬度，以便內部名牌置中 */
+   }
+   .name-card {
+    width: 8.5cm !important; /* 列印時名牌也變窄 */
+    height: 5.5cm !important; /* 保持高度 */
+    flex: none !important; /* 列印時也讓 width 直接生效 */
+    border: 1px solid #777 !important;
+    box-shadow: none !important;
+    padding: 0.25cm !important;
+    /* 確保名牌內容佈局在列印時依然正確 */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-radius: 0 !important;
+    text-align: center !important;
+    margin-bottom: 0 !important; /* 列印時也保持底部外邊距 */
+    position: relative !important;
+    overflow: hidden !important;
+   }
+   
+   /* 確保文字在浮水印之上 (列印時也生效) */
+   .card-header-top,
+   .card-event,
+   .card-name,
+   .card-group,
+   .card-footer {
+    position: relative !important;
+    z-index: 1 !important;
+   }
+   /* 強制分頁：每 10 張名牌後換頁 */
+   .name-card:nth-child(10n+10) {
+  page-break-after: always !important;
+  }
+   /* 防止名牌在列印時被分割 */
+   .name-card {
+    page-break-inside: avoid !important;
+   }
+  }
+ .error-line {
+  background-color: #ffecec;
+  border-left: 4px solid red;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 0.95em;
+  color: #a00;
+}
+.error-summary {
+  color: #b30000;
+  font-weight: bold;
+  margin-top: 8px;
+}
+.success-summary {
+  color: #007700;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+
+
+ </style>
+</head>
+<body>
+ <div class="container">
+  <h1>正華戶外活動名牌產生器v3</h1>
+  <h2>📋 活動設定</h2>
+  <div class="row">
+   <div class="col">
+    <label for="schoolName">分校名稱</label>
+    <input type="text" id="schoolName" value="永平分校" />
+   </div>
+   <div class="col">
+    <label for="eventName">活動名稱</label>
+    <input type="text" id="eventName" value="戶外一日營" />
+   </div>
+  </div>
+  <label for="director">帶隊主任</label>
+  <input type="text" id="director" value="OO主任0900-123-456" />
+
+  <h3>📚 學生資料</h3>
+  <p><p style="font-size: 0.9em; color: #555;">
+  ✅ 請從 Excel 貼上三欄或四欄：<code>姓名【Tab】車次【Tab】（桌次）【Tab】老師與電話</code><br>
+  系統會自動判斷是否有桌次，車次可寫「第3車」或「第3車次」，都能辨識。<br>
+  <strong>一定要從 Excel 複製 資料 貼上</strong>，請勿自己直接輸入資料在這個網頁，它有可能會判讀錯誤。
+</p>
+<textarea id="inputArea" placeholder="例如
+王小明　第1車次　第1桌　Tina老師 0900-111-222
+張飛   第3車    第8桌   Ann0911-111111" rows="8"></textarea>
+
+  <div>
+   <button onclick="generateCards()">生成名牌</button>
+   <button onclick="window.print()">列印名牌</button>
+  </div>
+  <div id="errorMsg" style="color: red; margin-top: 1rem; font-weight: bold;"></div>
+
+  <div class="card-container" id="cardContainer"></div>
+ </div>
+
+ <script>
+function generateCards() {
+  const school = document.getElementById("schoolName").value.trim();
+  const event = document.getElementById("eventName").value.trim();
+  const director = document.getElementById("director").value.trim();
+  const input = document.getElementById("inputArea").value.trim();
+  const container = document.getElementById("cardContainer");
+  container.innerHTML = ""; // 清空舊名牌
+
+  const lines = input.split(/\r?\n/);
+  const errorContainer = document.getElementById("errorMsg");
+errorContainer.innerHTML = ""; // ✅ 完全清空所有錯誤訊息
+  let errorCount = 0;
+
+ const pattern4 = /^(\S+)\t(第\s*\S+\s*車(?:次)?)\t(第\S+桌)\t(.+?)\s*(09\d{2}-?\d{3}-?\d{3})$/;
+const pattern3 = /^(\S+)\t(第\s*\S+\s*車(?:次)?)\t(.+?)\s*(09\d{2}-?\d{3}-?\d{3})$/;
+
+for (const [index, line] of lines.entries()) {
+  if (line.trim() === "") continue;
+
+  const cleanedLine = line.replace(/[\u3000\u00A0]/g, ' ').trim();
+  let match = cleanedLine.match(pattern4); // 先試四欄格式
+  let group = "", name = "", leader = "", teacherPhone = "", teacherName = "";
+
+  if (match) {
+    name = match[1];
+    const car = match[2].replace(/\s+/g, '');
+    const table = match[3].replace(/\s+/g, '');
+    group = `${car} ${table}`;
+    teacherName = match[4].trim();
+    teacherPhone = match[5];
+  } else {
+    match = cleanedLine.match(pattern3); // 再試三欄格式
+    if (!match) {
+  const errorDiv = document.createElement("div");
+  errorDiv.className = "error-line";
+  errorDiv.innerText = `第 ${index + 1} 行格式錯誤：${line}`;
+  document.getElementById("errorMsg").appendChild(errorDiv);
+  errorCount++;
+  continue;
+}
+
+    name = match[1];
+    const car = match[2].replace(/\s+/g, '');
+    group = `${car}`; // 沒有桌次
+    teacherName = match[3].trim();
+    teacherPhone = match[4];
+  }
+
+  leader = `${teacherName} ${teacherPhone}`;
+
+  const card = document.createElement("div");
+  card.className = "name-card";
+  card.innerHTML = `
+    <div class="card-bg"></div>
+    <div class="card-header-top">
+      <span>正華學苑</span><span>${school}</span>
+    </div>
+    <div class="card-event">${event}</div>
+    <div class="card-name">${name}</div>
+    <div class="card-group">${group}</div>
+    <div class="card-footer">
+      <div>帶隊老師：${leader}</div>
+      <div>帶隊主任：${director}</div>
+    </div>
+  `;
+  container.appendChild(card);
+}
+
+
+
+
+ 
+// ✅ 放在 for 迴圈之後！
+// 放在 for 迴圈之後！
+const count = container.childElementCount;
+
+if (count > 0) {
+  const successMsg = document.createElement("div");
+  successMsg.className = "success-summary";
+  successMsg.innerHTML = `✅ 共成功產生 ${count} 張名牌。`;
+  errorContainer.appendChild(successMsg);
+}
+
+if (errorCount > 0) {
+  const summary = document.createElement("div");
+  summary.className = "error-summary";
+  summary.style.marginTop = "8px";
+  summary.innerHTML = `⚠️ 共 ${errorCount} 筆資料格式不正確，請檢查上方錯誤。`;
+  errorContainer.appendChild(summary);
+}
+
+
+}
+
+
+</script>
+</body>
+</html>
