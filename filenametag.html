@@ -56,10 +56,10 @@
 
 .namecard {
   width: 63mm;
-  height: 42mm;  /* 讓七列剛剛好容納 */
+  height: 39mm;  /* 讓七列剛剛好容納 */
   margin: 0;
-  padding: 3mm 0 0 0;
-  border: 1px solid #000;
+  padding: 2mm 0 0 0;
+  border: 0.3px solid #000;
   box-sizing: border-box;
   text-align: center;
   page-break-inside: avoid;
@@ -70,7 +70,7 @@
 #output {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 1px;
   justify-content: center;
 }
 
@@ -161,7 +161,7 @@
   </style>
 </head>
 <body>
-  <h1>正華資料夾名條產生器</h1>
+  <h1>正華資料夾名條產生器，印出來是A4 3*7</h1>
 
   <div class="input-area">
     <label>（第一列）營隊名稱</label>
@@ -211,7 +211,7 @@ function generateNamecards() {
       `;
       page.appendChild(card);
 
-      if ((index + 1) % 18 === 0 && index + 1 !== rows.length) {
+      if ((index + 1) % 21 === 0 && index + 1 !== rows.length) {
         page = createNewPage();
         output.appendChild(page);
       }
