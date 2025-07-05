@@ -59,7 +59,7 @@
         }
         table {  
             table-layout: fixed;
-            width: 80%;/*改寬度*/
+            width: 90%;/*改寬度*/
             border-collapse: collapse;
             margin-top: 1.5em;
             background-color: white;
@@ -148,6 +148,14 @@
             flex-wrap: wrap;
             max-width: 150px;    
         }
+        .special-leave-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+
         
     </style>
 </head>
@@ -569,7 +577,7 @@ function generateSpecialLeaveCell(date) {
             <option value="陪產假">陪產假</option>
             <option value="產檢假">產檢假</option>
         </select>
-        <label><input type="checkbox" class="special-leave-day" onchange="validateRowTotal(this.closest('tr')); calculateLeave()">1天</label><br>
+        <label><input type="checkbox" class="special-leave-day" onchange="validateRowTotal(this.closest('tr')); calculateLeave()">1天</label>
         <input type="number" class="special-leave-hour" min="0" max="8" step="0.5" placeholder="時" onchange="validateInput(this); validateRowTotal(this.closest('tr')); calculateLeave()">
     `;
 }
@@ -751,8 +759,13 @@ function appendResultBlock(label, days, hours, records, warning = "") {
             } else if (hourValue > 0) {
                 specialLeaves[selectedType].hours += hourValue;
                 specialLeaves[selectedType].records.push({ hours: hourValue, date, weekday });
+            } else {
+                // ✅ 若沒有勾選一天或填時數 → 自動清除選擇，並跳出提示
+                showToast(`⚠️ ${date} 已選假別種類，但未填寫天數或時數，已自動清除`);
+                typeSelect.value = "";
             }
         }
+
     });
 
     // 📊 開始呈現統計結果
