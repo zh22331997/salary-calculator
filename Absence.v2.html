@@ -131,7 +131,11 @@
         tr.weekend-row:hover {
             background-color: #A29093;
         }
-        
+        tr.error-row {
+            background-color: #ffe6e6 !important; /* 淡紅色 */
+            border: 2px solid #d33; /* 強調邊框 */
+        }
+
         .date-input {
             width: 80px;
             margin-top: 5px;
@@ -414,39 +418,44 @@
  */
     // ✅ 整列假別總量防呆
     function validateRowTotal(row) {
-        let totalDays = 0;
-        let totalHours = 0;
-        
-        const dayCheckboxes = row.querySelectorAll("input[type='checkbox'][data-type$='-day'], .special-leave-day");
-        dayCheckboxes.forEach(cb => {
-            if (cb.checked && !cb.disabled) {
-                totalDays += 1;
-            }
-        });
-        
-        const hourInputs = row.querySelectorAll("input[type='number'][data-type$='hour'], .special-leave-hour");
-        hourInputs.forEach(input => {
-            if (!input.disabled) {
-                const val = parseFloat(input.value);
-            if (!isNaN(val)) {
-                totalHours += val;
-            }
+    let totalDays = 0;
+    let totalHours = 0;
+    row.classList.remove("error-row"); // ✅ 每次驗證先清除錯誤樣式
+
+    const date = row.querySelector("td:first-child")?.innerText || "（未知日期）";
+
+    const dayCheckboxes = row.querySelectorAll("input[type='checkbox'][data-type$='-day'], .special-leave-day");
+    dayCheckboxes.forEach(cb => {
+        if (cb.checked && !cb.disabled) totalDays += 1;
+    });
+
+    const hourInputs = row.querySelectorAll("input[type='number'][data-type$='hour'], .special-leave-hour");
+    hourInputs.forEach(input => {
+        if (!input.disabled) {
+            const val = parseFloat(input.value);
+            if (!isNaN(val)) totalHours += val;
         }
-        });
-        if (totalDays > 1) {
-            showToast("⚠️ 同一天不能請超過 1 天的假！");
-            return false;
-        }
-        if (totalDays === 1 && totalHours > 0) {
-            showToast("⚠️ 已請 1 天，不可再填時數！");
-            return false;
-        }
-        if (totalDays === 0 && totalHours > 8) {
-            showToast("⚠️ 單日時數不能超過 8 小時！");
-            return false;
-        }
-        return true;
+    });
+
+    if (totalDays > 1) {
+        row.classList.add("error-row");
+        showToast(`⚠️ ${date} 同一天不能請超過 1 天的假！`);
+        return false;
     }
+    if (totalDays === 1 && totalHours > 0) {
+        row.classList.add("error-row");
+        showToast(`⚠️ ${date} 已請 1 天，不可再填時數！`);
+        return false;
+    }
+    if (totalDays === 0 && totalHours > 8) {
+        row.classList.add("error-row");
+        showToast(`⚠️ ${date} 單日時數不能超過 8 小時！`);
+        return false;
+    }
+
+    return true;
+}
+
 
     /**
      * 生成月份的日期表格。
@@ -604,6 +613,9 @@ function appendResultBlock(label, days, hours, records, warning = "") {
     function calculateLeave() {
     const rows = document.querySelectorAll("#formArea table tbody tr");
 
+    // 🔁 每次重新計算前，清掉所有錯誤紅框
+    rows.forEach(row => row.classList.remove("error-row"));
+
 
     // 重設所有統計記錄
     leaveRecords = [];
@@ -630,6 +642,9 @@ function appendResultBlock(label, days, hours, records, warning = "") {
     let totalOtHours = 0;
 
     rows.forEach(row => {
+        if (!validateRowTotal(row)) {
+        return; // ⚠️ 若單列驗證沒通過，就不要處理該列
+        }
         const date = row.querySelector("td:first-child").innerText;
         const weekday = getWeekdayString(date);
 
