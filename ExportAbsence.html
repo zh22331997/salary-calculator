@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>匯出缺勤明細</title> 
 <style>
-  /*可辨識0.5小時+遲到漏打卡+辨識星期+自動選年月+記住分校+提醒先按分析鈕+失敗上傳GOOLE-SHEET按鈕v4*/
+
   body {
     font-family: "Segoe UI", "微軟正黑體", sans-serif;
     background-color: #f3f1f0; /* 淺暖灰粉 */
@@ -120,7 +120,7 @@
   </select>
 
   <label for="input">📋 貼上老師的出缺勤資料：</label>
-  <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「✅假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型，而且分析中會忽略「超時」與「預計折現」。"></textarea>
+  <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「✅假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型"></textarea>
 
   <div class="button-group">
     <button onclick="analyzeAndCopy()">🔍 分析資料並複製表格</button> 
@@ -143,6 +143,14 @@
   </table>
 
 <script>
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   // ✅ 自動載入上次選擇的分校
   const lastBranch = localStorage.getItem("lastBranch");
@@ -181,145 +189,209 @@ window.addEventListener('message', function(event) {
     }
   }
 });
+function appendRow(tbody, ym, branch, name, type, subtotal, notes) {
+  const tr = document.createElement('tr');
+
+  // 使用 innerHTML 一次性插入整列的內容
+tr.innerHTML = `
+  <td>${escapeHTML(ym)}</td>
+  <td>${escapeHTML(branch)}</td>
+  <td>${escapeHTML(name)}</td>
+  <td>${escapeHTML(type)}</td>
+  <td>${escapeHTML(subtotal)}</td>
+  <td>${escapeHTML(notes)}</td>
+`;
+
+
+  // 最後 append 到 tbody
+  tbody.appendChild(tr);
+}
 
 
 function analyzeData() {
-  const ym = document.getElementById('month').value;
+  const yearMonth = document.getElementById('month').value;
   const branch = document.getElementById('branch').value;
-  const raw = document.getElementById('input').value.trim();
-  const tbody = document.querySelector('#outputTable tbody');
-  tbody.innerHTML = '';
+  const rawInput = document.getElementById('input').value.trim();
+  const outputTableBody = document.querySelector('#outputTable tbody');
+  outputTableBody.innerHTML = ''; // 清空表格內容
 
-  if (!ym || !raw) {
-  showToast('⚠️ 請輸入年月、分校、資料！', 'warning');
-  return;
-}
+  const processedRows = []; // 儲存最終要顯示在表格的數據
 
-  const sections = raw.split(/(?=^[^\s：]{1,10}\s*$)/m); // 依老師名切段
-  sections.forEach(block => {
-    const lines = block.trim().split('\n');
-    const name = lines.shift().trim();
-    const content = lines.join('\n');
-
-    let lateTotal = 0, lateCount = 0, lateDetails = [];
-    let lateNDTotal = 0, lateNDCount = 0, lateNDDetails = [];
-    let punchDetails = [];
-
-    const rows = content.split(/✅/).map(r => r.trim()).filter(Boolean);
-    
-    // ✅ 新增資料格式防呆：沒有任何符合格式的資料就跳出
-    const validRows = rows.filter(row => /^(.+?)[:：]\s*(.+?)([（(）)].*?)?$/.test(row));
-    if (validRows.length === 0) {
-    showToast(`⚠️ ${name} 的資料格式錯誤`, 'error');
+  // 輸入驗證
+  if (!yearMonth || !branch || !rawInput) {
+    showToast('⚠️ 請輸入年月、分校、以及原始資料！', 'warning');
     return;
-}
+  }
 
-    
-    
-    rows.forEach(row => {
-      const match = row.match(/^(.+?)[:：]\s*(.+?)\s*([（(）)].*?)?$/); //容許半形:
-      if (!match) return;
+  // 根據老師名稱切分資料區塊
+  const teacherSections = rawInput.split(/(?=^[^\s：]{1,10}\s*$)/m);
 
-      const type = match[1].trim();
-      const subtotal = match[2].trim();
-      const notesText = match[3] || '';
-      
+  teacherSections.forEach(block => {
+    const lines = block.trim().split('\n');
+    const teacherName = lines.shift().trim(); // 第一行是老師名稱
+    const content = lines.join('\n'); // 剩餘部分是老師的內容
 
-      // ✅ 全勤緩衝 → 遲到(不扣) + 漏打卡
+    // 初始化每個老師的統計數據
+    const teacherStats = {
+      lateDeductionTotalMinutes: 0, // 遲到(扣薪)總分鐘數
+      lateDeductionCount: 0,       // 遲到(扣薪)次數
+      lateDeductionDetails: [],    // 遲到(扣薪)詳情
+      lateNoDeductionTotalMinutes: 0, // 遲到(不扣)總分鐘數
+      lateNoDeductionCount: 0,      // 遲到(不扣)次數
+      lateNoDeductionDetails: [],   // 遲到(不扣)詳情
+      punchCardMissingDetails: [],  // 漏打卡詳情
+      overtimeTotalMinutes: 0,      // 超時總分鐘數
+      overtimeDetails: []           // 超時詳情
+    };
+
+    // 處理內容行，去除空的或不符合格式的行
+    const contentRows = content.split(/[💸✅]/).map(r => r.trim()).filter(Boolean);
+    const validContentRows = contentRows.filter(row => /^(.+?)[:：]\s*(.+?)([（(）)].*?)?$/.test(row));
+
+    if (validContentRows.length === 0) {
+      showToast(`⚠️ 老師 **${teacherName}** 的資料格式錯誤或無有效資料，請檢查！`, 'error');
+      return; // 跳過此老師，繼續處理下一個
+    }
+
+    validContentRows.forEach(row => {
+      const match = row.match(/^(.+?)[:：]\s*(.+?)\s*([（(）)].*?)?$/);
+      if (!match) return; // 如果不符合預期格式，則跳過
+
+      const type = match[1].trim();     // 假別類型
+      const subtotal = match[2].trim(); // 小計
+      const notesText = match[3] || ''; // 括號內的備註
+
+      // --- 核心分析邏輯 ---
+
+      // 處理「全勤緩衝」
       if (type === '全勤緩衝') {
-        const brackets = [...notesText.matchAll(/[（(](.+?)[）)]/g)];
-        brackets.forEach(m => {
-          const entry = m[1];
-          if (/分/.test(entry)) {
-            const minutes = parseInt(entry.match(/(\d+)分/)?.[1] || '0');
-            lateNDTotal += minutes;
-            lateNDCount++;
-            lateNDDetails.push(entry);
-          } else if (/上班|下班/.test(entry)) {
-            punchDetails.push(entry);
+        const bracketEntries = [...notesText.matchAll(/[（(](.+?)[）)]/g)];
+        bracketEntries.forEach(entryMatch => {
+          const entryContent = entryMatch[1];
+          if (/分/.test(entryContent)) {
+            const minutesMatch = entryContent.match(/(\d+)分/);
+            if (minutesMatch) {
+              const minutes = parseInt(minutesMatch[1], 10);
+              if (!isNaN(minutes)) {
+                teacherStats.lateNoDeductionTotalMinutes += minutes;
+                teacherStats.lateNoDeductionCount++;
+                teacherStats.lateNoDeductionDetails.push(entryContent);
+              }
+            }
+          } else if (/上班|下班/.test(entryContent)) {
+            teacherStats.punchCardMissingDetails.push(entryContent);
           }
         });
-        return; // 不進表格
+        return; // 全勤緩衝已處理完畢，不需加入主表格
       }
 
-      // ✅ 遲到 → 扣薪
+      // 處理「遲到」 (扣薪)
       if (type === '遲到') {
         const lateMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2}\s*.+?分)[）)]/g)];
         lateMatches.forEach(m => {
           const minutes = parseInt(m[1].match(/(\d+)分/)?.[1] || '0');
-          lateTotal += minutes;
-          lateCount++;
-          lateDetails.push(m[1]);
+          teacherStats.lateDeductionTotalMinutes += minutes;
+          teacherStats.lateDeductionCount++;
+          teacherStats.lateDeductionDetails.push(m[1]);
         });
-        return; // 不進表格
+        return; // 遲到已統計完畢，不需加入主表格
       }
 
-      // ❌ 忽略
-      if (type === '預計折現' || type === '超時') return;
+      // 處理「超時」
+      // 處理「超時」（單位只會是「時」，最小為 0.5）
+if (type === '超時') {
+  const timeMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2})\s*([\d.]+)時[）)]/g)];
+  timeMatches.forEach(m => {
+    const entry = `${m[1]} ${m[2]}時`; // ex: 6/12 0.5時
+    const hours = parseFloat(m[2]);
+    if (!isNaN(hours)) {
+      teacherStats.overtimeTotalHours = (teacherStats.overtimeTotalHours || 0) + hours;
+      teacherStats.overtimeDetails.push(entry);
+    }
+  });
+  return;
+}
 
-      // ✅ 一般假別
+
+
+      // 處理一般假別，加入主表格
       const noteMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2}\s*.+?(?:天|時|分))[）)]/g)];
       const cleanNotes = noteMatches.map(m => m[1].trim()).join('、');
 
-      tbody.innerHTML += `
-        <tr>
-          <td>${ym}</td>
-          <td>${branch}</td>
-          <td>${name}</td>
-          <td>${type}</td>
-          <td>${subtotal}</td>
-          <td>${cleanNotes}</td>
-        </tr>`;
+      processedRows.push({
+        ym: yearMonth,
+        branch: branch,
+        name: teacherName,
+        type: type,
+        subtotal: subtotal,
+        notes: cleanNotes
+      });
     });
 
-    // ✅ 遲到(不扣)
-    if (lateNDCount > 0) {
-      tbody.innerHTML += `
-        <tr>
-          <td>${ym}</td>
-          <td>${branch}</td>
-          <td>${name}</td>
-          <td>遲到(不扣)</td>
-          <td>${lateNDTotal}分 (${lateNDCount} 次)</td>
-          <td>${lateNDDetails.join('、')}</td>
-        </tr>`;
+    // --- 將統計結果加入 processedRows ---
+
+    // 遲到(不扣)
+    if (teacherStats.lateNoDeductionCount > 0) {
+      processedRows.push({
+        ym: yearMonth,
+        branch: branch,
+        name: teacherName,
+        type: '遲到(不扣)',
+        subtotal: `${teacherStats.lateNoDeductionTotalMinutes}分 (${teacherStats.lateNoDeductionCount}次)`,
+        notes: teacherStats.lateNoDeductionDetails.join('、')
+      });
     }
 
-    // ✅ 遲到⚠️
-    if (lateCount > 0) {
-      tbody.innerHTML += `
-        <tr>
-          <td>${ym}</td>
-          <td>${branch}</td>
-          <td>${name}</td>
-          <td>遲到⚠️</td>
-          <td>${lateTotal}分 (${lateCount} 次)</td>
-          <td>${lateDetails.join('、')}</td>
-        </tr>`;
+    // 漏打卡
+    if (teacherStats.punchCardMissingDetails.length > 0) {
+      processedRows.push({
+        ym: yearMonth,
+        branch: branch,
+        name: teacherName,
+        type: '漏打卡',
+        subtotal: `${teacherStats.punchCardMissingDetails.length}次`,
+        notes: teacherStats.punchCardMissingDetails.join('、')
+      });
     }
 
-    // ✅ 漏打卡
-    if (punchDetails.length > 0) {
-      tbody.innerHTML += `
-        <tr>
-          <td>${ym}</td>
-          <td>${branch}</td>
-          <td>${name}</td>
-          <td>漏打卡</td>
-          <td>${punchDetails.length} 次</td>
-          <td>${punchDetails.join('、')}</td>
-        </tr>`;
+    // 遲到⚠️ (扣薪)
+    if (teacherStats.lateDeductionCount > 0) {
+      processedRows.push({
+        ym: yearMonth,
+        branch: branch,
+        name: teacherName,
+        type: '遲到⚠️',
+        subtotal: `${teacherStats.lateDeductionTotalMinutes}分 (${teacherStats.lateDeductionCount}次)`,
+        notes: teacherStats.lateDeductionDetails.join('、')
+      });
     }
-  });
 
-  
+    // 超時
+    if (teacherStats.overtimeTotalHours) {
+        processedRows.push({
+        ym: yearMonth,
+        branch: branch,
+        name: teacherName,
+        type: '超時',
+        subtotal: `${teacherStats.overtimeTotalHours.toFixed(1)}時`,
+        notes: teacherStats.overtimeDetails.join('、')
+    });
 }
 
-//下下行是上傳GOOGLE SHEET的JS檔案
-</script>
+  });
 
-<script src="submit-to-sheet-v4.js"></script>
-  <script>
+  // 最後將所有處理好的行渲染到表格
+  renderRows(outputTableBody, processedRows);
+}
+function renderRows(tbody, rows) {
+  tbody.innerHTML = '';
+  rows.forEach(row => appendRow(tbody, row.ym, row.branch, row.name, row.type, row.subtotal, row.notes));
+}
+
+
+
+
+ 
     function submitToGoogle() {
       const table = document.querySelector('#outputTable');
       const branch = document.getElementById('branch').value;
@@ -473,5 +545,6 @@ function copyTable() {
 
 
 </script>
+<script src="submit-to-sheet-v4.js"></script>
 </body>
 </html>
