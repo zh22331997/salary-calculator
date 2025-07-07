@@ -245,7 +245,7 @@ function analyzeData() {
     };
 
     // 處理內容行，去除空的或不符合格式的行
-    const contentRows = content.split(/[💸✅]/).map(r => r.trim()).filter(Boolean);
+    const contentRows = content.split(/[💸✅📌]/).map(r => r.trim()).filter(Boolean);
     const validContentRows = contentRows.filter(row => /^(.+?)[:：]\s*(.+?)([（(）)].*?)?$/.test(row));
 
     if (validContentRows.length === 0) {
@@ -311,8 +311,18 @@ if (type === '超時') {
   });
   return;
 }
-
-
+// 📌 處理「特休補休結餘」也像一般請假列出來
+if (type === '特休補休結餘') {
+  processedRows.push({
+    ym: yearMonth,
+    branch: branch,
+    name: teacherName,
+    type: '📌特休補休結餘',
+    subtotal: subtotal,
+    notes: notesText.replace(/[（）]/g, '')  // 去掉括號
+  });
+  return;
+}
 
       // 處理一般假別，加入主表格
       const noteMatches = [...notesText.matchAll(/[（(](\d{1,2}\/\d{1,2}\s*.+?(?:天|時|分))[）)]/g)];
@@ -384,13 +394,11 @@ if (type === '超時') {
   renderRows(outputTableBody, processedRows);
 }
 function renderRows(tbody, rows) {
+  const order = ['特休', '補休', '事假', '病假', '生理假', '婚假', '產假', '陪產假', '產檢假', '超時', '遲到⚠️', '遲到(不扣)', '漏打卡', '📌特休補休結餘'];
+  rows.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
   tbody.innerHTML = '';
   rows.forEach(row => appendRow(tbody, row.ym, row.branch, row.name, row.type, row.subtotal, row.notes));
 }
-
-
-
-
  
     function submitToGoogle() {
       const table = document.querySelector('#outputTable');
