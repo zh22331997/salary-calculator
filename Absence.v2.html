@@ -1,4 +1,4 @@
-<!DOCTYPE html>  
+<!DOCTYPE html>   
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -51,7 +51,7 @@
         transition: background-color 0.3s ease;
         margin: 0.3em;
         }
-
+        
         /* 藍色按鈕 */
         .btn-blue {
             background-color: #3c82f6;
@@ -84,7 +84,6 @@
             background-color: white;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-
         th, td {
             border: 1px solid #ddd;
             padding: 0.6em;
@@ -155,7 +154,6 @@
             line-height: 1.6;
         }
 
-
         tr.weekend-row:hover {
             background-color: #A29093;
         }
@@ -190,8 +188,6 @@
             flex-wrap: nowrap;
             gap: 4px; /* 元件間距 */
         }
-
-
         
     </style>
 </head>
@@ -272,13 +268,11 @@
 
     <label>💰折現（小時）：</label>
     <input type="number" id="cashOutHoursSalary" style="width: 60px" placeholder="0" oninput="calculateLeave()"><br>
-    
 
     <button class="btn btn-blue" onclick="calculateSalaryDeduction()">計算不支薪</button>
     <br><br>
     <div id="salaryResult"></div>
     <button class="btn btn-gray" onclick="copyResultsSalary()">📋 複製算式</button>
-
 
 <script>
     // --- 工具函數 (Utility Functions) ---
@@ -309,8 +303,6 @@
 
     return `(${entry.date} ${value}${unitText})`;
 }
-
-
     /**
      * 顯示短暫的提示訊息。
      * @param {string} message - 要顯示的訊息。
@@ -373,7 +365,6 @@
         const element = document.getElementById(id);
         return element ? parseNumber(element.value) : 0;
     }
-
 
     // --- 全局狀態 (Global State) ---
     // 全局變數用於儲存記錄，以便匯入和顯示
@@ -504,10 +495,8 @@
         showToast(`⚠️ ${date} 單日時數不能超過 8 小時！`);
         return false;
     }
-
     return true;
 }
-
 
     /**
      * 生成月份的日期表格。
@@ -678,9 +667,6 @@ function appendResultBlock(label, days = 0, hours = 0, records = [], warning = "
 
     return result + '\n';
 }
-
-
-
     /**
      * 計算所有假別的總和並顯示結果。
      */
@@ -693,9 +679,6 @@ function appendResultBlock(label, days = 0, hours = 0, records = [], warning = "
     row.classList.remove("error-row");
     row.classList.remove("warned-incomplete-special-leave"); 
 });
-
-
-
     // 重設所有統計記錄
     leaveRecords = [];
     sickRecords = [];
@@ -838,9 +821,6 @@ function appendResultBlock(label, days = 0, hours = 0, records = [], warning = "
         }
     }
 }
-
-
-
     });
 
     // 📊 開始呈現統計結果
@@ -850,8 +830,8 @@ function appendResultBlock(label, days = 0, hours = 0, records = [], warning = "
     const format = (records, unit) => records.map(e => formatEntry(e, unit)).join("、");
 
     result += appendResultBlock("特休/補休", totalVDays, totalVHours, vacationRecords);
-
-
+    result += appendResultBlock("超時", 0, totalOtHours, overtimeRecords);
+        
     // 全勤緩衝
     const totalNoDeductMinutes = lateNoDeductRecords.reduce((sum, r) => sum + (r.minutes || 0), 0);
     const totalMissPunches = punchCardMissRecords.length;
@@ -909,10 +889,8 @@ if (totalNoDeductMinutes || totalMissPunches) {
     if (rawRemainingDays < 0 || rawRemainingHours < 0) {
         showToast("⚠️ 特休補休透支了，請注意！");
     }
-
     document.getElementById("resultsLeave").innerText = result;
 }
-
 
     /**
      * 複製假別統計結果到剪貼簿。
@@ -954,7 +932,6 @@ if (totalNoDeductMinutes || totalMissPunches) {
         if (teacherNameLeave) {
             document.getElementById("nameSalary").value = teacherNameLeave;
         }
-
         showToast("假別統計結果已匯入不計薪計算！");
     }
 
@@ -1052,7 +1029,6 @@ if (totalNoDeductMinutes || totalMissPunches) {
         }
     }
 
-
     // --- DOM 加載完成後初始化 (Initialization on DOMContentLoaded) ---
     window.addEventListener("DOMContentLoaded", () => {
         // 設定預設月份為上個月
@@ -1082,12 +1058,7 @@ if (totalNoDeductMinutes || totalMissPunches) {
                 e.preventDefault(); // 阻止滾輪預設行為
                 document.activeElement.blur(); // 移除 focus 避免數值被改動
             }
-        }, { passive: false });
-
-
-        
-
-
+        }, { passive: false });      
 
     });
     function toggleBalanceInfo() {
