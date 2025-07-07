@@ -30,6 +30,14 @@
             --w-punch: 8em;
             --w-special: 15em;
         }
+        /*統一兩種統計結果的字體大小*/
+        #resultsLeave,
+        #vacationBreakdown {
+            font-size: 16px;
+            font-family: "Segoe UI", "微軟正黑體", sans-serif;
+            line-height: 1.6;
+        }
+
 
 
         /* 統一按鈕樣式 */
@@ -116,27 +124,25 @@
 
         /* 每欄寬度設定 */
         /* 每欄寬度設定（集中管理） */
-table th:nth-child(1), table td:nth-child(1) { width: var(--w-date); }     /* 日期（如 7/12） */
-table th:nth-child(2), table td:nth-child(2) { width: var(--w-weekday); }  /* 星期（如 (日)） */
-
-table th:nth-child(3), table td:nth-child(3),                               /* 特休(天) */
-table th:nth-child(5), table td:nth-child(5),                               /* 事假(天) */
-table th:nth-child(7), table td:nth-child(7),                               /* 病假(天) */
-table th:nth-child(13), table td:nth-child(13) { width: var(--w-day); }    /* 喪假(天) */
-
-table th:nth-child(4), table td:nth-child(4),                               /* 特休(時) */
-table th:nth-child(6), table td:nth-child(6),                               /* 事假(時) */
-table th:nth-child(8), table td:nth-child(8),                               /* 病假(時) */
-table th:nth-child(12), table td:nth-child(12),                             /* 生理假(時) */
-table th:nth-child(14), table td:nth-child(14),                             /* 喪假(時) */
-table th:nth-child(15), table td:nth-child(15) { width: var(--w-hour); }   /* 超時(時) */
-
-table th:nth-child(9), table td:nth-child(9),                               /* 遲到扣(分鐘) */
-table th:nth-child(10), table td:nth-child(10) { width: var(--w-minutes); }/* 遲到三次五分鐘內(分鐘) */
-
-table th:nth-child(11), table td:nth-child(11) { width: var(--w-punch); }  /* 漏打卡 */
-
-table th:nth-child(16), table td:nth-child(16) { width: var(--w-special); }/* 婚／產／陪產／產檢假（綜合欄） */
+        table th:nth-child(1), table td:nth-child(1) { width: var(--w-date); }     /* 日期（如 7/12） */
+        table th:nth-child(2), table td:nth-child(2) { width: var(--w-weekday); }  /* 星期（如 (日)） */
+        
+        table th:nth-child(3), table td:nth-child(3),                               /* 特休(天) */
+        table th:nth-child(5), table td:nth-child(5),                               /* 事假(天) */
+        table th:nth-child(7), table td:nth-child(7),                               /* 病假(天) */
+        table th:nth-child(13), table td:nth-child(13) { width: var(--w-day); }    /* 喪假(天) */
+        
+        table th:nth-child(4), table td:nth-child(4),                               /* 特休(時) */
+        table th:nth-child(6), table td:nth-child(6),                               /* 事假(時) */
+        table th:nth-child(8), table td:nth-child(8),                               /* 病假(時) */
+        table th:nth-child(12), table td:nth-child(12),                             /* 生理假(時) */
+        table th:nth-child(14), table td:nth-child(14),                             /* 喪假(時) */
+        table th:nth-child(15), table td:nth-child(15) { width: var(--w-hour); }    /* 超時(時) */
+        
+        table th:nth-child(9), table td:nth-child(9),                               /* 遲到扣(分鐘) */
+        table th:nth-child(10), table td:nth-child(10) { width: var(--w-minutes); } /* 遲到三次五分鐘內(分鐘) */
+        table th:nth-child(11), table td:nth-child(11) { width: var(--w-punch); }   /* 漏打卡 */
+        table th:nth-child(16), table td:nth-child(16) { width: var(--w-special); } /* 婚／產／陪產／產檢假（綜合欄） */
 
         .totals {
             margin-top: 20px;
@@ -144,7 +150,11 @@ table th:nth-child(16), table td:nth-child(16) { width: var(--w-special); }/* �
             background-color: #f9f9f9;
             padding: 10px;
             border: 1px dashed #ccc;
+            font-size: 1.2em; /* 特休加減統計區文字大小 */
+            font-family: "Segoe UI", "微軟正黑體", sans-serif; /* 避免預設變 monospace */
+            line-height: 1.6;
         }
+
 
         tr.weekend-row:hover {
             background-color: #A29093;
@@ -641,7 +651,7 @@ function appendResultBlock(label, days = 0, hours = 0, records = [], warning = "
             .filter(e => e)
             .join("、");
 
-        return `✅ ${label}：${minuteTotal} 分    ${minuteEntries}\n`;
+        return `💸 ${label}：${minuteTotal} 分    ${minuteEntries}\n`;
     }
 
     // 👉 若天與時都為 0，就略過該項
@@ -652,7 +662,10 @@ function appendResultBlock(label, days = 0, hours = 0, records = [], warning = "
     const hourPart = hours ? `${hours} 時` : '';
     const dayHourDisplay = [dayPart, hourPart].filter(Boolean).join(" ");
 
-    let result = `✅ ${label}：${dayHourDisplay}`;
+    let unpaidLeaves = ["事假", "病假", "生理假", "遲到"];
+    let emoji = unpaidLeaves.includes(label) ? "💸" : "✅";
+    let result = `${emoji} ${label}：${dayHourDisplay}`;
+
 
     const dayEntries = records.filter(r => r.days).map(r => formatEntry(r, 'days'));
     const hourEntries = records.filter(r => r.hours).map(r => formatEntry(r, 'hours'));
@@ -857,14 +870,11 @@ if (totalNoDeductMinutes || totalMissPunches) {
     result += "\n";
 }
 
-
-    result += appendResultBlock("喪假", totalFDays, totalFHours, funeralRecords);
-    result += appendResultBlock("遲到", 0, 0, lateRecords);
     result += appendResultBlock("事假", totalPDays, totalPHours, leaveRecords);
     result += appendResultBlock("病假", totalSDays, totalSHours, sickRecords);
     result += appendResultBlock("生理假", 0, totalMHours, menstrualRecords, totalMHours > 8 ? "⚠️ 生理假超過限額！" : "");
-    result += appendResultBlock("超時補休", 0, totalOtHours, overtimeRecords);
-
+    result += appendResultBlock("遲到", 0, 0, lateRecords);
+    result += appendResultBlock("喪假", totalFDays, totalFHours, funeralRecords);
 
     Object.entries(specialLeaves).forEach(([type, data]) => {
     result += appendResultBlock(type, data.days, data.hours, data.records);
@@ -887,14 +897,14 @@ if (totalNoDeductMinutes || totalMissPunches) {
     const balanceWarning = (rawRemainingDays < 0 || rawRemainingHours < 0) ? " ⚠️" : "";
 
     let vacationSummary = '';
-vacationSummary += `📊特休補休計算說明：\n`;
-vacationSummary += `原始結餘：${originalVacationDays} 天 ${originalVacationHours} 時\n`;
-vacationSummary += `扣除使用：-${totalVDays} 天 -${totalVHours} 時\n`;
-vacationSummary += `補回超時：+${totalOtHours} 時\n`;
-vacationSummary += `➡️最終剩餘：${rawRemainingDays} 天 ${rawRemainingHours} 時${balanceWarning}\n`;
+    vacationSummary += `特休補休計算說明：\n`;
+    vacationSummary += `前月結餘：${originalVacationDays} 天 ${originalVacationHours} 時\n`;
+    vacationSummary += `扣本月用：-${totalVDays} 天 -${totalVHours} 時\n`;
+    vacationSummary += `本月超時：+${totalOtHours} 時\n`;
+    vacationSummary += `本月結餘：${rawRemainingDays} 天 ${rawRemainingHours} 時${balanceWarning}\n`;
 
-// 顯示在另外一個區塊
-document.getElementById("vacationBreakdown").innerText = vacationSummary;
+    // 顯示在另外一個區塊
+    document.getElementById("vacationBreakdown").innerText = vacationSummary;
 
     if (rawRemainingDays < 0 || rawRemainingHours < 0) {
         showToast("⚠️ 特休補休透支了，請注意！");
