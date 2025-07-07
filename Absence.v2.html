@@ -908,10 +908,12 @@ if (totalNoDeductMinutes || totalMissPunches) {
 
     // 顯示在另外一個區塊
     document.getElementById("vacationBreakdown").innerText = vacationSummary;
+    
 
     if (rawRemainingDays < 0 || rawRemainingHours < 0) {
         showToast("⚠️ 特休補休透支了，請注意！");
     }
+    result += `📌 特休補休結餘：${rawRemainingDays} 天 ${rawRemainingHours} 時${balanceWarning}\n`;
 
     document.getElementById("resultsLeave").innerText = result;
 }
@@ -1055,6 +1057,7 @@ if (totalNoDeductMinutes || totalMissPunches) {
         }
     }
 
+
     // --- DOM 加載完成後初始化 (Initialization on DOMContentLoaded) ---
     window.addEventListener("DOMContentLoaded", () => {
         // 設定預設月份為上個月
@@ -1084,7 +1087,12 @@ if (totalNoDeductMinutes || totalMissPunches) {
                 e.preventDefault(); // 阻止滾輪預設行為
                 document.activeElement.blur(); // 移除 focus 避免數值被改動
             }
-        }, { passive: false });     
+        }, { passive: false });
+
+
+        
+
+
 
     });
     function toggleBalanceInfo() {
