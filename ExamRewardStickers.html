@@ -84,7 +84,7 @@
     }
     .slip {
       width: 6.5cm;
-      height: 5.8cm; /* 高度調整為 5.8cm */
+      height: 5.6cm; /* 高度調整為 5.6cm (5.8cm - 2mm) */
       border: 1px dashed #999; /* 裁切輔助線：預設虛線 */
       padding: 0.4cm;
       box-sizing: border-box;
@@ -161,12 +161,20 @@
       }
       .slip {
         width: 6.5cm;
-        height: 5.8cm; /* 列印時也使用 5.8cm 高度 */
+        height: 5.6cm; /* 列印時也使用 5.6cm 高度 */
         border: 0.5px solid #000; /* 使用細實線作為裁切線，更清晰 */
         box-sizing: border-box;
         page-break-inside: avoid;
         position: relative;
         overflow: hidden;
+      }
+      /* 調整列印時的字體大小和行高 (根據上次的討論，保留這個調整) */
+      .slip pre {
+        font-size: 10.5pt; /* 略微縮小字體 */
+        line-height: 1.1; /* 調整行高，使其更緊湊 */
+      }
+      .student-name {
+        font-size: 13pt; /* 略微縮小學生姓名 */
       }
       /* 隱藏禮券統計資訊，因為這只用於網頁顯示 */
       .total-voucher-info, .no-data-message {
@@ -326,11 +334,10 @@
         if (reward > 0) { // 只生成有獎勵的貼條
           totalVoucherCount += reward / 100;
 
-          // --- START --- 這裡是要修改的部分
+          // 使用 strong 標籤突顯期別和學期
           let formattedSemester = semester.replace('上', '<strong>上</strong>').replace('下', '<strong>下</strong>');
           let formattedExamType = examType.replace('中', '<strong>中</strong>').replace('末', '<strong>末</strong>');
           const term = `${gradeRaw}年級${formattedSemester}${formattedExamType}`;
-          // --- END ---
 
           const policy = getPolicyText(gradeRaw);
 
@@ -338,7 +345,7 @@
 因${term}
 各科平均達${avg}分，
 特頒禮券 ${reward} 元以茲鼓勵。
----------------------------`;
+--------------------------`;
 
           slipsHTML.push(`
             <div class="slip">
