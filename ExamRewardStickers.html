@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>期中期末禮券貼條產生器</title>
+  <style>
+    /* 全域設定與基本排版 */
+    @page {
+      margin: 0.6cm; /* 標準 A4 邊距，上下左右各 0.6cm */
+    }
+    body {
+      font-family: "微軟正黑體", sans-serif;
+      background-color: #f4f4f4;
+      padding: 2em;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    /* 輸入區塊樣式 */
+    h1 {
+      color: #0056b3;
+      text-align: center;
+      margin-bottom: 1em;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      font-size: 1em;
+      font-family: monospace;
+      padding: 0.8em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box; /* 確保內邊距和邊框包含在寬度內 */
+      margin-bottom: 1em;
+    }
+    select, button {
+      padding: 0.6em 1.2em;
+      margin-right: 0.5em;
+      border: 1px solid #007bff;
+      border-radius: 4px;
+      background-color: #007bff;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+    #printButton {
+      background-color: #28a745;
+      border-color: #28a745;
+      display: none; /* 預設隱藏 */
+    }
+    #printButton:hover {
+      background-color: #218838;
+      border-color: #1e7e34;
+    }
+
+    /* 輸出區塊樣式 (用於網頁顯示和列印) */
+    .output-container {
+      margin-top: 2em;
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .output-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 6.5cm); /* 3 列，每列寬度 6.5cm */
+      gap: 0; /* 確保貼條之間沒有間隔 */
+      background: #fff;
+      padding: 0;
+      justify-content: center; /* 讓網格內容在容器中水平居中 */
+      /* 新增：確保網頁顯示時的左右置中 */
+      margin: 0 auto;
+    }
+    .slip {
+      width: 6.5cm;
+      height: 5.8cm; /* 高度調整為 5.8cm */
+      border: 1px dashed #999; /* 裁切輔助線：預設虛線 */
+      padding: 0.4cm;
+      box-sizing: border-box;
+      page-break-inside: avoid; /* 防止貼條內容被拆散到不同頁 */
+      position: relative;
+      overflow: hidden; /* 防止內容溢出 */
+    }
+    .slip pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 11pt;
+      line-height: 1.2;
+      margin: 0;
+      color: #000; /* 確保列印時文字顏色為黑色 */
+    }
+    .student-name {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #d9534f; /* 給學生姓名一個更醒目的顏色 */
+    }
+    .policy-text {
+      font-size: 6pt; /* 保持 6pt 字體大小 */
+      line-height: 1.0;
+      color: #555;
+      margin-top: 0.2cm; /* 與上方內容隔開 */
+    }
+    .logo {
+      position: absolute;
+      top: 0.2cm;
+      right: 0.2cm;
+      width: 1.2cm;
+      height: auto;
+      opacity: 0.9;
+      pointer-events: none; /* 讓圖片不影響點擊事件 */
+    }
+    .total-voucher-info {
+      margin-top: 1em;
+      font-weight: bold;
+      text-align: center; /* 讓提示文字置中 */
+      padding: 0.5em;
+      border-top: 1px dashed #ccc; /* 增加分隔線 */
+    }
+    .total-voucher-count {
+      color: darkred;
+      font-size: 1.2em;
+    }
+    .no-data-message {
+        text-align: center;
+        color: #777;
+        padding: 1em;
+    }
+
+    /* 列印專用樣式 */
+    @media print {
+      body {
+        background-color: #fff; /* 列印時背景設為白色 */
+        padding: 0; /* 列印時移除頁面邊距 */
+      }
+      /* 隱藏所有非列印內容 */
+      body > *:not(.output-container) {
+        display: none !important;
+      }
+      .output-container {
+        margin-top: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+      .output-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 6.5cm); /* 列印時也使用 3 列佈局 */
+        gap: 0;
+        width: auto; /* 讓網格根據內容決定寬度 */
+        margin: 0 auto; /* 上下邊距0，左右自動，使其水平置中 */
+      }
+      .slip {
+        width: 6.5cm;
+        height: 5.8cm; /* 列印時也使用 5.8cm 高度 */
+        border: 0.5px solid #000; /* 使用細實線作為裁切線，更清晰 */
+        box-sizing: border-box;
+        page-break-inside: avoid;
+        position: relative;
+        overflow: hidden;
+      }
+      /* 隱藏禮券統計資訊，因為這只用於網頁顯示 */
+      .total-voucher-info, .no-data-message {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>期中期末禮券貼條產生器</h1>
+  <label for="input">請貼上成績表（直接複製含標題列的EXCEL資料，至少要有 **年級**、**姓名**、**平均** 三種資料）：</label><br>
+  <textarea id="input" placeholder="貼上Excel資料..."></textarea><br>
+  <label>選擇學期與考別：</label><br>
+  <select id="semester">
+    <option value="上學期">上學期</option>
+    <option value="下學期" selected>下學期</option>
+  </select>
+  <select id="examType">
+    <option value="期中考">期中考</option>
+    <option value="期末考" selected>期末考</option>
+  </select><br><br>
+  <button onclick="generateSlips()">產生禮券貼條</button>
+  <button id="printButton" onclick="printSlips()">🖨️ 列印貼條</button>
+
+  <div class="output-container">
+    <div id="result" class="output-grid">
+      </div>
+    <p id="totalVoucherSummary" class="total-voucher-info" style="display:none;"></p>
+    <p id="noDataMessage" class="no-data-message" style="display:block;">請輸入資料並點擊「產生禮券貼條」。</p>
+  </div>
+
+  <script>
+    /**
+     * 根據年級判斷所屬的學齡組。
+     * @param {string} grade - 年級的文字表示，例如「一」、「二」。
+     * @returns {string} - 「低年級」、「中年級」或「高年級」。
+     */
+    function classifyGrade(grade) {
+      if (grade === '一' || grade === '二') return '低年級';
+      if (grade === '三' || grade === '四') return '中年級';
+      return '高年級';
+    }
+
+    /**
+     * 根據年級和平均分數計算獎勵金額。
+     * @param {string} grade - 年級的文字表示。
+     * @param {number} avg - 平均分數。
+     * @returns {number} - 獎勵禮券金額。
+     */
+    function getReward(grade, avg) {
+      const group = classifyGrade(grade);
+      if (group === '低年級') {
+        if (avg === 100) return 300;
+        if (avg >= 98) return 100;
+      } else if (group === '中年級') {
+        if (avg === 100) return 300;
+        if (avg >= 97) return 200;
+        if (avg >= 95) return 100;
+      } else { // 高年級
+        if (avg >= 98) return 300;
+        if (avg >= 95) return 200;
+        if (avg >= 93) return 100;
+      }
+      return 0; // 沒有達到獎勵標準
+    }
+
+    /**
+     * 根據年級獲取相應的獎勵辦法文字。
+     * @param {string} grade - 年級的文字表示。
+     * @returns {string} - 獎勵辦法說明文字。
+     */
+    function getPolicyText(grade) {
+      const group = classifyGrade(grade);
+      if (group === '低年級') {
+        return '期中、期末考 成績優異獎勵辦法\n低年級\n平均100分      獎勵禮券300元\n平均98分~99分  獎勵禮券100元';
+      } else if (group === '中年級') {
+        return '期中、期末考 成績優異獎勵辦法\n中年級\n平均100分      獎勵禮券300元\n平均97分~99分  獎勵禮券200元\n平均95分~96分  獎勵禮券100元';
+      } else { // 高年級
+        return '期中、期末考 成績優異獎勵辦法\n高年級\n平均98~100分   獎勵禮券300元\n平均95分~97分  獎勵禮券200元\n平均93分~94分  獎勵禮券100元';
+      }
+    }
+
+    /**
+     * 生成禮券貼條。
+     */
+    function generateSlips() {
+      const text = document.getElementById('input').value.trim();
+      const semester = document.getElementById('semester').value;
+      const examType = document.getElementById('examType').value;
+      const resultDiv = document.getElementById('result');
+      const printButton = document.getElementById('printButton');
+      const totalVoucherSummary = document.getElementById('totalVoucherSummary');
+      const noDataMessage = document.getElementById('noDataMessage');
+
+      resultDiv.innerHTML = ''; // 清空之前的結果
+      totalVoucherSummary.style.display = 'none'; // 隱藏總結資訊
+      printButton.style.display = 'none'; // 隱藏列印按鈕
+      noDataMessage.style.display = 'none'; // 隱藏無資料訊息
+
+      if (!text) {
+        noDataMessage.textContent = '請貼上成績資料。';
+        noDataMessage.style.display = 'block';
+        return;
+      }
+
+      const lines = text.split('\n');
+      if (lines.length < 2) {
+        noDataMessage.textContent = '資料不足，請確認貼上的資料包含標題列和至少一行學生資料。';
+        noDataMessage.style.display = 'block';
+        return;
+      }
+
+      const headers = lines[0].trim().split(/\s+/);
+      // 清理表頭，去除任何空白字元（包括全形和半形）
+      const cleanedHeaders = headers.map(h => h.trim().replace(/\s/g, ''));
+
+      const gradeIndex = cleanedHeaders.findIndex(h => h.includes('年級') || h.includes('班級') || h.includes('班'));
+      const nameIndex = cleanedHeaders.findIndex(h => h.includes('姓名'));
+      const avgIndex = cleanedHeaders.findIndex(h => h.includes('平均'));
+
+      if (gradeIndex === -1 || nameIndex === -1 || avgIndex === -1) {
+        alert('找不到 年級／姓名／平均 欄位，請確認貼上的標題列格式正確。');
+        noDataMessage.textContent = '找不到 年級／姓名／平均 欄位，請確認貼上的標題列格式正確。';
+        noDataMessage.style.display = 'block';
+        return;
+      }
+
+      let slipsHTML = [];
+      let totalVoucherCount = 0;
+
+      // 從第二行開始處理資料
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue; // 跳過空行
+        
+        // 使用正則表達式分割，處理多個連續空白
+        const parts = line.split(/\s+/);
+
+        // 確保陣列長度足夠，避免索引超出範圍
+        if (parts.length <= Math.max(gradeIndex, nameIndex, avgIndex)) {
+            console.warn(`跳過無效行: ${line}`);
+            continue;
+        }
+
+        const gradeRaw = parts[gradeIndex];
+        const name = parts[nameIndex];
+        const avg = parseFloat(parts[avgIndex]);
+
+        // 檢查 avg 是否為有效數字
+        if (isNaN(avg)) {
+            console.warn(`跳過學生 ${name} 的無效平均分數: ${parts[avgIndex]}`);
+            continue;
+        }
+        
+        const reward = getReward(gradeRaw, avg);
+
+        if (reward > 0) { // 只生成有獎勵的貼條
+          totalVoucherCount += reward / 100;
+
+          // --- START --- 這裡是要修改的部分
+          let formattedSemester = semester.replace('上', '<strong>上</strong>').replace('下', '<strong>下</strong>');
+          let formattedExamType = examType.replace('中', '<strong>中</strong>').replace('末', '<strong>末</strong>');
+          const term = `${gradeRaw}年級${formattedSemester}${formattedExamType}`;
+          // --- END ---
+
+          const policy = getPolicyText(gradeRaw);
+
+          const slipText = `學生 <span class='student-name'>${name}</span>
+因${term}
+各科平均達${avg}分，
+特頒禮券 ${reward} 元以茲鼓勵。
+---------------------------`;
+
+          slipsHTML.push(`
+            <div class="slip">
+              <img src="https://github.com/zh22331997/salary-calculator/blob/main/2019%20zh%20logo.png?raw=true" class="logo" alt="學校Logo" />
+              <pre>${slipText}</pre>
+              <pre class="policy-text">${policy}</pre>
+            </div>`);
+        }
+      }
+
+      if (slipsHTML.length > 0) {
+        resultDiv.innerHTML = slipsHTML.join(''); // 將所有貼條直接加入結果區塊
+        totalVoucherSummary.innerHTML = `🎁 共需 <span class="total-voucher-count">${totalVoucherCount}</span> 張 100元禮券，請確認庫存。`;
+        totalVoucherSummary.style.display = 'block';
+        printButton.style.display = 'inline-block'; // 顯示列印按鈕
+      } else {
+        noDataMessage.textContent = '⚠️ 沒有學生符合獎勵條件。';
+        noDataMessage.style.display = 'block';
+      }
+    }
+
+    /**
+     * 觸發列印功能。
+     */
+    function printSlips() {
+      // 由於CSS中的@media print已經處理了列印時的顯示/隱藏，
+      // 這裡只需要直接呼叫 window.print() 即可。
+      window.print();
+    }
+  </script>
+</body>
+</html>
