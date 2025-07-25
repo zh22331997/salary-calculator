@@ -94,6 +94,13 @@
       line-height: 10mm; /* 班級、導師、電話等欄位的行高，決定了這些行之間的垂直空間 */
       margin: 0 0 1mm 0; /* 每個欄位下方有 1mm 的間距 */
     }
+      #errorLog div {
+    background-color: #ffecec;
+    border-left: 4px solid red;
+    padding: 6px 10px;
+    margin: 5px 0;
+    font-weight: bold;
+  }
 
     @media print {
       @page {
@@ -137,6 +144,10 @@
 
   <div id="output"></div>
   <div id="errorLog" style="color: red; margin-top: 20px;"></div>
+<h3>👇可複製到 Word 的表格</h3>
+<div id="outputTable" contenteditable="true" style="margin-top:20px; border:1px solid #ccc; padding:10px;"></div>
+<button onclick="copyTableToClipboard()">📋 複製表格到剪貼簿</button>
+
 
 
   <script>
@@ -160,6 +171,14 @@
         while (i + 1 < rows.length && !rows[i + 1].match(/\d{4}-?\d{4,}|[\u4e00-\u9fa5]{1,4}\d{3}/)) {
           row += ' ' + rows[++i].trim();
         }
+        if (!/^[\u4e00-\u9fa5]{1,4}[\t\u3000\s]+[\u4e00-\u9fa5]{1,4}\d{3}$/.test(row)) {
+  const errorLine = `❌ 第 ${i + 1} 行無法解析：${row}`;
+  const errorItem = document.createElement('div');
+  errorItem.textContent = errorLine;
+  errorLog.appendChild(errorItem);
+  continue;
+}
+
 
         let cleaned = row.replace(/"/g, '').trim();
         let phoneMatch = cleaned.match(/\d{4}-?\d{4,}/);
@@ -193,10 +212,74 @@
         `;
 
         output.appendChild(card);
+        
       }
 
+// 👉 同時產出 Word 用表格
+// 👉 同時產出 Word 用的多欄名條表格（4欄為一行）
+let tableHTML = '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; font-size:16px;"><tbody>';
+let rowCells = [];
+
+for (let i = 0; i < output.children.length; i++) {
+  const card = output.children[i];
+  const name = card.querySelector('.name')?.innerText || '';
+  const fields = card.querySelectorAll('.field');
+  const classField = fields[0]?.innerText || '';
+  const teacherField = fields[1]?.innerText || '';
+  const phoneField = fields[2]?.innerText || '';
+
+  const tdHTML = `
+    <td style="width: 25%; vertical-align: top;">
+      <div style="font-size:20pt; font-weight:bold;">${name}</div>
+      <div>${classField}</div>
+      <div>${teacherField}</div>
+      <div>${phoneField}</div>
+    </td>
+  `;
+  rowCells.push(tdHTML);
+
+  if (rowCells.length === 4) {
+    tableHTML += `<tr>${rowCells.join('')}</tr>`;
+    rowCells = [];
+  }
+}
+// 若不足4欄，用空欄補足
+if (rowCells.length > 0) {
+  while (rowCells.length < 4) {
+    rowCells.push('<td></td>');
+  }
+  tableHTML += `<tr>${rowCells.join('')}</tr>`;
+}
+
+tableHTML += '</tbody></table>';
+document.getElementById('outputTable').innerHTML = tableHTML;
+
+
       document.getElementById('printBtn').style.display = 'inline-block';
+      document.querySelector('button[onclick="copyTableToClipboard()"]').style.display = 'inline-block';
     }
+function copyTableToClipboard() {
+  const outputTable = document.getElementById('outputTable');
+  const range = document.createRange();
+  range.selectNode(outputTable);
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  try {
+    const success = document.execCommand('copy');
+    if (success) {
+      alert('✅ 表格已複製到剪貼簿！請到 Word 貼上即可。');
+    } else {
+      alert('❌ 複製失敗，請手動選取內容後按 Ctrl+C');
+    }
+  } catch (err) {
+    alert('❌ 發生錯誤：' + err);
+  }
+
+  selection.removeAllRanges();
+}
+
   </script>
 </body>
 </html>
