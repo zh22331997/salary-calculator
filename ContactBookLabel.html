@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -135,6 +136,8 @@
   </div>
 
   <div id="output"></div>
+  <div id="errorLog" style="color: red; margin-top: 20px;"></div>
+
 
   <script>
     function generateNamecards() {
@@ -143,6 +146,9 @@
       const groupClass = document.getElementById('groupClass').value;
       const raw = document.getElementById('rawData').value.trim();
       const output = document.getElementById('output');
+      const errorLog = document.getElementById('errorLog'); 
+      errorLog.innerHTML = ''; 
+
 
       output.innerHTML = '';
       const rows = raw.split(/\n+/);
@@ -151,7 +157,7 @@
         let row = rows[i].trim();
         if (!row) continue;
 
-        while (i + 1 < rows.length && !rows[i + 1].match(/\d{4}-?\d{4,}|(江翠|文聖|江|莒)\d{3}/)) {
+        while (i + 1 < rows.length && !rows[i + 1].match(/\d{4}-?\d{4,}|[\u4e00-\u9fa5]{1,4}\d{3}/)) {
           row += ' ' + rows[++i].trim();
         }
 
@@ -160,26 +166,22 @@
         let extractedPhone = phoneMatch ? phoneMatch[0] : phone;
         cleaned = cleaned.replace(/\d{4}-?\d{4,}/g, '').trim();
 
-        // 使用 Tab、全形空白或一個或多個半形空白來分割姓名和其餘資訊
-        const parts = cleaned.split(/[\t\u3000\s]+/); 
-        const name = parts[0]?.trim(); // 取得姓名
+        // 嘗試使用正則表達式解析姓名與班級
+        const match = cleaned.match(/^([\u4e00-\u9fa5]{1,4})[\t\u3000\s]+([\u4e00-\u9fa5]{1,4}\d{3})/);
 
-        let classRaw = '';
-        if (parts.length > 1) {
-            // 將姓名之後的所有部分合併為 classRaw
-            classRaw = parts.slice(1).join(' ').trim();
-        }
-        
-        // 嘗試從 classRaw 中提取班級名稱，確保從字串開頭匹配，以提高精確度
-        const classMatch = classRaw.match(/^(江翠|文聖|江|莒)\d{3}/);
-
-        if (!name || !classMatch) {
-            // 如果姓名或班級名稱未能成功提取，跳過此筆資料
-            // 可以在此處加入 console.log(row) 來調試哪些行被跳過
-            continue; 
+        if (!match) {
+          const errorLine = `❌ 第 ${i + 1} 行無法解析：${row}`;
+          const errorItem = document.createElement('div');
+          errorItem.textContent = errorLine;
+          errorLog.appendChild(errorItem);
+          continue;
         }
 
-        const className = classMatch[0]; // 取得匹配到的班級名稱
+        const name = match[1];
+        const className = match[2];
+
+
+      
 
         const card = document.createElement('div');
         card.className = 'namecard';
