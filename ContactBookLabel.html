@@ -144,7 +144,7 @@
 
   <div id="output"></div>
   <div id="errorLog" style="color: red; margin-top: 20px;"></div>
-<h3>👇可複製到 Word 的表格</h3>
+<h3>👇可複製到 Word 的表格，按下複製，再到 Word 貼上</h3>
 <div id="outputTable" contenteditable="true" style="margin-top:20px; border:1px solid #ccc; padding:10px;"></div>
 <button onclick="copyTableToClipboard()">📋 複製表格到剪貼簿</button>
 
@@ -217,7 +217,7 @@
 
 // 👉 同時產出 Word 用表格
 // 👉 同時產出 Word 用的多欄名條表格（4欄為一行）
-let tableHTML = '<table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; font-size:16px;"><tbody>';
+let tableHTML = '<table border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; font-family:DFKai-sb, PMingLiU, sans-serif; font-size:18pt; line-height:28pt; table-layout: fixed; width: 100%;">';
 let rowCells = [];
 
 for (let i = 0; i < output.children.length; i++) {
@@ -229,7 +229,7 @@ for (let i = 0; i < output.children.length; i++) {
   const phoneField = fields[2]?.innerText || '';
 
   const tdHTML = `
-    <td style="width: 25%; vertical-align: top;">
+    <td style="width: 25%; vertical-align: top; padding: 12pt 10pt 12pt 10pt;">
       <div style="font-size:20pt; font-weight:bold;">${name}</div>
       <div>${classField}</div>
       <div>${teacherField}</div>
