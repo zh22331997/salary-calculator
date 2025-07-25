@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>個人成績單產生器</title>
+  <style>
+    @page {
+      size: B4 landscape;
+      margin: 0.5cm;
+    }
+
+    @media print {
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .b5 {
+        width: 17.6cm !important;
+        height: 25cm !important;
+        padding: 1.5cm;
+        box-sizing: border-box;
+        page-break-inside: avoid;
+      }
+    }
+
+    textarea, input, select {
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .b5 {
+      width: 50%;
+      float: left;
+      box-sizing: border-box;
+      page-break-inside: avoid;
+      page-break-before: avoid;
+      break-inside: avoid;
+      height: 100%;
+      min-height: 100%;
+      padding: 1.5cm;
+      margin: 0.5cm;
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid black;
+      text-align: center;
+      padding: 5px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+    }
+
+    #output {
+      margin-top: 20px;
+    }
+
+    .small-text {
+      font-size: 10pt;
+    }
+
+    .red-title {
+      color: red;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    @media print {
+      textarea, input, select {
+        border: none;
+        color: black;
+      }
+      button, #controls {
+        display: none;
+      }
+    }
+
+    @media screen {
+      .b5 {
+        width: 17.6cm;
+        height: 25cm;
+        margin: 0.5cm auto;
+        border: 1px solid #ccc;
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+        background: white;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="controls">
+  <h2 style="text-align:center">正華資優教育學苑
+    <select id="branch">
+      <option>永平</option>
+      <option>秀朗</option>
+      <option>清水</option>
+      <option>永和</option>
+      <option>江翠</option>
+    </select>分校
+  </h2>
+
+  <p style="text-align:center">
+    <input id="schoolYear" size="4" readonly>學年
+    <select id="grade">
+      <option>一</option>
+      <option>二</option>
+      <option>三</option>
+      <option>四</option>
+      <option>五</option>
+      <option selected>六</option>
+    </select>年級
+    <select id="semester"><option>上</option><option>下</option></select>學期
+    <select id="examType"><option>中</option><option>末</option></select>考 學生成績單
+  </p>
+
+  <h3>請貼上全班成績資料（含標題列）</h3>
+  <textarea id="rawInput" placeholder="姓名\t國語\t數學\t自然\t社會\t英文"></textarea>
+  <br><br>
+
+  <h3>班平均成績（貼上格式：國語\t數學\t自然\t社會\t英文）</h3>
+  <textarea id="avgPaste" placeholder="請貼上班平均五科成績（例如：91.29\t91.54\t94.37\t92.28\t93.57）"></textarea>
+  <br><br>
+
+  正華班排前 <input id="targetIndex" type="number" value="5" style="width:50px"> 名（若有並列名次，會自動包含）
+  <br><br>
+
+  老師的話：<br>
+  <textarea id="teacherComment" placeholder="請輸入老師的話，會出現在成績單上"></textarea>
+  <div id="wordCount" style="font-size:12px; color:#666; margin-top:4px;">目前字數：0 / 建議上限 600</div>
+  <br><br>
+
+  <button onclick="generateReports()">產生成績單</button>
+  <button onclick="window.print()">🖨️ 列印所有成績單</button>
+</div>
+
+<div id="output"></div>
+
+<script>
+function formatNumber(n) {
+  const f = parseFloat(n);
+  return f % 1 === 0 ? parseInt(f) : f.toFixed(2);
+}
+
+function generateReports() {
+  const branch = document.getElementById("branch").value;
+  const schoolYear = document.getElementById("schoolYear").value;
+  const grade = document.getElementById("grade").value;
+  const semester = document.getElementById("semester").value;
+  const examType = document.getElementById("examType").value;
+  const comment = document.getElementById("teacherComment").value;
+  const topN = parseInt(document.getElementById("targetIndex").value);
+
+  const avgRaw = document.getElementById("avgPaste").value.trim().split("\t");
+  const avgC = Number(avgRaw[0] || 0).toFixed(2);
+  const avgM = Number(avgRaw[1] || 0).toFixed(2);
+  const avgS = Number(avgRaw[2] || 0).toFixed(2);
+  const avgSo = Number(avgRaw[3] || 0).toFixed(2);
+  const avgE = Number(avgRaw[4] || 0).toFixed(2);
+
+  const avgTotal = (+avgC + +avgM + +avgS + +avgSo + +avgE).toFixed(2);
+  const avgAverage = ((+avgC + +avgM + +avgS + +avgSo + +avgE)/5).toFixed(2);
+
+  const raw = document.getElementById("rawInput").value.trim();
+  const lines = raw.split("\n");
+  const headers = lines[0].split("\t");
+  const headerMap = {};
+  headers.forEach((title, index) => {
+    if (title.includes('國語')) headerMap.c = index;
+    if (title.includes('數學')) headerMap.m = index;
+    if (title.includes('自然')) headerMap.s = index;
+    if (title.includes('社會')) headerMap.so = index;
+    if (title.includes('英文')) headerMap.e = index;
+  });
+
+  const students = lines.slice(1).map(l => l.split("\t"));
+  const scoreList = students.map(fields => {
+    const total = [
+      +fields[headerMap.c],
+      +fields[headerMap.m],
+      +fields[headerMap.s],
+      +fields[headerMap.so],
+      +fields[headerMap.e]
+    ].reduce((a, b) => a + b, 0);
+    return {
+      name: fields[0],
+      data: fields,
+      total: total,
+      avg: (total / 5).toFixed(1)
+    };
+  }).sort((a, b) => b.total - a.total);
+
+  const cutoffScore = scoreList.length >= topN ? scoreList[topN - 1].total : 0;
+  const topStudents = scoreList.filter(stu => stu.total >= cutoffScore);
+
+  const output = document.getElementById("output");
+  output.innerHTML = "";
+
+  scoreList.forEach((student) => {
+    const s = student.data;
+    let currentRank = 1;
+    let lastScore = null;
+    let displayRank = 1;
+    const topRows = topStudents.map((stu) => {
+      if (lastScore !== null && stu.total < lastScore) {
+        displayRank = currentRank;
+      }
+      lastScore = stu.total;
+      currentRank++;
+      return `
+        <tr>
+          <td>${displayRank}</td>
+          <td>${stu.name}</td>
+          <td>${formatNumber(stu.data[headerMap.c])}</td>
+          <td>${formatNumber(stu.data[headerMap.m])}</td>
+          <td>${formatNumber(stu.data[headerMap.s])}</td>
+          <td>${formatNumber(stu.data[headerMap.so])}</td>
+          <td>${formatNumber(stu.data[headerMap.e])}</td>
+          <td>${formatNumber(stu.total)}</td>
+          <td>${formatNumber(stu.avg)}</td>
+        </tr>`;
+    }).join("");
+
+    const page = `
+    <div class="b5">
+      <h2 style="text-align:center; margin-bottom: 4px; line-height: 1.2;">正華資優教育學苑 ${branch}分校</h2>
+      <p style="text-align:center; margin-top: 0; line-height: 1.2;">${schoolYear}學年${semester}學期 期${examType}考 ${grade}年級學生個人成績單</p>
+
+      <table>
+        <tr><th>學生</th><th>國語</th><th>數學</th><th>自然</th><th>社會</th><th>英文</th><th>總分</th><th>平均</th></tr>
+        <tr>
+          <td>${s[0]}</td>
+          <td>${formatNumber(s[headerMap.c])}</td>
+          <td>${formatNumber(s[headerMap.m])}</td>
+          <td>${formatNumber(s[headerMap.s])}</td>
+          <td>${formatNumber(s[headerMap.so])}</td>
+          <td>${formatNumber(s[headerMap.e])}</td>
+          <td>${formatNumber(student.total)}</td>
+          <td>${formatNumber(student.avg)}</td>
+        </tr>
+        <tr>
+          <td>班平均</td>
+          <td>${formatNumber(avgC)}</td>
+          <td>${formatNumber(avgM)}</td>
+          <td>${formatNumber(avgS)}</td>
+          <td>${formatNumber(avgSo)}</td>
+          <td>${formatNumber(avgE)}</td>
+          <td>${formatNumber(avgTotal)}</td>
+          <td>${formatNumber(avgAverage)}</td>
+        </tr>
+      </table>
+
+      <div class="red-title">正華班排前${topN}名</div>
+      <table>
+        <tr><th>名次</th><th>姓名</th><th>國語</th><th>數學</th><th>自然</th><th>社會</th><th>英文</th><th>總分</th><th>平均</th></tr>
+        ${topRows}
+      </table>
+
+      <p><strong>老師的話：</strong></p>
+      <div style="border: 1px solid black; padding: 8px; white-space: pre-line;">${comment}</div>
+
+      <table style="width:100%; margin-top:12px; font-size:10pt; border-collapse: collapse;">
+        <tr>
+          <td style="width:33%; text-align:left; border: 1px solid white;">班主任：</td>
+          <td style="width:33%; text-align:left; border: 1px solid white;">導師：</td>
+          <td style="width:33%; text-align:left; border: 1px solid white;">家長簽名：</td>
+        </tr>
+      </table>
+    </div>
+    `;
+    output.innerHTML += page;
+  });
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+
+  const semesterYear = (month >= 8 || month === 1)
+    ? year - 1911
+    : year - 1912;
+  const semester = (month >= 8 || month === 1) ? "上" : "下";
+
+  let examType = "中";
+  if ((month >= 1 && month <= 2) || (month >= 5 && month <= 6)) {
+    examType = "末";
+  } else if ((month >= 11 && month <= 12) || (month >= 4 && month <= 5)) {
+    examType = "中";
+  }
+
+  document.getElementById("schoolYear").value = semesterYear;
+  document.getElementById("semester").value = semester;
+  document.getElementById("examType").value = examType;
+
+  // 字數計算功能啟動
+  const teacherComment = document.getElementById("teacherComment");
+  teacherComment.addEventListener("input", () => {
+    const count = teacherComment.value.length;
+    const wordCountDisplay = document.getElementById("wordCount");
+    wordCountDisplay.innerText = `目前字數：${count} / 建議上限 600`;
+    wordCountDisplay.style.color = count > 600 ? 'red' : '#666';
+  });
+});
+</script>
+
+</body>
+</html>
