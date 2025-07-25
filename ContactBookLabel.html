@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>聯絡簿封面名條產生器</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    h1 {
+  text-align: center;
+   }
+    @font-face {
+      font-family: 'XiaolaiMonoSC';
+      src: url('https://cdn.jsdelivr.net/gh/zh22331997/salary-calculator/ttf_XiaolaiMonoSC-Regular.ttf') format('truetype');
+    }
+
+    body {
+      font-family: 'XiaolaiMonoSC', 'Noto Sans TC', sans-serif;
+      background: #ffffff;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .input-area {
+      max-width: 600px;
+      margin: 0 auto 30px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .input-area label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    .input-area input,
+    .input-area textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      font-family: 'XiaolaiMonoSC', sans-serif;
+    }
+
+    .input-area button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .namecard {
+      width: 60mm;
+      height: 53mm;
+      box-sizing: border-box;
+      text-align: left;
+      padding: 2mm 0 0 2mm; /* 名條內部上邊距 2mm，左右下邊距 0 */
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      border: 0.3px solid black;
+      page-break-inside: avoid;
+    }
+
+    #output {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1px;
+      justify-content: flex-start;
+    }
+
+    .output-page {
+      width: 100%;
+      font-size: 0;
+      page-break-after: always;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+
+    .name {
+      font-size: 10mm;
+      line-height: 14mm; /* 姓名行的行高，決定了姓名與下一行之間的垂直空間 */
+      font-weight: bold;
+      margin: 0 0 1mm 0; /* 姓名下方有 1mm 的間距 */
+    }
+
+    .field {
+      font-size: 6mm;
+      line-height: 10mm; /* 班級、導師、電話等欄位的行高，決定了這些行之間的垂直空間 */
+      margin: 0 0 1mm 0; /* 每個欄位下方有 1mm 的間距 */
+    }
+
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      .input-area, #printBtn {
+        display: none !important;
+      }
+      .output-page {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        page-break-after: always;
+      }
+      .namecard {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>聯絡本姓名條產生器</h1>
+  <div class="input-area">
+    <label>貼上學生姓名與原始資料(可從點名表貼上或直接打字)</label>
+    <textarea id="rawData" rows="12" placeholder="例：陳小文 江翠101"></textarea>
+    
+    <label>安親班級（會顯示在名條上）</label>
+    <input type="text" id="groupClass" value="2A">
+
+    <label>安親導師</label>
+    <input type="text" id="teacher" value="Nana老師">
+
+    <label>聯絡電話</label>
+    <input type="text" id="phone" value="2233-1997分機11">
+
+    
+    <button onclick="generateNamecards()">產生名條</button>
+    <button id="printBtn" onclick="window.print()" style="display: none;">列印名條</button>
+  </div>
+
+  <div id="output"></div>
+
+  <script>
+    function generateNamecards() {
+      const teacher = document.getElementById('teacher').value;
+      const phone = document.getElementById('phone').value;
+      const groupClass = document.getElementById('groupClass').value;
+      const raw = document.getElementById('rawData').value.trim();
+      const output = document.getElementById('output');
+
+      output.innerHTML = '';
+      const rows = raw.split(/\n+/);
+
+      for (let i = 0; i < rows.length; i++) {
+        let row = rows[i].trim();
+        if (!row) continue;
+
+        while (i + 1 < rows.length && !rows[i + 1].match(/\d{4}-?\d{4,}|(江翠|文聖|江|莒)\d{3}/)) {
+          row += ' ' + rows[++i].trim();
+        }
+
+        let cleaned = row.replace(/"/g, '').trim();
+        let phoneMatch = cleaned.match(/\d{4}-?\d{4,}/);
+        let extractedPhone = phoneMatch ? phoneMatch[0] : phone;
+        cleaned = cleaned.replace(/\d{4}-?\d{4,}/g, '').trim();
+
+        // 使用 Tab、全形空白或一個或多個半形空白來分割姓名和其餘資訊
+        const parts = cleaned.split(/[\t\u3000\s]+/); 
+        const name = parts[0]?.trim(); // 取得姓名
+
+        let classRaw = '';
+        if (parts.length > 1) {
+            // 將姓名之後的所有部分合併為 classRaw
+            classRaw = parts.slice(1).join(' ').trim();
+        }
+        
+        // 嘗試從 classRaw 中提取班級名稱，確保從字串開頭匹配，以提高精確度
+        const classMatch = classRaw.match(/^(江翠|文聖|江|莒)\d{3}/);
+
+        if (!name || !classMatch) {
+            // 如果姓名或班級名稱未能成功提取，跳過此筆資料
+            // 可以在此處加入 console.log(row) 來調試哪些行被跳過
+            continue; 
+        }
+
+        const className = classMatch[0]; // 取得匹配到的班級名稱
+
+        const card = document.createElement('div');
+        card.className = 'namecard';
+        card.innerHTML = `
+          <div class="name">${name}</div>
+          <div class="field">${groupClass}/${className}</div>
+          <div class="field">${teacher}</div>
+          <div class="field">${extractedPhone}</div>
+        `;
+
+        output.appendChild(card);
+      }
+
+      document.getElementById('printBtn').style.display = 'inline-block';
+    }
+  </script>
+</body>
+</html>
