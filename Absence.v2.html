@@ -209,7 +209,7 @@
     <h3>統計結果（如未更新，空白處點一下，再按複製）：</h3>
     <div class="totals" id="resultsLeave" contenteditable="true"></div>
     <button class="btn btn-gray" onclick="copyResultsLeave()">📋 複製結果</button>
-    <button class="btn btn-green" onclick="importLeaveResults()">➔ 匯入 假別表格 與 不支薪計算</button>
+    <button class="btn btn-green" onclick="importToAll()">➔ 匯入 假別登記表格 與 不支薪計算</button>
     <button class="btn btn-gray" onclick="toggleBalanceInfo()">📌 顯示 / 隱藏特休補休計算說明</button>
     <div id="balanceDetails" style="display: none;">
     <pre class="totals" id="vacationBreakdown" contenteditable="true"></pre>
@@ -218,6 +218,7 @@
     <div style="margin-top: 30px; padding: 15px; background-color: #f7f6f4; border-radius: 16px;">
     <h3 style="margin-bottom: 10px; color: #5a5a5a;">📄 缺勤分析結果</h3>
     <iframe
+    id="absenceFrame"
     src="https://zh22331997.github.io/salary-calculator/ExportAbsence.html"
     width="100%"
     height="600"
@@ -1042,20 +1043,47 @@ if (totalNoDeductMinutes || totalMissPunches) {
             .then(() => showToast("✅ 已複製算式！"))
             .catch(err => showToast("❌ 複製失敗：" + err));
     }
+    function importToAll() {
+     // 先重新計算，確保 resultsLeave 與各全域記錄是最新
+     calculateLeave();
+
+     // 先把統計數據匯入到「不支薪」區塊
+     importLeaveResults();
+
+     // 再送到 iframe（缺勤分析頁）
+     sendToIframe();
+
+     showToast("✅ 已匯入缺勤分析與不支薪計算");
+    }
+
 
     /**
      * 將假別數據發送給 iframe。
      */
     function sendToIframe() {
-        const data = document.getElementById('resultsLeave').innerText;
-        const iframe = document.querySelector('iframe');
-        if (iframe && iframe.contentWindow) {
-            // 注意：這裡的 origin 必須與 iframe 的實際來源匹配
-            iframe.contentWindow.postMessage({ type: 'IMPORT_LEAVE_DATA', payload: data }, 'https://zh22331997.github.io');
-        } else {
-            showToast("⚠️ 無法與 iframe 通訊，請稍後再試");
+        const data = (document.getElementById('resultsLeave').innerText || '').trim();
+        if (!data) {
+            showToast("⚠️ 沒有可傳送的統計資料，請先輸入或點表格欄位讓系統重算");
+            return;
         }
-    }
+        
+        const iframe = document.getElementById('absenceFrame');
+        if (!iframe || !iframe.contentWindow) {
+            showToast("⚠️ 找不到缺勤分析的 iframe（absenceFrame）");
+            return;
+        }
+        
+        if (!window.absenceFrameReady) {
+            showToast("⌛️ 分析頁面尚在載入中，稍後再試");
+            return;
+        }
+        
+        iframe.contentWindow.postMessage(
+            { type: 'IMPORT_LEAVE_DATA', payload: data },
+            'https://zh22331997.github.io' // 必須精準匹配 iframe 的來源
+             );
+            }
+
 
 
     // --- DOM 加載完成後初始化 (Initialization on DOMContentLoaded) ---
@@ -1088,6 +1116,16 @@ if (totalNoDeductMinutes || totalMissPunches) {
                 document.activeElement.blur(); // 移除 focus 避免數值被改動
             }
         }, { passive: false });
+
+        // 讓父頁知道 iframe 什麼時候載好
+        const absFrame = document.getElementById('absenceFrame');
+        window.absenceFrameReady = false;
+        if (absFrame) {
+                        absFrame.addEventListener('load', () => {
+    window.absenceFrameReady = true;
+  });
+}
+
 
 
         
