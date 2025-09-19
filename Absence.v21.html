@@ -244,35 +244,33 @@
 
     <h2>事病假 或 遲到 不計薪計算器</h2>
 
-    <label>老師姓名（可留空）：</label>
-    <input type="text" id="nameSalary" style="width: 100px" placeholder="例如：張正華"><br>
+<label>老師姓名（可留空）：</label>
+<input type="text" id="nameSalary" style="width: 100px" placeholder="例如：張正華"><br>
 
-    <label>原始月薪：</label>
-    <input type="number" id="salary" style="width: 100px;" placeholder="例如：32000"><br>
+<label>原始月薪：</label>
+<input type="number" id="salary" style="width: 100px;" placeholder="例如：32000"><br>
 
-    <label>事假（天）：</label>
-    <input type="number" id="leaveDaysSalary" style="width: 60px" placeholder="0">
+<label>事假（小時）：</label>
+<input type="number" id="leaveHoursSalary" style="width: 60px" placeholder="0"><br>
 
-    <label>事假（小時）：</label>
-    <input type="number" id="leaveHoursSalary" style="width: 60px" placeholder="0"><br>
+<label>病假（小時）：</label>
+<input type="number" id="sickHoursSalary" style="width: 60px" placeholder="0"><br>
 
-    <label>病假（天）：</label>
-    <input type="number" id="sickDaysSalary" style="width: 60px" placeholder="0">
+<label>生理假（小時）：</label>
+<input type="number" id="menstrualHoursSalary" style="width: 60px" placeholder="0"><br>
 
-    <label>病假（小時）：</label>
-    <input type="number" id="sickHoursSalary" style="width: 60px" placeholder="0"><br>
+<label>家庭照顧假（小時）：</label>
+<input type="number" id="familyCareHoursSalary" style="width: 60px" placeholder="0"><br>
 
-    <label>生理假（小時）：</label>
-    <input type="number" id="menstrualHoursSalary" style="width: 60px" placeholder="0"><br>
+<label>超過三次5分鐘的遲到（分鐘）：</label>
+<input type="number" id="lateMinutesSalary" style="width: 60px" placeholder="0"><br>
 
-    <label>超過三次5分鐘的遲到（分鐘）：</label>
-    <input type="number" id="lateMinutesSalary" style="width: 60px" placeholder="0"><br>
-    
-    <label>💰折現（天）：</label>
-    <input type="number" id="cashOutDaysSalary" style="width: 60px" placeholder="0" oninput="calculateLeave()">
+<label>💰折現（天）：</label>
+<input type="number" id="cashOutDaysSalary" style="width: 60px" placeholder="0" oninput="calculateLeave()">
 
-    <label>💰折現（小時）：</label>
-    <input type="number" id="cashOutHoursSalary" style="width: 60px" placeholder="0" oninput="calculateLeave()"><br>
+<label>💰折現（小時）：</label>
+<input type="number" id="cashOutHoursSalary" style="width: 60px" placeholder="0" oninput="calculateLeave()"><br>
+<br>
     
 
     <button class="btn btn-blue" onclick="calculateSalaryDeduction()">計算不支薪</button>
@@ -381,12 +379,14 @@
     let vacationRecords = [];      // 特休/補休
     let funeralRecords = [];       // 喪假
     let overtimeRecords = [];      // 超時
-    let specialLeaves = {          // 婚／產／陪產／產檢假
-        '婚假': { records: [], days: 0, hours: 0 },
-        '產假': { records: [], days: 0, hours: 0 },
-        '陪產假': { records: [], days: 0, hours: 0 },
-        '產檢假': { records: [], days: 0, hours: 0 }
-    };
+    let specialLeaves = {          // 婚／產／陪產／產檢／家庭照顧假
+    '婚假': { records: [], days: 0, hours: 0 },
+    '產假': { records: [], days: 0, hours: 0 },
+    '陪產假': { records: [], days: 0, hours: 0 },
+    '產檢假': { records: [], days: 0, hours: 0 },
+    '家庭照顧假': { records: [], days: 0, hours: 0 }
+};
+
 
     // --- 事件處理與邏輯 (Event Handlers & Logic) ---
 
@@ -422,7 +422,7 @@ function validateRowTotal(row) {
                 <th>生理假<br>(時)</th>
                 <th>喪假<br>(時)</th>
                 <th>超時<br>(時)</th>
-                <th>婚／產／陪產／產檢假（時）</th>
+                <th>婚／產／陪產／產檢／家庭照顧假（時）</th>
             </tr>
             </thead>
 <tbody>
@@ -510,7 +510,9 @@ function generateSpecialLeaveCell(date) {
                 <option value="產假">產假</option>
                 <option value="陪產假">陪產假</option>
                 <option value="產檢假">產檢假</option>
-            </select>
+                <option value="家庭照顧假">家庭照顧假</option>
+                </select>
+
             <!-- 只留時數；移除「1天」勾選與 max=8 限制 -->
             <input type="number" class="special-leave-hour" min="0" step="0.5" placeholder="時"
                    onchange="validateInput(this); calculateLeave()">
@@ -563,7 +565,7 @@ function appendResultBlock(label, days = 0, hours = 0, records = [], warning = "
     const hourPart = hours ? `${hours} 時` : '';
     const dayHourDisplay = [dayPart, hourPart].filter(Boolean).join(" ");
 
-    let unpaidLeaves = ["事假", "病假", "生理假", "遲到"];
+    let unpaidLeaves = ["事假", "病假", "生理假", "遲到", "家庭照顧假"];
     let emoji = unpaidLeaves.includes(label) ? "💸" : "✅";
     let result = `${emoji} ${label}：${dayHourDisplay}`;
 
@@ -805,95 +807,112 @@ function appendResultBlock(label, days = 0, hours = 0, records = [], warning = "
      * 將假別統計結果匯入不計薪計算區塊。
      */
     function importLeaveResults() {
-        // 從全局變數獲取已統計的數據
-        const totalLeaveDays = leaveRecords.filter(r => r.days).reduce((sum, r) => sum + r.days, 0);
-        const totalLeaveHours = leaveRecords.filter(r => r.hours).reduce((sum, r) => sum + r.hours, 0);
-        const totalSickDays = sickRecords.filter(r => r.days).reduce((sum, r) => sum + r.days, 0);
-        const totalSickHours = sickRecords.filter(r => r.hours).reduce((sum, r) => sum + r.hours, 0);
-        const totalLateMinutes = lateRecords.filter(r => r.minutes).reduce((sum, r) => sum + r.minutes, 0);
-        const totalMenstrualHours = menstrualRecords.filter(r => r.hours).reduce((sum, r) => sum + r.hours, 0);
+    // 以「時」為主的匯入（你的月表本來就只算「時」）
+    const totalLeaveHours = leaveRecords.filter(r => r.hours).reduce((sum, r) => sum + r.hours, 0);
+    const totalSickHours = sickRecords.filter(r => r.hours).reduce((sum, r) => sum + r.hours, 0);
+    const totalLateMinutes = lateRecords.filter(r => r.minutes).reduce((sum, r) => sum + r.minutes, 0);
+    const totalMenstrualHours = menstrualRecords.filter(r => r.hours).reduce((sum, r) => sum + r.hours, 0);
 
-        // 填入薪資計算區塊的輸入框
-        document.getElementById("leaveDaysSalary").value = totalLeaveDays;
-        document.getElementById("leaveHoursSalary").value = totalLeaveHours;
-        document.getElementById("sickDaysSalary").value = totalSickDays;
-        document.getElementById("sickHoursSalary").value = totalSickHours;
-        document.getElementById("lateMinutesSalary").value = totalLateMinutes;
-        document.getElementById("menstrualHoursSalary").value = totalMenstrualHours;
+    // ✅ 新增：家庭照顧假（時）從 specialLeaves 彙總
+    const familyCare = specialLeaves["家庭照顧假"] || { hours: 0 };
+    const totalFamilyCareHours = familyCare.hours || 0;
 
-        const teacherNameLeave = document.getElementById("teacherNameLeave").value.trim();
-        if (teacherNameLeave) {
-            document.getElementById("nameSalary").value = teacherNameLeave;
-        }
+    // 對應輸入框（若頁面上有就填，避免報錯）
+    const setIfExist = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
 
-        showToast("假別統計結果已匯入不計薪計算！");
-    }
+    setIfExist("leaveHoursSalary", totalLeaveHours);
+    setIfExist("sickHoursSalary", totalSickHours);
+    setIfExist("lateMinutesSalary", totalLateMinutes);
+    setIfExist("menstrualHoursSalary", totalMenstrualHours);
+    setIfExist("familyCareHoursSalary", totalFamilyCareHours); // ← 新增帶入
+
+    const teacherNameLeave = document.getElementById("teacherNameLeave").value.trim();
+    if (teacherNameLeave) setIfExist("nameSalary", teacherNameLeave);
+
+    showToast("假別統計結果已匯入不支薪計算！");
+}
+
+
 
     /**
      * 計算薪資扣款。
      */
     function calculateSalaryDeduction() {
-        const name = document.getElementById("nameSalary").value.trim();
-        const salary = getValue("salary"); // 月薪
+    const name = document.getElementById("nameSalary").value.trim();
+    const salary = getValue("salary"); // 月薪
 
-        if (salary <= 0) {
-            document.getElementById("salaryResult").innerText = "⚠️ 請填入原始月薪";
-            return;
-        }
-
-        // 從輸入框獲取假別天數/時數
-        const leaveDays = getValue("leaveDaysSalary");
-        const leaveHours = getValue("leaveHoursSalary");
-        const sickDays = getValue("sickDaysSalary");
-        const sickHours = getValue("sickHoursSalary");
-        const lateMinutes = getValue("lateMinutesSalary");
-        const menstrualHours = getValue("menstrualHoursSalary");
-        const cashOutDays = getValue("cashOutDaysSalary");
-        const cashOutHours = getValue("cashOutHoursSalary");
-
-        // 生成詳細記錄註釋
-        const leaveDaysNote = leaveRecords.filter(r => r.days).map(record => `（${record.date} ${record.days}天）`).join('');
-        const leaveHoursNote = leaveRecords.filter(r => r.hours).map(record => `（${record.date} ${record.hours}時）`).join('');
-        const sickDaysNote = sickRecords.filter(r => r.days).map(record => `（${record.date} ${record.days}天）`).join('');
-        const sickHoursNote = sickRecords.filter(r => r.hours).map(record => `（${record.date} ${record.hours}時）`).join('');
-        const lateNote = lateRecords.map(record => `（${record.date} ${record.minutes}分）`).join('');
-        const menstrualNote = menstrualRecords.map(record => `（${record.date} ${record.hours}時）`).join('');
-
-        // 計算原始未取整的扣款金額
-        const rawLeaveDayDeduct = (salary / 30) * leaveDays;
-        const rawLeaveHourDeduct = (salary / 30 / 8) * leaveHours;
-        const rawSickDayDeduct = (salary / 30 / 2) * sickDays; // 半薪
-        const rawSickHourDeduct = (salary / 30 / 8 / 2) * sickHours; // 半薪
-        const rawLateDeduct = (salary / 30 / 8 / 60) * lateMinutes;
-        const rawMenstrualDeduct = (salary / 30 / 8 / 2) * menstrualHours; // 半薪
-
-        // 計算原始未取整的折現金額
-        const rawCashOutDayBonus = (salary / 30) * cashOutDays;
-        const rawCashOutHourBonus = (salary / 30 / 8) * cashOutHours;
-
-        // 最終加總時再進行四捨五入
-        const totalDeduct = Math.round(rawLeaveDayDeduct + rawLeaveHourDeduct + rawSickDayDeduct + rawSickHourDeduct + rawLateDeduct + rawMenstrualDeduct);
-        const totalCashOutBonus = Math.round(rawCashOutDayBonus + rawCashOutHourBonus);
-
-        let formula = `${name ? name + "：" : ""}明細如下：\n`;
-
-        // 顯示扣薪明細
-        if (leaveDays) formula += `➖事假 ${leaveDays}天 × ${salary}/30 = ${Math.round(rawLeaveDayDeduct)}元 ${leaveDaysNote}\n`;
-        if (leaveHours) formula += `➖事假 ${leaveHours}時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元 ${leaveHoursNote}\n`;
-        if (sickDays) formula += `➖病假 ${sickDays}天 × ${salary}/30/2 = ${Math.round(rawSickDayDeduct)}元 ${sickDaysNote}\n`;
-        if (sickHours) formula += `➖病假 ${sickHours}時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元 ${sickHoursNote}\n`;
-        if (lateMinutes) formula += `➖遲到 ${lateMinutes}分 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元 ${lateNote}\n`;
-        if (menstrualHours) formula += `➖生理假 ${menstrualHours}時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元 ${menstrualNote}\n`;
-
-        formula += `不支薪金額：${totalDeduct} 元\n`;
-
-        // 顯示折現明細
-        if (cashOutDays) formula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
-        if (cashOutHours) formula += `➕折現 ${cashOutHours}時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
-        if (cashOutDays || cashOutHours) formula += `折現總金額：${totalCashOutBonus} 元\n`;
-
-        document.getElementById("salaryResult").innerText = formula;
+    if (salary <= 0) {
+        document.getElementById("salaryResult").innerText = "⚠️ 請填入原始月薪";
+        return;
     }
+
+    // 只以「時」為單位
+    const leaveHours = getValue("leaveHoursSalary");           // 事假（時）→ 全額不支薪
+    const sickHours = getValue("sickHoursSalary");             // 病假（時）→ 半薪
+    const menstrualHours = getValue("menstrualHoursSalary");   // 生理假（時）→ 半薪
+    const familyCareHours = getValue("familyCareHoursSalary"); // 家庭照顧假（時）→ 全額不支薪
+    const lateMinutes = getValue("lateMinutesSalary");
+
+    const cashOutDays = getValue("cashOutDaysSalary");
+    const cashOutHours = getValue("cashOutHoursSalary");
+
+    // 生成詳細註記（沿用你既有的記錄資料；若無對應就顯示為空）
+    const leaveHoursNote = leaveRecords.filter(r => r.hours).map(record => `（${record.date} ${record.hours}時）`).join('');
+    const sickHoursNote = sickRecords.filter(r => r.hours).map(record => `（${record.date} ${record.hours}時）`).join('');
+    const lateNote = lateRecords.map(record => `（${record.date} ${record.minutes}分）`).join('');
+    const menstrualNote = menstrualRecords.map(record => `（${record.date} ${record.hours}時）`).join('');
+    // 家庭照顧假可由上方月份表格的「特殊假」選單統計並匯入；這裡直接使用輸入框數值
+
+
+    // 單位換算
+    const perHour = salary / 30 / 8;
+    const perMinute = perHour / 60;
+
+    // 原始金額（四捨五入放在總額）
+    const rawLeaveHourDeduct = perHour * leaveHours;                 // 事假：全額
+    const rawSickHourDeduct = (perHour / 2) * sickHours;             // 病假：半薪
+    const rawMenstrualDeduct = (perHour / 2) * menstrualHours;       // 生理假：半薪
+    const rawFamilyCareDeduct = perHour * familyCareHours;           // 家庭照顧假：全額
+    const rawLateDeduct = perMinute * lateMinutes;
+
+    const rawCashOutDayBonus = (salary / 30) * cashOutDays;
+    const rawCashOutHourBonus = perHour * cashOutHours;
+
+    const totalDeduct = Math.round(
+        rawLeaveHourDeduct +
+        rawSickHourDeduct +
+        rawMenstrualDeduct +
+        rawFamilyCareDeduct +
+        rawLateDeduct
+    );
+
+    const totalCashOutBonus = Math.round(rawCashOutDayBonus + rawCashOutHourBonus);
+
+    let formula = `${name ? name + "：" : ""}明細如下：\n`;
+
+    if (leaveHours)     formula += `➖事假 ${leaveHours}時 × ${salary}/30/8 = ${Math.round(rawLeaveHourDeduct)}元 ${leaveHoursNote}\n`;
+    if (sickHours)      formula += `➖病假 ${sickHours}時 × ${salary}/30/8/2 = ${Math.round(rawSickHourDeduct)}元 ${sickHoursNote}\n`;
+    if (menstrualHours) formula += `➖生理假 ${menstrualHours}時 × ${salary}/30/8/2 = ${Math.round(rawMenstrualDeduct)}元 ${Math.round(rawMenstrualDeduct) ? menstrualNote : ""}\n`;
+    if (familyCareHours)formula += `➖家庭照顧假 ${familyCareHours}時 × ${salary}/30/8 = ${Math.round(rawFamilyCareDeduct)}元\n`;
+    if (lateMinutes)    formula += `➖遲到 ${lateMinutes}分 × ${salary}/30/8/60 = ${Math.round(rawLateDeduct)}元 ${lateNote}\n`;
+
+    // 全勤提醒：只要事假、病假，或「超過三次5分鐘的遲到（分鐘）」任一不為 0 就提醒
+    if (leaveHours > 0 || sickHours > 0 || lateMinutes > 0) {
+    formula += `⚠️ 記得扣全勤\n`;
+    }
+
+
+    formula += `不支薪金額：${totalDeduct} 元\n`;
+
+    if (cashOutDays)  formula += `➕折現 ${cashOutDays}天 × ${salary}/30 = ${Math.round(rawCashOutDayBonus)}元\n`;
+    if (cashOutHours) formula += `➕折現 ${cashOutHours}時 × ${salary}/30/8 = ${Math.round(rawCashOutHourBonus)}元\n`;
+    if (cashOutDays || cashOutHours) {
+        formula += `折現總金額：${totalCashOutBonus} 元\n`;
+    }
+
+    document.getElementById("salaryResult").innerText = formula;
+}
+
 
     /**
      * 複製薪資計算結果到剪貼簿。
