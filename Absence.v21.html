@@ -25,7 +25,6 @@
         :root {
             --w-date: 2em;
             --w-weekday: 2em;
-            --w-day: 2em;
             --w-hour: 4em;
             --w-minutes: 4em;
             --w-punch: 8em;
@@ -164,11 +163,6 @@
             border: 2px solid #d33; /* 強調邊框 */
         }
 
-        .date-input {
-            width: 80px;
-            margin-top: 5px;
-        }
-
         .checkbox-group {
             display: flex;
             align-items: center; /* 水平對齊 */
@@ -176,13 +170,7 @@
             flex-wrap: wrap;
             max-width: 150px;    
         }
-        .special-leave-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            flex-wrap: nowrap;
-        }
+        
         .no-wrap-cell {
             display: flex;
             align-items: center;
@@ -391,13 +379,6 @@
     // --- 事件處理與邏輯 (Event Handlers & Logic) ---
 
 
-function validateRowTotal(row) {
-    // 取消整列總量檢查（不再限制一天/8小時，也不做天時互斥）
-    row.classList.remove("error-row");
-    return true;
-}
-
-
 
     /**
      * 生成月份的日期表格。
@@ -456,27 +437,26 @@ function validateRowTotal(row) {
     document.getElementById("resultsLeave").innerText = '';
     calculateLeave();
 }
-function generateLeaveCells(type, date, withValidateRow = false) {
-    // 只產生「(時)」欄位，不再有「(天)」
-    const validate = withValidateRow ? "validateRowTotal(this.closest('tr'));" : "";
-    return `
-        <td>
-            <input type="number" name="leave-${type}" data-type="${type}-hour" onchange="validateInput(this); ${validate} calculateLeave();">
-            <input type="hidden" name="leave-${type}-date" value="${date}">
-        </td>
-    `;
+function generateLeaveCells(type, date) {
+  return `
+    <td>
+      <input type="number" name="leave-${type}" data-type="${type}-hour"
+             onchange="validateInput(this); calculateLeave();">
+    </td>
+  `;
 }
+// 生成表格時，原本的：${generateLeaveCells("v", displayDate, true)}
+// 改成：      ${generateLeaveCells("v", displayDate)}
+
 
 
 function generateLateCells(date) {
     return `
         <td>
             <input type="number" name="late" data-type="late-min" onchange="validateInput(this); calculateLeave();">
-            <input type="hidden" name="late-date" value="${date}">
         </td>
         <td>
             <input type="number" name="late-no-deduct" data-type="late-no-deduct-min" onchange="validateInput(this); calculateLeave();">
-            <input type="hidden" name="late-no-deduct-date" value="${date}">
         </td>
     `;
 }
@@ -496,7 +476,6 @@ function generateHourOnlyCell(type, date) {
     return `
         <td>
             <input type="number" name="${type}" data-type="${type}-hour" onchange="validateInput(this); calculateLeave();">
-            <input type="hidden" name="${type}-date" value="${date}">
         </td>
     `;
 }
@@ -623,8 +602,7 @@ function appendResultBlock(label, days = 0, hours = 0, records = [], warning = "
     let totalOtHours = 0;  // 超時(時)
 
     rows.forEach(row => {
-        if (!validateRowTotal(row)) return;
-
+        
         const date = row.querySelector("td:first-child").innerText;
         const weekday = getWeekdayString(date);
 
@@ -852,6 +830,9 @@ result += finalReasons.length
      * 計算薪資扣款。
      */
     function calculateSalaryDeduction() {
+    // 先同步最新月表與全域統計（安全）
+    calculateLeave();
+
     const name = document.getElementById("nameSalary").value.trim();
     const salary = getValue("salary"); // 月薪
 
@@ -1010,11 +991,6 @@ formula += finalReasons.length
             document.getElementById("yearInput").value = now.getFullYear();
         }
 
-        // 設定年份為當前年份
-        // 只有「現在不是一月」時才覆蓋成年，避免前面的「去年12月」被蓋掉
-if (prevMonth !== 0) {
-    document.getElementById("yearInput").value = now.getFullYear();
-}
 
 
         generateTable(); // 初始化時生成表格
@@ -1038,7 +1014,13 @@ if (prevMonth !== 0) {
                         absFrame.addEventListener('load', () => {
     window.absenceFrameReady = true;
   });
-}     
+}
+
+
+
+        
+
+
 
     });
     function toggleBalanceInfo() {
