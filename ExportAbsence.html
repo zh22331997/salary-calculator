@@ -55,20 +55,39 @@
     resize: vertical;
   }
 
+  /* 共用按鈕基本樣式 */
   button {
-    background-color: #b8b7b3; /* 莫蘭迪灰杏 */
     color: #fff;
     border: none;
     cursor: pointer;
     margin-top: 10px;
     margin-right: 10px;
     width: auto;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 1em;
     transition: background-color 0.3s;
   }
 
-  button:hover {
-    background-color: #9f9d97; /* 深一階 */
+    /* 灰色按鈕（如：複製、次要操作） */
+  .btn-gray {
+    background-color: #6b7280; /* 深灰 */
   }
+  .btn-gray:hover {
+    background-color: #4b5563; /* 更深灰 */
+  }
+
+  /* 綠色按鈕（分析用） */
+  .btn-green {
+    background-color: #10b981; /* 綠色 */
+  }
+  .btn-green:hover {
+    background-color: #0e9f6e; /* 深綠 */
+  }
+   button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
   .button-group {
     margin-top: 15px;
@@ -123,8 +142,9 @@
   <textarea id="input" placeholder="可以一次貼上多位老師的資料...系統會用「✅假別：1天 (1/1 1天)」格式來判斷每一筆資料的類型"></textarea>
 
   <div class="button-group">
-    <button onclick="analyzeAndCopy()">🔍 分析資料並複製表格</button> 
-    <button onclick="exportCSV()">💾 匯出 EXCEL</button>
+    <button class="btn-green" onclick="analyzeAndCopy()">🔍 分析資料並複製表格</button> 
+    <button class="btn-gray" onclick="exportCSV()">💾 匯出 EXCEL</button>
+
   </div>
 
   <table id="outputTable">
@@ -555,5 +575,4 @@ function copyTable() {
 <script src="submit-to-sheet-v4.js"></script>
 </body>
 </html>
-
 
