@@ -6,13 +6,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>打卡紀錄分析</title>
 <style>
+    /* 放在 <style> 的最上面 */
+*, *::before, *::after { box-sizing: border-box; }
+
   :root{--bg:#f7f7fb;--card:#fff;--ink:#1f2937;--muted:#6b7280;--pri:#4f46e5;--border:#e5e7eb}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans TC","Segoe UI",Roboto,Arial,"PingFang TC","Microsoft JhengHei","Helvetica Neue",sans-serif}
   .wrap{max-width:1200px;margin:24px auto;padding:0 16px}
   .title{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .title h1{margin:0;font-size:20px}
   .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);padding:16px}
-  textarea{width:100%;height:260px;border:1px solid var(--border);border-radius:12px;padding:12px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace}
+  textarea{
+  width:100%;
+  max-width:100%;
+  height:260px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;
+  display:block;          /* 防止和 inline 元素並排造成怪寬 */
+  resize:vertical;        /* 只允許上下拉高，不橫向撐寬（可選） */
+}
+
   .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
   /* Buttons -Blue */
 button{
@@ -79,7 +93,7 @@ button.secondary:hover{
       <h1>貼上打卡之星匯出的"打卡紀錄"</h1>
     </div>
 
-    <div class="muted">貼上打卡之星匯出的EXCEL"打卡紀錄"。一天工時固定 <b>8 小時</b>。</div>
+    <div class="muted">直接貼上打卡紀錄(勿有隱藏"行"會分析失敗)。一天工時固定 <b>8 小時</b>。</div>
 
     <div class="card" style="margin-top:12px">
       <textarea id="raw" placeholder="在這裡貼上原始資料（含或不含表頭；欄位以 Tab 分隔）"></textarea>
@@ -393,7 +407,7 @@ if (copyBtn) {
 
 // 3) 有警示再跳 TOAST（不會被 #out 覆蓋）
 if (dangerCount > 0) {
-  toast(`偵測到 <b>${dangerCount}</b> 筆「早退／曠職」。請確認是否應補請假、補打卡或有改時間。`, 12000);
+  toast(`偵測到 <b>${dangerCount}</b> 筆「早退／曠職」。請確認是否應補假單。`, 12000);
 }
 
 
