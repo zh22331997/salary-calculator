@@ -1,3 +1,5 @@
+
+
 <!doctype html>
 <html lang="zh-Hant">
 <head>
@@ -204,9 +206,11 @@ button.secondary:hover{
       // 3) 真的有時數才輸出
       if (otRecruit > 0) {
          addAgg(map, ym, branch, name, "招生(加班)", otRecruit, `${md} ${fmtPiece(otRecruit, DAY_HRS)}`, DAY_HRS);
-} else if (otRecruit === "?") {
-         addAgg(map, ym, branch, name, "招生(加班)", 0, `${md} 招生?小時`, DAY_HRS);
-         }
+         } else if (otRecruit === "?") {
+         // 不寫入小時數，以「待確認」記一筆，備註提示 ? 小時
+        addAgg(map, ym, branch, name, "招生(待確認)", { cnt: 1 }, `${md} 招生？小時`, DAY_HRS, true);
+      }
+
 
       }
 
@@ -321,6 +325,13 @@ button.secondary:hover{
       const [ym, branch, name, typ] = key.split("|");
       let subtotal = "";
       let remark = "";
+    // 特例：招生(待確認) → 顯示「？小時」
+      if (typ === "招生(待確認)") {
+      subtotal = "？小時";
+      remark   = val.detail.join("、"); // 例如：9/13 招生？小時
+      rowsOut.push([ym, branch, name, typ, subtotal, remark]);
+      continue;
+      }
 
       // A) 計次型：漏打卡 / 非出勤日打卡 / 補打卡單 / 其他異常
       if (COUNT_TYPES.has(typ) || typ === "其他異常") {
