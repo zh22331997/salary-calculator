@@ -1,5 +1,3 @@
-
-
 <!doctype html>
 <html lang="zh-Hant">
 <head>
@@ -197,22 +195,20 @@ button.secondary:hover{
       otRecruit = Number(recruitMatch[1]); // 直接取文字裡的數字
       }
 
-      // 2) 如果沒寫「X小時」，才回頭用加班欄位 or 工時差額
+      // 2) 如果沒寫「X小時」，就標記為 ? 小時（不自動推算）
       if (!otRecruit || otRecruit <= 0) {
-      otRecruit = ot; // 來自「加班時數/加班時間」
-      if (!otRecruit || otRecruit <= 0) {
-      const worked = hhmmToHours(r[H_WORKED_H]);   // 可能是 "09:30" 或數字
-      const base   = hhmmToHours(r[H_BASE_H]);
-      const diff   = Math.max(0, Number(worked) - Number(base));
-      otRecruit = diff;
-        }
+       otRecruit = "?"; 
       }
 
-  // 3) 真的有時數才輸出
-  if (otRecruit > 0) {
-    addAgg(map, ym, branch, name, "招生(加班)", otRecruit, `${md} ${fmtPiece(otRecruit, DAY_HRS)}`, DAY_HRS);
-  }
-}
+
+      // 3) 真的有時數才輸出
+      if (otRecruit > 0) {
+         addAgg(map, ym, branch, name, "招生(加班)", otRecruit, `${md} ${fmtPiece(otRecruit, DAY_HRS)}`, DAY_HRS);
+} else if (otRecruit === "?") {
+         addAgg(map, ym, branch, name, "招生(加班)", 0, `${md} 招生?小時`, DAY_HRS);
+         }
+
+      }
 
 
 
