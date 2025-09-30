@@ -1,21 +1,73 @@
 
+
 <!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TSV → 年月/分校/姓名/類型/小計/備註</title>
+<title>打卡紀錄分析</title>
 <style>
+    /* 放在 <style> 的最上面 */
+*, *::before, *::after { box-sizing: border-box; }
+
   :root{--bg:#f7f7fb;--card:#fff;--ink:#1f2937;--muted:#6b7280;--pri:#4f46e5;--border:#e5e7eb}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans TC","Segoe UI",Roboto,Arial,"PingFang TC","Microsoft JhengHei","Helvetica Neue",sans-serif}
   .wrap{max-width:1200px;margin:24px auto;padding:0 16px}
   .title{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .title h1{margin:0;font-size:20px}
   .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);padding:16px}
-  textarea{width:100%;height:260px;border:1px solid var(--border);border-radius:12px;padding:12px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace}
+  textarea{
+  width:100%;
+  max-width:100%;
+  height:260px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;
+  display:block;          /* 防止和 inline 元素並排造成怪寬 */
+  resize:vertical;        /* 只允許上下拉高，不橫向撐寬（可選） */
+}
+
   .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  button{border:0;border-radius:12px;background:var(--pri);color:#fff;padding:10px 14px;font-weight:600;cursor:pointer}
-  button.secondary{background:#e5e7eb;color:#111827}
+  /* Buttons -Blue */
+button{
+  appearance:none;
+  border:0;
+  border-radius:8px;
+  background:#e3f2fd;
+  color:#1565c0;
+  padding:14px 20px;
+  font-weight:600;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  box-shadow:0 2px 6px rgba(21,101,192,0.3);
+  transition:background .2s, box-shadow .2s, transform .04s;
+}
+button:hover{
+  background:#cde5fd;
+  box-shadow:0 4px 12px rgba(21,101,192,0.5);
+}
+button:active{
+  transform:translateY(1px);
+}
+button:focus-visible{
+  outline:2px solid #1a73e8;
+  outline-offset:2px;
+}
+
+/* 次要按鈕（灰階） */
+button.secondary{
+  background:#f1f5f9;
+  color:#334155;
+  box-shadow:0 1px 3px rgba(2,6,23,0.12);
+}
+button.secondary:hover{
+  background:#e2e8f0;
+  box-shadow:0 3px 8px rgba(2,6,23,0.18);
+}
+
   .muted{color:var(--muted);font-size:12px;margin-top:6px}
   table{width:100%;border-collapse:collapse}
   th,td{border:1px solid var(--border);padding:8px 10px;vertical-align:top}
@@ -42,13 +94,12 @@
       <h1>貼上打卡之星匯出的"打卡紀錄"</h1>
     </div>
 
-    <div class="muted">請確保你直接貼上"打卡之星"的資料。一天工時固定 <b>8 小時</b>。</div>
+    <div class="muted">直接貼上打卡紀錄(勿有隱藏"行"會分析失敗)。一天工時固定 <b>8 小時</b>。</div>
 
     <div class="card" style="margin-top:12px">
       <textarea id="raw" placeholder="在這裡貼上原始資料（含或不含表頭；欄位以 Tab 分隔）"></textarea>
       <div class="row" style="margin-top:8px">
         <button id="run">整理打卡紀錄並產生表格</button>
-        <button id="copyTSV" class="secondary">複製缺勤資料（請貼回 Google Sheet）</button>
         <button id="clear" class="secondary">清空</button>
       </div>
     </div>
@@ -81,7 +132,6 @@
   // 事件
   $("#run").addEventListener("click", run);
   $("#clear").addEventListener("click", ()=>{ $("#raw").value=""; $("#out").innerHTML='<div class="hint">尚未輸出。</div>'; });
-  $("#copyTSV").addEventListener("click", copyTSV);
 
   // 主流程
   let lastTSV = ""; // for copy
@@ -98,9 +148,14 @@
     const H_BRANCH = pickHeader(headers, /分校|部門/, "部門"); // 從資料抓
     const H_LEAVE_H    = pickHeader(headers, /請假時數/, "請假時數");
     const H_LEAVE_KIND = pickHeader(headers, /假別/, "假別");
-    const H_OT_H     = pickHeader(headers, /加班時數|加班工時|加班時間|超時|加班/, "加班時數");
-    const H_OT_TIME  = pickHeader(headers, /加班時間/, "加班時間"); 
+    const H_OT_H     = pickHeader(headers, /^(加班時數|加班工時)$/, "加班時數");
+    const H_OT_TIME  = pickHeader(headers, /^加班時間$/, "加班時間");
     const H_ABN   = pickHeader(headers, /出勤異常/, "出勤異常");
+    const H_EARLY_REASON = pickHeader(headers, /提早上班原因/, "提早上班原因");
+    const H_LATE_REASON  = pickHeader(headers, /延後下班原因/, "延後下班原因");
+    const H_WORKED_H     = pickHeader(headers, /打卡工時/, "打卡工時");
+    const H_BASE_H       = pickHeader(headers, /計薪基準工時/, "計薪基準工時");
+
 
     // 聚合：key = 年月|分校|姓名|類型
     const map = new Map();
@@ -121,12 +176,46 @@
       }
 
       // 2) 超時（加班）—保留原功能（支援「加班時數=數字」或「加班時間=hh:mm(:ss)」）
-      const otH        = toNumber(r[H_OT_H]);      
-      const otFromTime = hhmmToHours(r[H_OT_TIME]); 
-      const ot = otH || otFromTime;               
+      const otFromTime = hhmmToHours(r[H_OT_TIME]);           // 例如 "01:30:00" → 1.5
+      const otH        = (H_OT_H && r[H_OT_H]) ? toNumber(r[H_OT_H]) : 0; // 純數字小時
+      const ot         = (otFromTime || 0) > 0 ? otFromTime : otH;        // 先用時間，有再用小時
       if (ot > 0) {
-        addAgg(map, ym, branch, name, "超時", ot, `${md} ${fmtPiece(ot, DAY_HRS)}`, DAY_HRS);
+         addAgg(map, ym, branch, name, "超時", ot, `${md} ${fmtPiece(ot, DAY_HRS)}`, DAY_HRS);
       }
+      // ---- 招生時數：理由含「招生」就把該筆加到「招生(加班)」 ----
+      const earlyReason = String(r[H_EARLY_REASON] || "");
+      const lateReason  = String(r[H_LATE_REASON]  || "");
+      const reasonText  = earlyReason + " " + lateReason;
+
+      // 先檢查是否有「招生」字樣
+      if (/招生/.test(reasonText)) {
+      let otRecruit = 0;
+
+      // 1) 先抓「招生X小時」的格式
+      const recruitMatch = reasonText.match(/招生.*?(\d+(?:\.\d+)?)\s*小時/);
+      if (recruitMatch) {
+      otRecruit = Number(recruitMatch[1]); // 直接取文字裡的數字
+      }
+
+      // 2) 如果沒寫「X小時」，才回頭用加班欄位 or 工時差額
+      if (!otRecruit || otRecruit <= 0) {
+      otRecruit = ot; // 來自「加班時數/加班時間」
+      if (!otRecruit || otRecruit <= 0) {
+      const worked = hhmmToHours(r[H_WORKED_H]);   // 可能是 "09:30" 或數字
+      const base   = hhmmToHours(r[H_BASE_H]);
+      const diff   = Math.max(0, Number(worked) - Number(base));
+      otRecruit = diff;
+        }
+      }
+
+  // 3) 真的有時數才輸出
+  if (otRecruit > 0) {
+    addAgg(map, ym, branch, name, "招生(加班)", otRecruit, `${md} ${fmtPiece(otRecruit, DAY_HRS)}`, DAY_HRS);
+  }
+}
+
+
+
 
       // 3) 出勤異常：分鐘型（遲到/早退/曠職）＋ 計次型（漏打卡/非出勤日打卡/補打卡單/其他異常）
       if (abn && abn !== "--") {
@@ -281,7 +370,7 @@
 
          // 1) 有遲到⚠️（至少 1 次）
          if (typ === "遲到⚠️" && (v.count || 0) > 0) {
-         rec.reasons.push("遲到⚠️");
+         rec.reasons.push(`遲到⚠️${v.count}次`);
          }
          // 2) 有事假 / 病假（>0 小時）
          if ((typ === "事假" || typ === "病假") && (v.totalHours || 0) > 0) {
@@ -318,8 +407,16 @@ const tbody = `<tbody>${
 }</tbody>`;
 
 // 先組主表 HTML
-let html = `<div class="hint" style="margin-bottom:8px">共 ${rowsOut.length} 列，可按「複製為 TSV」貼回 Google Sheet。</div>
-<div style="overflow:auto"><table>${thead}${tbody}</table></div>`;
+// 先組主表 HTML（在提示文字中放一顆 copy 按鈕）
+let html = `
+  <div class="hint" style="margin-bottom:8px">
+    共 ${rowsOut.length} 列，
+    <button id="copyTSV" class="pill">複製下面表格</button>
+    可貼回 Google Sheet。
+  </div>
+  <div style="overflow:auto"><table>${thead}${tbody}</table></div>
+`;
+
 
 // 再加「本月非全勤名單」（有資料才畫）
 if (notFullRows.length > 0) {
@@ -338,11 +435,20 @@ if (notFullRows.length > 0) {
   <div style="overflow:auto"><table>${thead2}${tbody2}</table></div>`;
 }
 
-// 寫回畫面
+// 1) 寫回畫面（主表 + 非全勤表）
 $("#out").innerHTML = html;
-if (dangerCount > 0) {
-  toast(`偵測到 <b>${dangerCount}</b> 筆「早退／曠職」。請確認是否應補請假、補打卡或有改時間。`, 12000);
+
+// 2) 渲染完再綁定新產生的按鈕
+const copyBtn = document.querySelector("#out #copyTSV");
+if (copyBtn) {
+  copyBtn.addEventListener("click", copyTSV);
 }
+
+// 3) 有警示再跳 TOAST（不會被 #out 覆蓋）
+if (dangerCount > 0) {
+  toast(`偵測到 <b>${dangerCount}</b> 筆「早退／曠職」。請確認是否應補假單。`, 12000);
+}
+
 
 
     // TSV
@@ -352,7 +458,7 @@ if (dangerCount > 0) {
 
   function copyTSV(){
     if(!lastTSV){ alert("還沒有可複製的內容，請先產生表格。"); return; }
-    navigator.clipboard.writeText(lastTSV).then(()=>{ alert("已複製 TSV，可直接貼到 Google Sheet！"); });
+    navigator.clipboard.writeText(lastTSV).then(()=>{ alert("已複製，可直接貼到要給Candy的表格！"); });
   }
 
  function addAgg(map, ym, branch, name, typ, val, detailStr, dayHrs){
@@ -427,7 +533,14 @@ if (dangerCount > 0) {
     return {headers, rows, err:null};
   }
 
-  function toNumber(v){ const m = String(v??"").match(/-?\d+(?:\.\d+)?/); return m? Number(m[0]) : 0; }
+  function toNumber(v){
+  const s = String(v ?? "");
+  // 若像 "12:30"、"12:30~14:00" 這種時間字串，直接視為 0，避免誤抓成 12 小時
+  if (/[~:]/.test(s)) return 0;
+  const m = s.match(/-?\d+(?:\.\d+)?/);
+  return m ? Number(m[0]) : 0;
+  }
+
   function hhmmToHours(v){
     const s = String(v || "").trim();
     // 例如 "1:30" 或 "01:30:00"
