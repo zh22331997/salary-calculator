@@ -1,10 +1,11 @@
 
+
 <!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>打卡紀錄分析</title>
+<title>打卡紀錄分析v36</title>
 <style>
     /* 放在 <style> 的最上面 */
 *, *::before, *::after { box-sizing: border-box; }
@@ -68,8 +69,8 @@ button.secondary:hover{
 }
 
   .muted{color:var(--muted);font-size:12px;margin-top:6px}
-  table{width:100%;border-collapse:collapse}
-  th,td{border:1px solid var(--border);padding:8px 10px;vertical-align:top}
+  table{width:100%;border-collapse:collapse;table-layout:fixed}
+  th,td{border:1px solid var(--border);padding:8px 10px;vertical-align:middle}
   th{background:#f3f4f6;text-align:left}
   .hint{font-size:12px;color:var(--muted)}
     /* 早退/曠職警示 */
@@ -84,6 +85,13 @@ button.secondary:hover{
     box-shadow:0 8px 24px rgba(0,0,0,.12); max-width:520px; font-size:14px; line-height:1.4;
   }
   .toast b{color:#fca5a5}
+  
+  /* 只針對主表的第 6 欄（備註）允許強制換行，避免被長字串撐破 */
+  #out table:first-of-type td:nth-child(6),
+  #out table:first-of-type th:nth-child(6){
+  overflow-wrap:anywhere;   /* 現代瀏覽器 */
+  word-break:break-word;    /* 相容舊版 */
+  }
 
 </style>
 </head>
@@ -135,6 +143,9 @@ button.secondary:hover{
   // 主流程
   let lastTSV = ""; // for copy
   function run(){
+  // 用來記錄：本次資料中實際出現過的「年月|分校|姓名」組合
+  const allCombos = new Set();
+
     const text = ($("#raw").value||"").trim();
     const out = $("#out");
     if(!text){ out.innerHTML = '<div class="hint">（請先貼上資料）</div>'; return; }
@@ -150,6 +161,11 @@ button.secondary:hover{
     const H_OT_H     = pickHeader(headers, /^(加班時數|加班工時)$/, "加班時數");
     const H_OT_TIME  = pickHeader(headers, /^加班時間$/, "加班時間");
     const H_ABN   = pickHeader(headers, /出勤異常/, "出勤異常");
+    const H_EARLY_REASON = pickHeader(headers, /提早上班原因/, "提早上班原因");
+    const H_LATE_REASON  = pickHeader(headers, /延後下班原因/, "延後下班原因");
+    const H_WORKED_H     = pickHeader(headers, /打卡工時/, "打卡工時");
+    const H_BASE_H       = pickHeader(headers, /計薪基準工時/, "計薪基準工時");
+
 
     // 聚合：key = 年月|分校|姓名|類型
     const map = new Map();
@@ -161,6 +177,11 @@ button.secondary:hover{
       const name = (r[H_NAME]||"").trim();
       const branch = (r[H_BRANCH]||"").trim();
       const abn = (r[H_ABN]||"").trim();
+      // 紀錄本次資料中實際出現的人（即使沒有異常/請假/加班）
+      if (ym && name) {
+      allCombos.add(`${ym}|${branch}|${name}`);
+      }
+
 
       // 1) 請假（小時計）—保留原功能
       const leaveKind = (r[H_LEAVE_KIND]||"").replace(/\s/g,"");
@@ -176,6 +197,39 @@ button.secondary:hover{
       if (ot > 0) {
          addAgg(map, ym, branch, name, "超時", ot, `${md} ${fmtPiece(ot, DAY_HRS)}`, DAY_HRS);
       }
+      // ---- 招生時數：理由含「招生」就把該筆加到「招生(加班)」 ----
+      const earlyReason = String(r[H_EARLY_REASON] || "");
+      const lateReason  = String(r[H_LATE_REASON]  || "");
+      const reasonText  = earlyReason + " " + lateReason;
+
+      // 先檢查是否有「招生」字樣
+      if (/招生/.test(reasonText)) {
+      let otRecruit = 0;
+
+      // 1) 先抓「招生X小時」的格式
+      const recruitMatch = reasonText.match(/招生.*?(\d+(?:\.\d+)?)\s*小時/);
+      if (recruitMatch) {
+      otRecruit = Number(recruitMatch[1]); // 直接取文字裡的數字
+      }
+
+      // 2) 如果沒寫「X小時」，就標記為 ? 小時（不自動推算）
+      if (!otRecruit || otRecruit <= 0) {
+       otRecruit = "?"; 
+      }
+
+
+      // 3) 真的有時數才輸出
+      if (otRecruit > 0) {
+         addAgg(map, ym, branch, name, "招生(加班)", otRecruit, `${md} ${fmtPiece(otRecruit, DAY_HRS)}`, DAY_HRS);
+         } else if (otRecruit === "?") {
+         // 不寫入小時數，以「待確認」記一筆，備註提示 ? 小時
+        addAgg(map, ym, branch, name, "招生(待確認)", { cnt: 1 }, `${md} 招生？小時`, DAY_HRS, true);
+      }
+
+
+      }
+
+
 
 
       // 3) 出勤異常：分鐘型（遲到/早退/曠職）＋ 計次型（漏打卡/非出勤日打卡/補打卡單/其他異常）
@@ -286,6 +340,13 @@ button.secondary:hover{
       const [ym, branch, name, typ] = key.split("|");
       let subtotal = "";
       let remark = "";
+    // 特例：招生(待確認) → 顯示「？小時」
+      if (typ === "招生(待確認)") {
+      subtotal = "？小時";
+      remark   = val.detail.join("、"); // 例如：9/13 招生？小時
+      rowsOut.push([ym, branch, name, typ, subtotal, remark]);
+      continue;
+      }
 
       // A) 計次型：漏打卡 / 非出勤日打卡 / 補打卡單 / 其他異常
       if (COUNT_TYPES.has(typ) || typ === "其他異常") {
@@ -331,7 +392,7 @@ button.secondary:hover{
 
          // 1) 有遲到⚠️（至少 1 次）
          if (typ === "遲到⚠️" && (v.count || 0) > 0) {
-         rec.reasons.push("遲到⚠️");
+         rec.reasons.push(`遲到⚠️${v.count}次`);
          }
          // 2) 有事假 / 病假（>0 小時）
          if ((typ === "事假" || typ === "病假") && (v.totalHours || 0) > 0) {
@@ -366,6 +427,30 @@ const tbody = `<tbody>${
     }</tr>`;
   }).join("")
 }</tbody>`;
+// 固定欄寬：讓「非全勤名單（4欄）」與「無異常名單（3欄）」對齊
+const col4 = `<colgroup>
+  <col style="width:110px"><!-- 年月 -->
+  <col style="width:120px"><!-- 分校 -->
+  <col style="width:120px"><!-- 姓名 -->
+  <col><!-- 原因（自動吃剩下的寬度） -->
+</colgroup>`;
+const col3 = `<colgroup>
+  <col style="width:110px"><!-- 年月 -->
+  <col style="width:120px"><!-- 分校 -->
+  <col><!-- 姓名（自動吃剩下的寬度） -->
+</colgroup>`;
+// 主表（6欄）的欄寬：讓「分校／姓名」更窄，「備註」更寬
+// 寬度可以再微調：年月110、分校120、姓名120、類型160、小計110、備註吃剩
+const col6 = `<colgroup>
+  <col style="width:110px"><!-- 年月 -->
+  <col style="width:120px"><!-- 分校 -->
+  <col style="width:120px"><!-- 姓名 -->
+  <col style="width:160px"><!-- 假別/類型 -->
+  <col style="width:110px"><!-- 小計 -->
+  <col><!-- 備註（自動吃剩的空間） -->
+</colgroup>`;
+
+
 
 // 先組主表 HTML
 // 先組主表 HTML（在提示文字中放一顆 copy 按鈕）
@@ -375,7 +460,7 @@ let html = `
     <button id="copyTSV" class="pill">複製下面表格</button>
     可貼回 Google Sheet。
   </div>
-  <div style="overflow:auto"><table>${thead}${tbody}</table></div>
+  <div style="overflow:auto"><table>${col6}${thead}${tbody}</table></div>
 `;
 
 
@@ -393,7 +478,43 @@ if (notFullRows.length > 0) {
     }).join("")
   }</tbody>`;
   html += `<div class="hint" style="margin:16px 0 8px">本月非全勤 <b>${notFullRows.length}</b> 人</div>
-  <div style="overflow:auto"><table>${thead2}${tbody2}</table></div>`;
+  <div style="overflow:auto"><table>${col4}${thead2}${tbody2}</table></div>`;
+}
+// —— 「本月無異常名單」：出現在資料中，但沒有請假、沒有加班、也沒有任何出勤異常 ——
+
+// 先把「有被彙總出任何類型（請假/加班/異常…）」的人找出來
+const someoneHasAnyMap = new Map(); // key = ym|branch|name -> true
+for (const key of map.keys()) {
+  const [ym, branch, name/*, typ*/] = key.split("|");
+  const combo = `${ym}|${branch}|${name}`;
+  someoneHasAnyMap.set(combo, true);
+}
+
+// 從 allCombos 中挑出「完全沒有被彙總到的人」＝ 無請假/無加班/無出勤異常
+const noAbnRows = [...allCombos]
+  .filter(combo => !someoneHasAnyMap.get(combo))
+  .map(combo => {
+    const [ym, branch, name] = combo.split("|");
+    return { ym, branch, name };
+  })
+  .sort((a,b)=> a.ym.localeCompare(b.ym)
+    || a.branch.localeCompare(b.branch)
+    || a.name.localeCompare(b.name));
+
+// 有資料才畫
+if (noAbnRows.length > 0) {
+  const thead3 = `<thead><tr><th>年月</th><th>分校</th><th>姓名</th></tr></thead>`;
+  const tbody3 = `<tbody>${
+    noAbnRows.map(r=>{
+      return `<tr>
+        <td>${escapeHtml(r.ym)}</td>
+        <td>${escapeHtml(r.branch)}</td>
+        <td>${escapeHtml(r.name)}</td>
+      </tr>`;
+    }).join("")
+  }</tbody>`;
+  html += `<div class="hint" style="margin:16px 0 8px">本月無異常名單 <b>${noAbnRows.length}</b> 人（有出現在資料，但完全正常）</div>
+  <div style="overflow:auto"><table>${col3}${thead3}${tbody3}</table></div>`;
 }
 
 // 1) 寫回畫面（主表 + 非全勤表）
