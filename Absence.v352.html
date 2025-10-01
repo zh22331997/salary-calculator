@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>打卡紀錄分析v351</title>
+<title>打卡紀錄分析</title>
 <style>
 *,*::before,*::after{box-sizing:border-box}
 :root{--bg:#f7f7fb;--card:#fff;--ink:#1f2937;--muted:#6b7280;--pri:#4f46e5;--border:#e5e7eb}
@@ -43,7 +43,7 @@ th{background:#f3f4f6;text-align:left}
     <div class="row">
       <div style="flex:1;min-width:280px">
         <label for="names">PT 姓名（逗號、空白或頓號分隔）</label>
-        <input id="names" type="text" placeholder="例如：張三、李四 王小明" />
+        <input id="names" type="text" placeholder="例如：張正華" />
       </div>
     </div>
     <div style="margin-top:12px">
@@ -253,7 +253,6 @@ th{background:#f3f4f6;text-align:left}
       subtotal = fmtHours(hours);
       remark   = val.detail.join("、");
       rowsOut.push([ym,branch,name,typ,subtotal,remark]);
-      someoneHasAnyMap.set(`${ym}|${branch}|${name}`, true);
     }
 
     rowsOut.sort((a,b)=> a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]) || a[2].localeCompare(b[2]) || a[3].localeCompare(b[3]));
@@ -319,32 +318,34 @@ th{background:#f3f4f6;text-align:left}
     }
 
     let html = "";
-    // 1) PT 工時彙總（整合到報告最上面）
+    // 1) 主表給Candy
+      html += `<div class="hint" style="margin-bottom:8px">
+      共 ${rowsOut.length} 列，
+      <button id="copyTSV" class="pill">複製給Candy的表格</button>
+      <button id="copyAllTSV" class="pill">複製整頁表格</button>
+      可貼回 Google Sheet。
+      </div>
+      <div style="overflow:auto"><table>${col6}${thead}${tbody}</table></div>`;
+      
+    // 2) PT 工時彙總
     if (ptRows.length>0){
       const colPT = `<colgroup>
         <col style="width:110px"><col style="width:120px"><col style="width:120px">
         <col style="width:120px"><col>
       </colgroup>`;
-      const theadPT = `<thead><tr><th>年月</th><th>分校</th><th>姓名</th><th>本月工時（小時）</th><th>每日明細（半小時規則）</th></tr></thead>`;
+      const theadPT = `<thead><tr><th>年月</th><th>分校</th><th>姓名</th><th>本月工時</th><th>每日明細</th></tr></thead>`;
       const tbodyPT = `<tbody>${
         ptRows.map(r=>`<tr>
           <td>${escapeHtml(r.ym)}</td>
           <td>${escapeHtml(r.branch)}</td>
           <td>${escapeHtml(r.name)}</td>
-          <td>${escapeHtml(fmtHours(r.hours))}</td>
+          <td>${escapeHtml(fmtHoursNum(r.hours))}</td>
           <td>${escapeHtml(r.detail.join("、"))}</td>
         </tr>`).join("")
       }</tbody>`;
-      html += `<div class="hint" style="margin-bottom:8px">本月（${escapeHtml(latestYM||"—")}）PT 工時彙總，共 ${ptRows.length} 筆</div>
-      <div style="overflow:auto;margin-bottom:16px"><table>${colPT}${theadPT}${tbodyPT}</table></div>`;
+      html += `<div class="hint" style="margin:16px 0 8px">本月（${escapeHtml(latestYM||"—")}）PT 工時彙總，共 ${ptRows.length} 筆</div>
+      <div style="overflow:auto; margin-bottom:16px"><table>${colPT}${theadPT}${tbodyPT}</table></div>`;
     }
-
-    // 2) 主表
-    html += `<div class="hint" style="margin-bottom:8px">
-      共 ${rowsOut.length} 列，
-      <button id="copyTSV" class="pill">複製下面表格</button> 可貼回 Google Sheet。
-    </div>
-    <div style="overflow:auto"><table>${col6}${thead}${tbody}</table></div>`;
 
     // 3) 缺成對
     if (miss.length>0){
@@ -405,6 +406,66 @@ th{background:#f3f4f6;text-align:left}
     lastTSV = [headerRow, ...rowsOut].map(cols=>cols.map(v=>String(v??"").replaceAll("\t"," ")).join("\t")).join("\n");
     const copyBtn = document.querySelector("#out #copyTSV");
     copyBtn && copyBtn.addEventListener("click", ()=>navigator.clipboard.writeText(lastTSV).then(()=>alert("已複製，可貼到 Google Sheet！")));
+    // ===== 產生「整頁 TSV」：主表 + PT工時 + 缺成對 + 非全勤 + 無異常 =====
+
+function makeTSV(header, rows) {
+  return [header, ...rows]
+    .map(cols => cols.map(v => String(v ?? "").replaceAll("\t", " ")).join("\t"))
+    .join("\n");
+}
+
+let allTSVParts = [];
+
+// (A) 主表
+const headerMain = ["年月","分校","姓名","假別/類型","小計","備註"];
+allTSVParts.push("【主表】");
+allTSVParts.push(makeTSV(headerMain, rowsOut));
+
+// (B) PT 工時彙總（若有）
+if (ptRows.length > 0) {
+  const headerPT = ["年月","分校","姓名","本月工時(小時)","每日明細（半小時規則）"];
+  const rowsPT = ptRows.map(r => [r.ym, r.branch, r.name, (Math.round((Number(r.hours||0))*10)/10), r.detail.join("、")]);
+  allTSVParts.push("【PT工時彙總】");
+  allTSVParts.push(makeTSV(headerPT, rowsPT));
+}
+
+
+
+// (C) 缺成對
+if (miss.length > 0) {
+  const headerMiss = ["年月","分校","姓名","日期","缺少","原始上下班打卡"];
+  const rowsMiss = miss.map(r => [r.ym, r.branch, r.name, r.md, r.which, `上班：${r.rawIn}／下班：${r.rawOut}`]);
+  allTSVParts.push("【缺成對打卡】");
+  allTSVParts.push(makeTSV(headerMiss, rowsMiss));
+}
+
+// (D) 非全勤
+if (notFullRows.length > 0) {
+  const headerNotFull = ["年月","分校","姓名","非全勤原因"];
+  const rowsNotFull = notFullRows.map(r => [r.ym, r.branch, r.name, r.reasons.join("、")]);
+  allTSVParts.push("【本月非全勤名單】");
+  allTSVParts.push(makeTSV(headerNotFull, rowsNotFull));
+}
+
+// (E) 無異常
+if (noAbnRows.length > 0) {
+  const headerNoAbn = ["年月","分校","姓名"];
+  const rowsNoAbn = noAbnRows.map(r => [r.ym, r.branch, r.name]);
+  allTSVParts.push("【本月無異常名單】");
+  allTSVParts.push(makeTSV(headerNoAbn, rowsNoAbn));
+}
+
+const lastTSVAll = allTSVParts.join("\n\n");
+
+// 綁定「複製整頁」按鈕
+const copyAllBtn = document.querySelector("#out #copyAllTSV");
+if (copyAllBtn) {
+  copyAllBtn.addEventListener("click", () => {
+    navigator.clipboard.writeText(lastTSVAll).then(() => {
+      alert("已複製全部表格，可直接貼到 Google Sheet！");
+    });
+  });
+}
 
     // Toast
     if (dangerCount>0) toast(`偵測到 <b>${dangerCount}</b> 筆「早退／曠職」。請確認是否應補假單。`, 12000);
@@ -433,7 +494,6 @@ th{background:#f3f4f6;text-align:left}
   function toYM(s){ const m=String(s).match(/(\d{4})[\/\-](\d{1,2})/); return m?`${m[1]}-${String(m[2]).padStart(2,'0')}`:(s||""); }
   function toMD(s){ const m=String(s).match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/); return m?Number(m[2])+"/"+Number(m[3]):(s||""); }
   function parseHM(s){ const m=String(s||"").match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/); if(!m) return null; const hh=Math.min(23,Math.max(0,+m[1]||0)); const mm=Math.min(59,Math.max(0,+m[2]||0)); return hh*60+mm; }
-  function fmtHM(mins){ const h=Math.floor(mins/60), m=mins%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
   function fmtHoursNum(h){ const n=Number(h||0); return (Math.round(n*10)/10).toString(); } // 1位小數
   function fmtHours(h){ return `${fmtHoursNum(h)} 小時`; }
   function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
