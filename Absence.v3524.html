@@ -459,7 +459,7 @@ window.addEventListener('unhandledrejection', e => {
         if (hMenstrual) parts.push(`生理假 ${fmtHoursNum(hMenstrual)}小時（半薪）`);
         if (lateMin)    parts.push(`遲到 ${lateMin}分`);
 
-        const 扣全勤 = notFullSet.has(`${latestYM}|${branch}|${name}`) ? "是" : "否";
+        const 扣全勤 = notFullSet.has(`${latestYM}|${branch}|${name}`) ? "沒全勤❌" : "是";
         rowsPay.push({
           name,
           info: parts.join("、") || "—",
@@ -469,13 +469,15 @@ window.addEventListener('unhandledrejection', e => {
       }
 
       if (rowsPay.length){
-        const headerPay = ["姓名","本薪","各種不支薪假別天數/時數(含遲到要扣)","不支薪明細 不支薪總額","是否扣全勤"];
+        const headerPay = ["姓名","本薪","各種不支薪假別天數/時數(含遲到要扣)","不支薪明細 不支薪總額","全勤?"];
         const colPay = `<colgroup>
           <col style="width:120px">
-          <col style="width:120px"><col>
-          <col style="width:280px">
+          <col style="width:120px">
+          <col style="width:300px">
+          <col style="width:300px">
           <col style="width:110px">
         </colgroup>`;
+
         const theadPay = `<thead><tr>${headerPay.map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
         const tbodyPay = `<tbody>${
           rowsPay.map(r=>`<tr
