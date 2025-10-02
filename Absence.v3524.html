@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>打卡紀錄分析</title>
+<title>打卡紀錄分析（合併 PT 工時計算）</title>
 <style>
 /* ===== Compact theme ===== */
 *,*::before,*::after{box-sizing:border-box}
@@ -42,6 +42,27 @@ th{background:#f3f4f6;text-align:left}
 /* 可編輯欄位 */
 .editable{background:#fffdf5}
 .editable:focus{outline:2px solid #fde68a}
+/* === Tables: shared column widths & alignment === */
+:root{
+  /* 主表 / PT工時 共用欄寬 */
+  --w-ym: 90px;
+  --w-branch: 120px;
+  --w-name: 120px;
+  --w-type: 160px;
+  --w-subtotal: 120px;
+
+  /* 不支薪明細 表的欄寬（姓名沿用主表） */
+  --w-nopay-salary: 120px;
+  --w-nopay-info: 320px;     /* 你可再調大/小 */
+  --w-nopay-detail: 360px;   /* 你可再調大/小 */
+  --w-nopay-full: 110px;
+}
+
+/* 數字右對齊（小計／工時／金額） */
+td.num, th.num{ text-align:right }
+
+/* 讓表格永遠使用固定欄寬（避免因內容長度而撐開） */
+#out table{ table-layout: fixed }
 
 /* toast */
 .toast-wrap{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:8px}
@@ -333,34 +354,74 @@ window.addEventListener('unhandledrejection', e => {
 
     // 主表
     const headerRow = ["年月","分校","姓名","假別/類型","小計","備註"];
-    const thead = `<thead><tr>${headerRow.map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
+    const thead = `<thead><tr>${
+    headerRow.map((h,i)=>`<th${i===4?' class="num"':''}>${h}</th>`).join("")
+    }</tr></thead>`;
     const tbody = `<tbody>${
-      rowsOut.map(r=>`<tr>${r.map((c,i)=>`<td${i===3 && /^(早退|曠職)$/.test(String(c))?' class="danger"':''}>${escapeHtml(c)}</td>`).join("")}</tr>`).join("")
+      rowsOut.map(r=>`<tr>${
+      r.map((c,i)=>{
+      const isDanger = (i===3 && /^(早退|曠職)$/.test(String(c)));
+      const isNum = (i===4); // 第5欄：小計
+      const cls = [isDanger?'danger':'', isNum?'num':''].filter(Boolean).join(' ');
+      return `<td${cls?` class="${cls}"`:''}>${escapeHtml(c)}</td>`;
+      }).join("")
+     }</tr>`).join("")
     }</tbody>`;
+
+    const colgroupMain = `<colgroup>
+      <col style="width:var(--w-ym)">
+      <col style="width:var(--w-branch)">
+      <col style="width:var(--w-name)">
+      <col style="width:var(--w-type)">
+      <col style="width:var(--w-subtotal)">
+      <col style="width:auto">
+    </colgroup>`;
+
     html += `<div class="hint" style="margin-bottom:8px">
       共 ${rowsOut.length} 列，
       <button id="copyTSV" class="pill">複製給Candy的表格</button>
       <button id="copyAllTSV" class="pill">複製給Candy+PT總時數表格</button>
       可貼回 Google Sheet。
       </div>
-      <div style="overflow:auto"><table>${thead}${tbody}</table></div>`;
+      <div style="overflow:auto"><table data-kind="main">${colgroupMain}${thead}${tbody}</table></div>`;
+
 
     // PT 工時
-    if (ptRows.length>0){
-      const headerPT = ["年月","分校","姓名","本月工時","每日明細"];
-      const theadPT = `<thead><tr>${headerPT.map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
-      const tbodyPT = `<tbody>${
-        ptRows.map(r=>`<tr>
-          <td>${escapeHtml(r.ym)}</td>
-          <td>${escapeHtml(r.branch)}</td>
-          <td>${escapeHtml(r.name)}</td>
-          <td>${escapeHtml(fmtHoursNum(r.hours))}</td>
-          <td>${escapeHtml(r.detail.join("、"))}</td>
-        </tr>`).join("")
-      }</tbody>`;
-      html += `<div class="hint" style="margin:16px 0 8px">本月（${escapeHtml(latestYM||"—")}）PT 工時彙總，共 ${ptRows.length} 筆</div>
-      <div style="overflow:auto; margin-bottom:16px"><table>${theadPT}${tbodyPT}</table></div>`;
-    }
+       if (ptRows.length>0){
+       const headerPT = ["年月","分校","姓名","本月工時","每日明細"];
+    // 表頭第 4 欄（本月工時）右對齊
+       const theadPT = `<thead><tr>${
+       headerPT.map((h,i)=>`<th${i===3?' class="num"':''}>${h}</th>`).join("")
+       }</tr></thead>`;
+
+    // 表身第 4 欄加上 class="num"
+       const tbodyPT = `<tbody>${
+       ptRows.map(r=>`<tr>
+       <td>${escapeHtml(r.ym)}</td>
+       <td>${escapeHtml(r.branch)}</td>
+       <td>${escapeHtml(r.name)}</td>
+       <td class="num">${escapeHtml(fmtHoursNum(r.hours))}</td>
+       <td>${escapeHtml(r.detail.join("、"))}</td>
+         </tr>`).join("")
+       }</tbody>`;
+
+  // 套用共用欄寬
+  const colgroupPT = `<colgroup>
+    <col style="width:var(--w-ym)">
+    <col style="width:var(--w-branch)">
+    <col style="width:var(--w-name)">
+    <col style="width:var(--w-subtotal)">
+    <col style="width:auto">
+  </colgroup>`;
+
+  html += `<div class="hint" style="margin:16px 0 8px">
+    本月（${escapeHtml(latestYM||"—")}）PT 工時彙總，共 ${ptRows.length} 筆
+  </div>
+  <div style="overflow:auto; margin-bottom:16px">
+    <table data-kind="pt">${colgroupPT}${theadPT}${tbodyPT}</table>
+  </div>`;
+  }
+
 
     // 不支薪送財務總表
     if (latestYM){
@@ -410,8 +471,10 @@ window.addEventListener('unhandledrejection', e => {
       if (rowsPay.length){
         const headerPay = ["姓名","本薪","各種不支薪假別天數/時數(含遲到要扣)","不支薪明細 不支薪總額","是否扣全勤"];
         const colPay = `<colgroup>
-          <col style="width:120px"><col style="width:120px"><col>
-          <col style="width:280px"><col style="width:110px">
+          <col style="width:120px">
+          <col style="width:120px"><col>
+          <col style="width:280px">
+          <col style="width:110px">
         </colgroup>`;
         const theadPay = `<thead><tr>${headerPay.map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
         const tbodyPay = `<tbody>${
