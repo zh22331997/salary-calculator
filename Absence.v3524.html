@@ -442,8 +442,10 @@ window.addEventListener('unhandledrejection', e => {
       );
 
       const rowsPay = [];
+      const setPT = new Set(wantedNames);   // ← 新增這一行
       for (const key of everyoneThisMonth) {
         const [branch, name] = key.split("|");
+        if (setPT.has(name)) continue;      // ← 新增這一行（PT 不進不支薪表）
         const hLeave      = getHours(latestYM,branch,name,"事假");
         const hCare       = getHours(latestYM,branch,name,"家庭照顧假");
         const hSick       = getHours(latestYM,branch,name,"病假");
@@ -682,3 +684,4 @@ function toast(msg, ms=3000){
 </script>
 </body>
 </html>
+
