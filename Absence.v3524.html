@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>打卡紀錄分析（合併 PT 工時計算）</title>
+<title>打卡紀錄分析</title>
 <style>
 /* ===== Compact theme ===== */
 *,*::before,*::after{box-sizing:border-box}
@@ -28,6 +28,7 @@ button.secondary{background:#f1f5f9;color:#334155}
 button.secondary:hover{background:#e2e8f0}
 button.pill{padding:4px 8px;border-radius:999px;font-size:12px}
 .muted{color:var(--muted);font-size:12px;margin-top:6px}
+.breakdown{white-space:pre-wrap} /* 第4欄明細換行更漂亮 */
 
 table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:var(--fs);line-height:1.35}
 th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
@@ -330,7 +331,7 @@ window.addEventListener('unhandledrejection', e => {
     /* ===== 畫面輸出 ===== */
     let html = "";
 
-    // 主表（給 Candy）
+    // 主表
     const headerRow = ["年月","分校","姓名","假別/類型","小計","備註"];
     const thead = `<thead><tr>${headerRow.map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
     const tbody = `<tbody>${
@@ -339,7 +340,7 @@ window.addEventListener('unhandledrejection', e => {
     html += `<div class="hint" style="margin-bottom:8px">
       共 ${rowsOut.length} 列，
       <button id="copyTSV" class="pill">複製給Candy的表格</button>
-      <button id="copyAllTSV" class="pill">複製整頁表格</button>
+      <button id="copyAllTSV" class="pill">複製給Candy+PT總時數表格</button>
       可貼回 Google Sheet。
       </div>
       <div style="overflow:auto"><table>${thead}${tbody}</table></div>`;
@@ -363,7 +364,6 @@ window.addEventListener('unhandledrejection', e => {
 
     // 不支薪送財務總表
     if (latestYM){
-      // 準備 per-type 小時（為了列出逐條明細）
       const getHours = (ym, branch, name, typ) => {
         const rec = aggMap.get(`${ym}|${branch}|${name}|${typ}`);
         return rec ? Number(rec.totalHours||0) : 0;
@@ -373,21 +373,16 @@ window.addEventListener('unhandledrejection', e => {
         return rec ? Number(rec.totalMins || 0) : 0;
       };
 
-      // 當月所有人
       const everyoneThisMonth = [...new Set(
         [...allCombos].map(k=>k.split("|")).filter(([ym])=>ym===latestYM).map(([ym,branch,name])=>`${branch}|${name}`)
       )];
-      // 非全勤名單 -> 扣全勤
       const notFullSet = new Set(
-        [...new Set([...notFullMap.keys()])]
-          .filter(k => k.startsWith(latestYM+"|"))
+        (notFullRows||[]).filter(r=>r.ym===latestYM).map(r=>`${r.ym}|${r.branch}|${r.name}`)
       );
 
       const rowsPay = [];
       for (const key of everyoneThisMonth) {
         const [branch, name] = key.split("|");
-
-        // 各假別時數（分開記）
         const hLeave      = getHours(latestYM,branch,name,"事假");
         const hCare       = getHours(latestYM,branch,name,"家庭照顧假");
         const hSick       = getHours(latestYM,branch,name,"病假");
@@ -395,7 +390,6 @@ window.addEventListener('unhandledrejection', e => {
         const hMenstrual  = getHours(latestYM,branch,name,"生理假");
         const lateMin     = getLateMins(latestYM,branch,name);
 
-        // 顯示在「各種不支薪…」欄（簡述）
         const parts = [];
         if (hLeave)     parts.push(`事假 ${fmtHoursNum(hLeave)}小時`);
         if (hCare)      parts.push(`家庭照顧假 ${fmtHoursNum(hCare)}小時`);
@@ -414,31 +408,35 @@ window.addEventListener('unhandledrejection', e => {
       }
 
       if (rowsPay.length){
-        const headerPay = ["姓名","本薪","各種不支薪假別天數/時數(含遲到會扣薪的部分)","不支薪總額","是否扣全勤"];
+        const headerPay = ["姓名","本薪","各種不支薪假別天數/時數(含遲到要扣)","不支薪明細 不支薪總額","是否扣全勤"];
+        const colPay = `<colgroup>
+          <col style="width:120px"><col style="width:120px"><col>
+          <col style="width:280px"><col style="width:110px">
+        </colgroup>`;
         const theadPay = `<thead><tr>${headerPay.map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
         const tbodyPay = `<tbody>${
           rowsPay.map(r=>`<tr
-              data-leave="${r.hLeave||0}"
-              data-care="${r.hCare||0}"
-              data-sick="${r.hSick||0}"
-              data-paidsick="${r.hPaidSick||0}"
-              data-menstrual="${r.hMenstrual||0}"
+              data-hleave="${r.hLeave||0}"
+              data-hcare="${r.hCare||0}"
+              data-hsick="${r.hSick||0}"
+              data-hpaidsick="${r.hPaidSick||0}"
+              data-hmenstrual="${r.hMenstrual||0}"
               data-late="${r.lateMin||0}">
             <td>${escapeHtml(r.name)}</td>
             <td contenteditable="plaintext-only" class="editable" data-col="salary" title="輸入月薪"></td>
             <td>${escapeHtml(r.info)}</td>
-            <td class="editable" data-col="nopayTotal" title="點一下可看明細"></td>
+            <td class="breakdown" data-col="nopayDetail" contenteditable="false"></td>
             <td>${escapeHtml(r.扣全勤)}</td>
           </tr>`).join("")
         }</tbody>`;
+
         html += `
           <div class="hint" style="margin:16px 0 8px">
-            不支薪送財務總表（${escapeHtml(latestYM)}；各假別金額先保留小數，最後「無條件捨去」）
-            <button id="copyNoPayTSV" class="pill" style="margin-left:8px">複製表（TSV）</button>
-            <button id="copyNoPayWithDetailTSV" class="pill" style="margin-left:6px">複製不支薪表（含計算明細）</button>
+            不支薪明細表（${escapeHtml(latestYM)}）
+            <button id="copyNoPayTSV" class="pill" style="margin-left:8px">複製不支薪明細表（TSV）</button>
           </div>
           <div style="overflow:auto; margin-bottom:16px">
-            <table id="noPayTable">${theadPay}${tbodyPay}</table>
+            <table id="noPayTable">${colPay}${theadPay}${tbodyPay}</table>
           </div>`;
       }
     }
@@ -448,13 +446,21 @@ window.addEventListener('unhandledrejection', e => {
     /* ===== 綁定：主表/整頁複製 ===== */
     const lastTSV = [ ["年月","分校","姓名","假別/類型","小計","備註"], ...rowsOut ]
       .map(cols=>cols.map(v=>String(v??"").replaceAll("\t"," ")).join("\t")).join("\n");
-    $("#out #copyTSV")?.addEventListener("click", ()=>navigator.clipboard.writeText(lastTSV).then(()=>toast("已複製主表，可貼到 Google Sheet！", 3000)));
+    $("#out #copyTSV")?.addEventListener("click", ()=>{
+    navigator.clipboard.write([
+    new ClipboardItem({
+      "text/html": new Blob([`<table>${thead}${tbody}</table>`], { type: "text/html" }),
+      "text/plain": new Blob([lastTSV], { type: "text/plain" })
+    })
+  ]).then(()=>toast("已複製給Candy的表，可貼到 Google Sheet！", 3000));
+});
+
 
     const allTSVParts = [];
-    allTSVParts.push("【主表】");
+    allTSVParts.push("【給Candy的表】");
     allTSVParts.push(lastTSV);
     if (typeof ptRows!=="undefined" && ptRows.length>0){
-      const headerPT = ["年月","分校","姓名","本月工時(小時)","每日明細（半小時規則＋缺成對備註）"];
+      const headerPT = ["年月","分校","姓名","本月工時(小時)","每日明細(整點半點上下班，漏打卡提醒)"];
       const rowsPT = ptRows.map(r => [r.ym, r.branch, r.name, fmtHoursNum(r.hours), r.detail.join("、")]);
       allTSVParts.push("【PT工時彙總】");
       allTSVParts.push([headerPT, ...rowsPT].map(cols=>cols.join("\t")).join("\n"));
@@ -464,115 +470,77 @@ window.addEventListener('unhandledrejection', e => {
     /* ===== 不支薪：計算 & 複製 ===== */
     const table = document.querySelector("#noPayTable");
     if (table){
-      
-      // 計算（先保留小數，到總額時無條件捨去）
-      function computeUnpaidDetailed(salary, hours, lateMin){
-        const hourly = salary / (PAY_DIV_DAYS * DAY_HRS); // salary/30/8
-        const perMin = hourly / 60;                       // salary/30/8/60
-        const raw = {
-          leave:      hourly * (hours.leave||0),                 // 事假
-          care:       hourly * (hours.care||0),                  // 家庭照顧假
-          sick:       hourly * 0.5 * (hours.sick||0),            // 病假(半薪)
-          paidsick:   hourly * 0.5 * (hours.paidsick||0),        // 有薪病假(半薪)
-          menstrual:  hourly * 0.5 * (hours.menstrual||0),       // 生理假(半薪)
-          late:       perMin * (lateMin||0)                      // 遲到(分鐘)
-        };
-        const totalRaw = raw.leave + raw.care + raw.sick + raw.paidsick + raw.menstrual + raw.late;
-        const total = Math.floor(totalRaw); // 無條件捨去
-        return {hourly, perMin, raw, total};
-      }
+      const money = n => formatMoney(Math.floor(Number(n)||0)); // 明細顯示四捨；總額 floor
+      const perHour = (salary)=> salary/(PAY_DIV_DAYS*DAY_HRS);
+      const perMin  = (salary)=> perHour(salary)/60;
 
-      // 產生你要的「逐條明細」文字
-      function buildBreakdownLines(salary, res, hours, lateMin){
-        const lines = [];
-        const baseHourly = `${salary}/30/8`;    // 文字式表示
-        const basePerMin = `${salary}/30/8/60`;
-        if (hours.leave)     lines.push(`➖事假 ${fmtHoursNum(hours.leave)}時 × ${baseHourly} = ${formatMoney(Math.floor(res.raw.leave))}元`);
-        if (hours.care)      lines.push(`➖家庭照顧假 ${fmtHoursNum(hours.care)}時 × ${baseHourly} = ${formatMoney(Math.floor(res.raw.care))}元`);
-        if (hours.sick)      lines.push(`➖病假 ${fmtHoursNum(hours.sick)}時 × ${salary}/30/8/2 = ${formatMoney(Math.floor(res.raw.sick))}元`);
-        if (hours.menstrual) lines.push(`➖生理假 ${fmtHoursNum(hours.menstrual)}時 × ${salary}/30/8/2 = ${formatMoney(Math.floor(res.raw.menstrual))}元`);
-        if (hours.paidsick)  lines.push(`➖有薪病假 ${fmtHoursNum(hours.paidsick)}時 × ${salary}/30/8/2 = ${formatMoney(Math.floor(res.raw.paidsick))}元`);
-        if (lateMin)         lines.push(`➖遲到 ${lateMin}分 × ${basePerMin} = ${formatMoney(Math.floor(res.raw.late))}元`);
-        lines.push(`不支薪金額：${formatMoney(res.total)} 元`);
-        return lines.join("\n");
-      }
-
-      // 綁 input：即時計算＋把明細塞進 cell 的 dataset
       table.addEventListener("input", (e)=>{
         const td = e.target.closest('[data-col="salary"]');
         if (!td) return;
-        const tr = td.parentElement;
+
+        const tr     = td.parentElement;
         const salary = parseMoney(td.innerText);
+        const hLeave     = Number(tr.dataset.hleave||0);
+        const hCare      = Number(tr.dataset.hcare||0);
+        const hSick      = Number(tr.dataset.hsick||0);
+        const hPaidSick  = Number(tr.dataset.hpaidsick||0);
+        const hMenstrual = Number(tr.dataset.hmenstrual||0);
+        const late       = Number(tr.dataset.late||0);
+        const cell   = tr.querySelector('[data-col="nopayDetail"]');
 
-        const hours = {
-          leave:     Number(tr.getAttribute("data-leave")||0),
-          care:      Number(tr.getAttribute("data-care")||0),
-          sick:      Number(tr.getAttribute("data-sick")||0),
-          paidsick:  Number(tr.getAttribute("data-paidsick")||0),
-          menstrual: Number(tr.getAttribute("data-menstrual")||0),
-        };
-        const late   = Number(tr.getAttribute("data-late")||0);
-        const totalCell = tr.querySelector('[data-col="nopayTotal"]');
+        if (!(salary>0)){ cell.textContent=""; cell.removeAttribute("data-total"); return; }
 
-        if (!(salary>0)){ totalCell.textContent=""; totalCell.removeAttribute("data-breakdown"); totalCell.removeAttribute("title"); return; }
+        const hourly    = salary / (PAY_DIV_DAYS * DAY_HRS);
+        const perMinute = hourly / 60;
 
-        const res = computeUnpaidDetailed(salary, hours, late);
-        const breakdown = buildBreakdownLines(salary, res, hours, late);
+        const rawLeave    = hourly * hLeave;
+        const rawCare     = hourly * hCare;
+        const rawSick     = hourly * 0.5 * hSick;
+        const rawPaidSick = hourly * 0.5 * hPaidSick;
+        const rawMens     = hourly * 0.5 * hMenstrual;
+        const rawLate     = perMinute * late;
 
-        totalCell.textContent = formatMoney(res.total);
-        totalCell.setAttribute("data-breakdown", breakdown);
-        totalCell.title = breakdown; // 滑過可看
+        const total = Math.floor(rawLeave + rawCare + rawSick + rawPaidSick + rawMens + rawLate);
+
+        const lines = [];
+        const round = (n)=> formatMoney(Math.round(n));
+        if (hLeave)     lines.push(`➖事假 ${hLeave}時 × ${salary}/30/8 = ${round(rawLeave)}元`);
+        if (hCare)      lines.push(`➖家庭照顧假 ${hCare}時 × ${salary}/30/8 = ${round(rawCare)}元`);
+        if (hSick)      lines.push(`➖病假 ${hSick}時 × ${salary}/30/8/2 = ${round(rawSick)}元`);
+        if (hPaidSick)  lines.push(`➖有薪病假 ${hPaidSick}時 × ${salary}/30/8/2 = ${round(rawPaidSick)}元`);
+        if (hMenstrual) lines.push(`➖生理假 ${hMenstrual}時 × ${salary}/30/8/2 = ${round(rawMens)}元`);
+        if (late)       lines.push(`➖遲到 ${late}分 × ${salary}/30/8/60 = ${round(rawLate)}元`);
+        lines.push(`不支薪金額：${formatMoney(total)} 元`);
+
+        cell.textContent = lines.join("\n");
+        cell.setAttribute("data-total", String(total));
       });
 
-      // 點總額欄位 → toast 顯示完整明細
-      table.addEventListener("click",(e)=>{
-        const cell = e.target.closest('[data-col="nopayTotal"]');
-        if (!cell) return;
-        const txt = cell.getAttribute("data-breakdown");
-        if (txt) toast(`<pre style="margin:0;white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace">${txt}</pre>`, 8000);
-      });
-
-      // 若本薪已貼好，初始化一次
+      // 如果本薪已填，初始化一次
       table.querySelectorAll('tr').forEach(tr=>{
         const salTd = tr.querySelector('[data-col="salary"]');
         if (salTd && salTd.innerText.trim()) salTd.dispatchEvent(new Event('input', {bubbles:true}));
       });
 
-      // 複製：不支薪表（基本 TSV）
-      $("#out #copyNoPayTSV")?.addEventListener("click", ()=>{
-        const header = ["姓名","本薪","各種不支薪假別天數/時數(含遲到會扣薪的部分)","不支薪總額","是否扣全勤"];
+      // 複製 TSV（照你要的欄序）
+      const btn = document.querySelector("#out #copyNoPayTSV");
+      btn && btn.addEventListener("click", ()=>{
+        const header = ["姓名","本薪","各種不支薪假別時數(含遲到要扣)","不支薪明細 不支薪總額","是否扣全勤"];
         const rows = [];
         const tb = table.querySelector("tbody");
         tb.querySelectorAll("tr").forEach(tr=>{
-          const tds = Array.from(tr.querySelectorAll("td"));
+          const tds   = Array.from(tr.querySelectorAll("td"));
           const name  = (tds[0]?.innerText||"").trim();
           const sal   = (tds[1]?.innerText||"").trim();
           const info  = (tds[2]?.innerText||"").trim();
-          const total = (tds[3]?.innerText||"").trim();
+          const det   = (tds[3]?.innerText||"").trim();  // 明細+總額（單一欄）
           const full  = (tds[4]?.innerText||"").trim();
-          rows.push([name, sal, info, total, full]);
+          rows.push([name, sal, info, det, full]);
         });
-        const tsv = [header, ...rows].map(r=>r.map(v=>String(v??"").replaceAll("\t"," ")).join("\t")).join("\n");
-        navigator.clipboard.writeText(tsv).then(()=>toast("已複製『不支薪送財務』表（基本版）",3000));
-      });
-
-      // 複製：不支薪表（含計算明細）
-      $("#out #copyNoPayWithDetailTSV")?.addEventListener("click", ()=>{
-        const header = ["姓名","本薪","各種不支薪假別天數/時數(含遲到會扣薪的部分)","不支薪總額","是否扣全勤","不支薪計算明細"];
-        const rows = [];
-        const tb = table.querySelector("tbody");
-        tb.querySelectorAll("tr").forEach(tr=>{
-          const tds = Array.from(tr.querySelectorAll("td"));
-          const name  = (tds[0]?.innerText||"").trim();
-          const sal   = (tds[1]?.innerText||"").trim();
-          const info  = (tds[2]?.innerText||"").trim();
-          const total = (tds[3]?.innerText||"").trim();
-          const full  = (tds[4]?.innerText||"").trim();
-          const breakdown = (tds[3]?.getAttribute("data-breakdown")||"").replace(/\t/g," "); // 避免跳欄
-          rows.push([name, sal, info, total, full, breakdown]);
-        });
-        const tsv = [header, ...rows].map(r=>r.map(v=>String(v??"").replaceAll("\t"," ")).join("\t")).join("\n");
-        navigator.clipboard.writeText(tsv).then(()=>toast("已複製『不支薪送財務』表（含計算明細）",3000));
+        const tsv = [header, ...rows]
+          .map(r=>r.map(v=>String(v??"").replaceAll("\t"," ")).join("\t"))
+          .join("\n");
+        navigator.clipboard.writeText(tsv).then(()=>toast("已複製不支薪明細表",3000));
       });
     }
   } // end run
@@ -582,8 +550,7 @@ window.addEventListener('unhandledrejection', e => {
   function tsvParse(text){
     const lines = text.split(/\r?\n/).filter(x => x.trim().length > 0);
     if (!lines.length) return {headers:[], rows:[], err:"空白內容"};
-    // 自動判斷分隔：優先 Tab，否則用 2+ 空白
-    const hasTab = /\t/.test(lines[0]);
+    const hasTab = /\t/.test(lines[0]);           // Tab 優先，否則 2+ 空白
     const splitter = hasTab ? /\t/ : /\s{2,}/;
     const firstCols = lines[0].split(splitter);
     const headerLike = firstCols.some(c => /員工編號|姓名|打卡日期|請假時數|假別|加班時數|出勤異常/.test(c));
@@ -647,11 +614,6 @@ function toast(msg, ms=3000){
   setTimeout(()=>{ if(el.parentNode) el.style.opacity="0"; }, delay);
   setTimeout(()=>{ el.parentNode && el.parentNode.removeChild(el); }, Math.max(300,ms));
 }
-
-/* ===== 共用格式化 ===== */
-function formatMoney(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
-function parseMoney(s){ return Number(String(s).replace(/[,\s]/g,""))||0; }
-function fmtHoursNum(h){ const n=Number(h||0); return (Math.round(n*10)/10).toString(); }
 </script>
 </body>
 </html>
