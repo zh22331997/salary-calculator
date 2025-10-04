@@ -1,10 +1,13 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8" />
 <title>計算課輔帶班津貼 清水、江翠</title>
 <style>
-/* ========= 0) 主題變數（莫蘭迪色系） ========= */
+/***** =========================================================
+ *  0) 主題變數（莫蘭迪色系）＋常用寬度
+ *  想換色 / 微調按鈕或欄寬，優先改這裡
+ * ======================================================= *****/
 :root{
   /* 表頭背景（對應三群） */
   --th-bg-month:#ffffff;
@@ -12,7 +15,7 @@
   --th-bg-sub:  #f7eadf;  /* 杏粉-淡  */
   --th-bg-sum:  #f2e7f6;  /* 淡紫-淡  */
 
-  /* 內容列底色（更淡） */
+  /* 內容列底色（更淡，對應三群） */
   --td-bg-sem:  #f3fbfd;
   --td-bg-sub:  #fff7ef;
   --td-bg-sum:  #faf3fb;
@@ -25,7 +28,7 @@
   --btn-main:#a7c1d1;
   --btn-main-hover:#94b3c6;
 
-  /* 摺疊鍵色（對應分群，稍深一階） */
+  /* 摺疊鍵（對應分群，稍深一階） */
   --btn-sem:#b8dce3;
   --btn-sem-hover:#a9cfda;
 
@@ -38,9 +41,25 @@
   /* 其他工具鍵（次要） */
   --btn-muted:#cfd6df;
   --btn-muted-hover:#c2cbd6;
+
+  /* ====== 欄寬參數（方便集中調整） ====== */
+  /* 僅需 3 位數的欄位寬度（人數、天數、比例等） */
+  --w-3digit: 2.8em;       /* 約 3 位數剛好 */
+  --w-3digit-plus: 3.2em;  /* 3 位數偏寬（較舒適） */
+
+  /* 本月津貼算式欄（加寬顯示） */
+  --w-final-formula-min: 26em; /*比下一行少2*/
+  --w-final-formula:     28em;
+
+  /* 備註欄（改為約原本的一半寬） */
+  --w-note-col:     15em; /*比下一行多1*/
+  --w-note-input:   14em;
+  --w-note-number:   2.8em;
 }
 
-/* ========= 1) 全站基礎 ========= */
+/***** =========================================================
+ *  1) 全站基礎
+ * ======================================================= *****/
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
 body{
@@ -52,27 +71,29 @@ body{
 h1{
   margin:0 0 16px;
   padding-left:12px;
-  border-left:6px solid #3c82f6;
-}
-button{
-  appearance:none; border:0; cursor:pointer;
-  padding:.6em 1em; border-radius:12px; font-size:16px;
-  line-height:1; transition:.15s;
-  display:inline-flex; align-items:center; gap:.5em;
-  color:#102a43;
+  border-left:6px solid #3c82f6; /* 標題裝飾 */
 }
 
-/* ========= 2) 表格外框 + 固定版面配置 ========= */
+/***** =========================================================
+ *  2) 表格外框＋固定版面配置（sticky）
+ * ======================================================= *****/
 .table-wrap{
-  max-height:70vh; overflow:auto; border:1px solid #e5e7eb; border-radius:12px; background:#fff;
+  max-height:70vh;
+  overflow:auto;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  background:#fff;
 }
 table{
-  width:100%; border-collapse:collapse; background:#fff;
-  table-layout:fixed;
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  table-layout:fixed; /* 固定版面，遵守欄寬 */
 }
 th,td{
   border:1px solid var(--bd);
-  text-align:center; vertical-align:middle;
+  text-align:center;
+  vertical-align:middle;
   padding:10px;
 }
 
@@ -94,68 +115,104 @@ th,td{
   position:sticky; left:0; z-index:4; background:#fff;
 }
 
-/* ========= 3) 內容列分色 ========= */
+/***** =========================================================
+ *  3) 內容列分色（tbody）
+ * ======================================================= *****/
 #rows td.thead-group-semester{ background:var(--td-bg-sem); }
-#rows td.thead-group-sub{ background:var(--td-bg-sub); }
-#rows td.thead-group-summer{ background:var(--td-bg-sum); }
-#rows td.thead-group-monthly{ background:#ffffff; }
+#rows td.thead-group-sub{      background:var(--td-bg-sub); }
+#rows td.thead-group-summer{   background:var(--td-bg-sum); }
+#rows td.thead-group-monthly{  background:#ffffff; }
 
-/* ========= 4) 欄寬 ========= */
+/***** =========================================================
+ *  4) 欄寬（以 class 對應你原本的欄位）
+ *  ・本月津貼算式加寬
+ *  ・備註欄變窄（約原本一半）
+ *  ・3 位數欄位微縮（新的需求）
+ * ======================================================= *****/
+/* 一般欄位（若未在下方覆蓋，沿用原先設定或預設分配） */
 th.teacher, td .teacher{ width:6em; }
 th.crossSchoolCol, td.crossSchoolCol{ width:3.2em; }
-th.persons, td .persons{ width:5em; }
 th.fullBonus, td.fullBonus{ width:6em; }
-th.partialDays, td .partialDays{ width:5em; }
 th.partialBonus, td.partialBonus{ width:6em; }
-th.rate, td .rate{ width:3.5em; }
 th.semTotal, td.semTotal{ width:7em; }
-th.subDays, td .subDays{ width:3.5em; }
-th.subHours, td .subHours{ width:3.55em; }
 th.subTotal, td.subTotal{ width:6em; }
-th.attend, td .attend{ width:5em; }
-th.camp1, td .camp1{ width:5em; }
-th.camp2, td .camp2{ width:5em; }
 th.vacBonus, td.vacBonus{ width:7em; }
-td.finalBonus{ min-width:15em; width:15em; }
-th.noteCol, td.noteCol{ width:22em; min-width:22em; }
 
-/* ========= 5) 儲存格顯示規則 ========= */
-/* 小欄位維持單行省略 */
+/* ====== 只需 3 位數的欄位 → 微縮 ======
+   可改用 --w-3digit / --w-3digit-plus 調整緊度 */
+th.persons,      td .persons{     width: var(--w-3digit-plus); } /* 全月人數 */
+th.partialDays,  td .partialDays{ width: var(--w-3digit-plus); } /* 非全月生天數 */
+th.rate,         td .rate{        width: var(--w-3digit); }      /* 比例（0~1） */
+th.subDays,      td .subDays{     width: var(--w-3digit); }      /* 代課天 */
+th.subHours,     td .subHours{    width: var(--w-3digit); }      /* 代課時 */
+th.attend,       td .attend{      width: var(--w-3digit-plus); } /* 點名表點數 */
+th.camp1,        td .camp1{       width: var(--w-3digit-plus); } /* 一日營(1) */
+th.camp2,        td .camp2{       width: var(--w-3digit-plus); } /* 一日營(2) */
+
+/* 本月津貼算式欄：加寬，便於閱讀長公式 */
+td.finalBonus{
+  min-width: var(--w-final-formula-min);
+  width:     var(--w-final-formula);
+}
+
+/* 備註欄：改為較窄 */
+th.noteCol, td.noteCol{
+  width:     var(--w-note-col);
+  min-width: var(--w-note-col);
+}
+
+/***** =========================================================
+ *  5) 儲存格顯示規則
+ *  ・小欄位維持省略
+ *  ・需要完整顯示（vacBonus/finalBonus/noteCol）允許換行
+ * ======================================================= *****/
 #dataTable tbody td{
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-/* 需要完整顯示的欄位 */
 #dataTable tbody td.vacBonus,
 #dataTable tbody td.finalBonus,
 #dataTable tbody td.noteCol{
-  white-space:normal; overflow:visible; text-overflow:clip;
+  white-space:normal; overflow:visible; text-overflow:clip; text-align:left;
 }
-/* 內部輸入統一 */
+
+/* 內部輸入統一外觀 */
 #dataTable tbody td input[type="number"],
 #dataTable tbody td input[type="text"]{
-  width:100%; max-width:100%; padding:6px 8px; text-align:center;
+  width:100%; max-width:100%;
+  padding:6px 8px; text-align:center;
   border:1px solid #cbd5e1; border-radius:8px; font-size:1em;
 }
-/* checkbox 不要被撐滿 */
+
+/* checkbox 不被撐滿 */
 #dataTable td.crossSchoolCol input.crossSchool{
   width:auto; display:inline-block; margin:0 auto;
 }
 
-/* ========= 6) 備註欄排版 ========= */
+/***** =========================================================
+ *  6) 備註欄排版（縮裡面的輸入寬）
+ * ======================================================= *****/
 td.noteCol{ padding:6px; }
 td.noteCol .note-wrap{
   display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px;
 }
 td.noteCol label{
   display:inline-flex; align-items:center; gap:4px; margin:0; white-space:nowrap;
+  font-size: 0.9rem;   /* ← 新增：備註欄中文字縮小 */
 }
-td.noteCol input[type="number"]{ width:4.2em; }
-td.noteCol input.note{ width:12em; text-align:left; }
+/* 跟著「備註欄變窄」微縮內部欄位 */
+td.noteCol input.note{ width: var(--w-note-input); text-align:left; }
+td.noteCol input[type="number"]{ width: var(--w-note-number); }
 
-/* ========= 7) 公式文字 ========= */
-.finalBonusFormula{ font-size:.85em; color:#4b5563; text-align:left; word-break:break-word; }
+/***** =========================================================
+ *  7) 算式小字
+ * ======================================================= *****/
+.finalBonusFormula{
+  font-size:.85em; color:#4b5563; word-break:break-word;
+}
 
-/* ========= 8) 摺疊群組 ========= */
+/***** =========================================================
+ *  8) 摺疊群組（按鈕切換時加上 class）
+ * ======================================================= *****/
 .collapse-semester th.thead-group-semester,
 .collapse-semester td.thead-group-semester{ display:none; }
 .collapse-sub th.thead-group-sub,
@@ -163,8 +220,9 @@ td.noteCol input.note{ width:12em; text-align:left; }
 .collapse-summer th.thead-group-summer,
 .collapse-summer td.thead-group-summer{ display:none; }
 
-/* ========= 9) 上方設定區 ========= */
-/* 用 flex 讓欄位不會被推位 */
+/***** =========================================================
+ *  9) 上方設定區（非必填的設定）
+ * ======================================================= *****/
 .settings-row{
   display:flex; flex-wrap:wrap; align-items:center;
   gap:16px 22px; padding:12px; margin:10px 0 14px;
@@ -181,50 +239,70 @@ td.noteCol input.note{ width:12em; text-align:left; }
   padding:6px 8px; border:1px solid #cbd5e1; border-radius:8px;
   background:#f9fafb; color:#374151;
 }
-.settings-row input:focus{ outline:none; border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.15); }
+.settings-row input:focus{
+  outline:none; border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.15);
+}
 
-/* ========= 10) 批次新增：兩欄（標題＋輸入） ========= */
+/***** =========================================================
+ * 10) 批次新增（說明合併在 placeholder）
+ * ======================================================= *****/
 .batch-merge{
   display:grid; grid-template-columns:max-content 1fr; gap:12px;
   align-items:flex-start; padding:12px; margin:10px 0 12px;
   background:#fff; border:1px solid #e5e7eb; border-radius:12px;
 }
-.batch-merge .title{ font-weight:600; color:#111827; white-space:nowrap; padding-top:6px; }
+.batch-merge .title{
+  font-weight:600; color:#111827; white-space:nowrap; padding-top:6px;
+}
 .batch-merge #batchInput{
   width:100%; min-height:44px; max-height:160px; resize:vertical;
   padding:8px 10px; border:none; background:#fff; font-size:1rem; line-height:1.4; outline:none;
 }
-.batch-merge:focus-within{ border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.15); transition:.15s; }
+.batch-merge:focus-within{
+  border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.15); transition:.15s;
+}
 @media (max-width:720px){
   .batch-merge{ grid-template-columns:1fr; gap:6px; }
   .batch-merge .title{ padding-top:0; }
 }
 
-/* ========= 11) 工具列按鈕（莫蘭迪） ========= */
+/***** =========================================================
+ * 11) 工具列按鈕（莫蘭迪一致風格）
+ * 主要三鍵用 .btn-main；摺疊鈕依分群 .btn-sem/.btn-sub/.btn-sum
+ * 其他工具用 .btn
+ * ======================================================= *****/
 .toolbar{ display:flex; flex-wrap:wrap; gap:10px; margin:8px 0 14px; }
 
-/* 基底 */
+button{
+  appearance:none; border:0; cursor:pointer;
+  padding:.6em 1em; border-radius:12px; font-size:16px;
+  line-height:1; transition:.15s;
+  display:inline-flex; align-items:center; gap:.5em;
+  color:#102a43;
+}
+/* 次要工具 */
 .btn{ background:var(--btn-muted); }
 .btn:hover{ background:var(--btn-muted-hover); }
-
-/* 主要三鍵：批次/新增/刪空白 */
+/* 主要三鍵 */
 .btn-main{ background:var(--btn-main); }
 .btn-main:hover{ background:var(--btn-main-hover); }
-
-/* 摺疊鍵對應分群 */
+/* 摺疊鈕（對應三群色） */
 .btn-sem{ background:var(--btn-sem); }
 .btn-sem:hover{ background:var(--btn-sem-hover); }
 .btn-sub{ background:var(--btn-sub); }
 .btn-sub:hover{ background:var(--btn-sub-hover); }
 .btn-sum{ background:var(--btn-sum); }
 .btn-sum:hover{ background:var(--btn-sum-hover); }
+
+
+
 </style>
 </head>
 
 <body>
 <h1>計算課輔帶班津貼 清水、江翠</h1>
 
-<!-- 非必填的設定（$ 與輸入同組、不會跑位） -->
+<!-- 非必填的設定 -->
 <div class="settings-row" role="group" aria-label="非必填的設定">
   <strong>非必填的設定：</strong>
 
@@ -248,13 +326,13 @@ td.noteCol input.note{ width:12em; text-align:left; }
   </div>
 </div>
 
-<!-- 批次新增（說明移入 placeholder） -->
+<!-- 批次新增 -->
 <div class="batch-merge">
   <div class="title">批次新增班級/導師：</div>
   <textarea id="batchInput" placeholder="請貼上空格分隔，例如：1A 1B APPLE老師"></textarea>
 </div>
 
-<!-- 操作按鈕列（莫蘭迪） -->
+<!-- 操作按鈕列 -->
 <div class="toolbar">
   <button class="btn-main" onclick="batchAddTeachers()">👥 批次新增班級/導師</button>
   <button class="btn-main" onclick="addRow()">➕ 新增空白列</button>
@@ -265,7 +343,7 @@ td.noteCol input.note{ width:12em; text-align:left; }
   <button class="btn" onclick="exportCSV()">💾 匯出 CSV 檔案</button>
 </div>
 
-<!-- 摺疊控制（顏色對應三區） -->
+<!-- 摺疊控制 -->
 <div class="toolbar">
   <button type="button" id="toggleSem" class="btn-sem">↕ 摺疊/展開：學期欄</button>
   <button type="button" id="toggleSub" class="btn-sub">↕ 摺疊/展開：代課欄</button>
@@ -300,7 +378,14 @@ td.noteCol input.note{ width:12em; text-align:left; }
 </div>
 
 <script>
-/* ========= 計算輔助：算式文字 ========= */
+/* ===== 顯示與最終計算規則 =====
+   - 顯示：中間欄位四捨五入
+   - 計算：保留原始小數做運算，最後本月津貼(不含額外獎金)無條件進位
+*/
+const roundDisp = n => Math.round(+n);      // 顯示四捨五入（整數）
+const ceilInt   = n => Math.ceil(+n - 1e-12); // 最終無條件進位（避免浮點誤差）
+
+/* ========= 算式文字 ========= */
 function generateSemesterBonusFormula(grade, persons, partialDays, workdays, semRate){
   const parts=[];
   if(persons>15) parts.push(`$${grade} * (${persons} - 15)`);
@@ -313,17 +398,17 @@ function generateSemesterBonusFormula(grade, persons, partialDays, workdays, sem
   }
   return f;
 }
-function generateSubstitutionDeductionFormula(subDays, subHours, subTotal){
+function generateSubstitutionDeductionFormula(subDays, subHours, subTotalRaw){
   if(subDays===0 && subHours===0){
-    return (subTotal>0.01) ? ` - 代課扣除$${subTotal.toFixed(0)}` : '';
+    return (subTotalRaw>0.01) ? ` - 代課扣除$${roundDisp(subTotalRaw)}` : '';
   }
   let t=' - 請代課';
   if(subDays>0) t+=`${subDays}天`;
   if(subHours>0) t+=`${subHours}小時`;
-  t+=`$${subTotal.toFixed(0)}`;
+  t+=`$${roundDisp(subTotalRaw)}`;
   return t;
 }
-function generateVacationBonusFormula(attendPts, camp1Pts, camp2Pts, requiredDays, vacBonus, userTotal, requiredTotal){
+function generateVacationBonusFormula(attendPts, camp1Pts, camp2Pts, requiredDays, vacBonusRaw, userTotal, requiredTotal){
   const parts=[];
   if(attendPts>0) parts.push(`${attendPts}`);
   if(camp1Pts>0) parts.push(`${camp1Pts}`);
@@ -332,7 +417,7 @@ function generateVacationBonusFormula(attendPts, camp1Pts, camp2Pts, requiredDay
     if(userTotal>0 || requiredTotal>0) return ` (點數${parts.join('+')}未超過責任額 ${requiredTotal}點)`;
     return '';
   }
-  if(vacBonus>0){
+  if(vacBonusRaw>0){
     let expr = parts.join('+');
     if(requiredDays>0) expr += `-15*${requiredDays}`;
     return ` + $36*(${expr})`;
@@ -364,26 +449,31 @@ function addRow(){
     <td class="thead-group-semester partialBonus">0</td>
     <td class="thead-group-semester"><input type="number" class="rate" step="0.001" min="0" max="1" value="1" oninput="recalcAll()"/></td>
     <td class="thead-group-semester semTotal">0</td>
+
     <td class="thead-group-sub"><input type="number" class="subDays" min="0" value="0" oninput="recalcAll()"/></td>
     <td class="thead-group-sub"><input type="number" class="subHours" min="0" value="0" oninput="recalcAll()"/></td>
     <td class="thead-group-sub subTotal">0</td>
+
     <td class="thead-group-summer"><input type="number" class="attend" min="0" value="0" oninput="recalcAll()"/></td>
     <td class="thead-group-summer"><input type="number" class="camp1" min="0" value="0" oninput="recalcAll()"/></td>
     <td class="thead-group-summer"><input type="number" class="camp2" min="0" value="0" oninput="recalcAll()"/></td>
     <td class="thead-group-summer vacBonus"></td>
+
     <td class="thead-group-monthly finalBonus">
       <span class="finalBonusValue" style="display:none;">0</span><br>
       <span class="finalBonusFormula"></span>
     </td>
+
     <td class="thead-group-monthly noteCol">
-      <div class="note-wrap">
-        <label>高年級加給 <input type="number" class="seniorBonus" min="0" value="0" oninput="recalcAll()"/></label>
-        <label>特色課 <input type="number" class="specialCourse" min="0" value="0" oninput="recalcAll()"/> × $<input type="number" class="specialCoursePrice" min="0" step="1" placeholder="預設" oninput="recalcAll()"/></label>
-        <label>簽約金 <input type="number" class="signBonus" min="0" value="0" oninput="recalcAll()"/></label>
-        <label>留班獎金 <input type="number" class="repeatBonus" min="0" value="0" oninput="recalcAll()"/></label>
-        <input type="text" class="note" placeholder="備註"/>
-      </div>
-    </td>`;
+  <div class="note-wrap">
+    <label>高年級加給 $ <input type="number" class="seniorBonus" min="0" step="1000" value="0" oninput="recalcAll()"/></label>
+    <label>特色課 <input type="number" class="specialCourse" min="0" value="0" oninput="recalcAll()"/> × $<input type="number" class="specialCoursePrice" min="0" step="1" placeholder="預設" oninput="recalcAll()"/></label>
+    <label>簽約金 $ <input type="number" class="signBonus"   min="0" step="1000" value="0" oninput="recalcAll()"/></label>
+    <label>留班獎金 <input type="number" class="repeatBonus" min="0" value="0" oninput="recalcAll()"/></label>
+    <input type="text" class="note" placeholder="備註"/>
+  </div>
+</td>`;
+  
   document.getElementById('rows').appendChild(tr);
   recalcAll();
 }
@@ -400,7 +490,7 @@ function removeEmptyRows(){
   recalcAll();
 }
 
-/* ========= 計算主流程 ========= */
+/* ========= 計算主流程（顯示四捨五入；最終無條件進位） ========= */
 function calcGrade(persons, isCrossSchool){
   let g26=650, g21=600, g15=550;
   if(isCrossSchool){ g26+=50; g21+=50; g15+=50; }
@@ -410,7 +500,7 @@ function calcGrade(persons, isCrossSchool){
   return 0;
 }
 function calcRow(row){
-  const workdays = parseFloat(document.getElementById('workdays').value) || 0;
+  const workdays     = parseFloat(document.getElementById('workdays').value) || 0;
   const requiredDays = parseFloat(document.getElementById('requiredDays').value) || 0;
 
   const getNum = cls=>{
@@ -421,85 +511,89 @@ function calcRow(row){
     return parseFloat(el.textContent)||0;
   };
 
-  const persons=getNum('persons');
-  const isCrossSchool=row.querySelector('.crossSchool').checked;
-  const grade=calcGrade(persons, isCrossSchool);
+  const persons = getNum('persons');
+  const isCrossSchool = row.querySelector('.crossSchool').checked;
+  const grade  = calcGrade(persons, isCrossSchool);
 
-  const partialDays=getNum('partialDays');
-  const partialBonus=(workdays>0 && partialDays>0)? grade*partialDays/workdays : 0;
+  const partialDays = getNum('partialDays');
+  const semRateRaw  = getNum('rate');
+  const semRate = isNaN(semRateRaw) ? 1 : semRateRaw;
 
-  let semRate=getNum('rate'); if(isNaN(semRate)) semRate=1;
-
-  const subDays=getNum('subDays');
+  const subDays  = getNum('subDays');
   if(subDays>workdays){
     alert(`⚠️ 代課天數（${subDays}）不可大於本月工作天數（${workdays}）`);
-    row.querySelector('.subDays').value=workdays;
+    row.querySelector('.subDays').value = workdays;
   }
-  const subHours=getNum('subHours');
-  const attendPts=getNum('attend');
-  const camp1Pts=getNum('camp1');
-  const camp2Pts=getNum('camp2');
+  const subHours = getNum('subHours');
 
-  const fullBonus=(persons>15)? (persons-15)*grade : 0;
-  const semTotal=Math.ceil((fullBonus+partialBonus)*semRate);
+  const attendPts = getNum('attend');
+  const camp1Pts  = getNum('camp1');
+  const camp2Pts  = getNum('camp2');
 
-  const subTotal=(workdays>0)
-    ? Math.floor((semTotal/workdays)*subDays + (semTotal/workdays/8)*subHours)
+  /* === 原始小數（用來計算） === */
+  const fullBonusRaw    = persons>15 ? (persons-15)*grade : 0;
+  const partialBonusRaw = (workdays>0 && partialDays>0)? grade*partialDays/workdays : 0;
+  const semTotalRaw     = (fullBonusRaw + partialBonusRaw) * semRate;
+
+  const subTotalRaw     = (workdays>0)
+    ? (semTotalRaw/workdays)*subDays + (semTotalRaw/workdays/8)*subHours
     : 0;
 
-  const userTotal=attendPts+camp1Pts+camp2Pts;
-  const requiredTotal=15*requiredDays;
-  const vacBonus = userTotal>requiredTotal ? (userTotal-requiredTotal)*36 : 0;
+  const userTotal      = attendPts + camp1Pts + camp2Pts;
+  const requiredTotal  = 15*requiredDays;
+  const vacBonusRaw    = userTotal>requiredTotal ? (userTotal-requiredTotal)*36 : 0;
 
-  const finalBonus=semTotal - subTotal + vacBonus;
+  // 最終本月津貼（不含加給）：無條件進位
+  const finalBaseRaw   = semTotalRaw - subTotalRaw + vacBonusRaw;
+  const finalBase      = ceilInt(finalBaseRaw);
 
-  row.querySelector('.fullBonus').textContent=fullBonus.toFixed(0);
-  row.querySelector('.partialBonus').textContent=partialBonus.toFixed(0);
-  row.querySelector('.semTotal').textContent=semTotal.toFixed(0);
-  row.querySelector('.subTotal').textContent=subTotal.toFixed(0);
+  /* === 顯示（四捨五入） === */
+  row.querySelector('.fullBonus').textContent    = roundDisp(fullBonusRaw);
+  row.querySelector('.partialBonus').textContent = roundDisp(partialBonusRaw);
+  row.querySelector('.semTotal').textContent     = roundDisp(semTotalRaw);
+  row.querySelector('.subTotal').textContent     = roundDisp(subTotalRaw);
 
-  // 寒暑津貼顯示邏輯：未填任何點數且未設責任額 → 不顯示
   const vacCell = row.querySelector('.vacBonus');
   if (userTotal === 0 && requiredTotal === 0) {
     vacCell.textContent = '';
   } else if (userTotal <= requiredTotal) {
-    vacCell.innerHTML = '<span style="font-size:0.85em;">未超過責任額</span>';
+    vacCell.innerHTML = '<span style="font-size:.88em;">未超過責任額</span>';
   } else {
-    vacCell.textContent = vacBonus.toFixed(0);
+    vacCell.textContent = roundDisp(vacBonusRaw);
   }
 
-  row.querySelector('.finalBonusValue').textContent=finalBonus.toFixed(0);
+  row.querySelector('.finalBonusValue').textContent = finalBase.toString();
 
   const semF = generateSemesterBonusFormula(grade, persons, partialDays, workdays, semRate);
-  const subF = generateSubstitutionDeductionFormula(subDays, subHours, subTotal);
-  const vacF = generateVacationBonusFormula(attendPts, camp1Pts, camp2Pts, requiredDays, vacBonus, userTotal, requiredTotal);
+  const subF = generateSubstitutionDeductionFormula(subDays, subHours, subTotalRaw);
+  const vacF = generateVacationBonusFormula(attendPts, camp1Pts, camp2Pts, requiredDays, vacBonusRaw, userTotal, requiredTotal);
 
   let base = [semF, subF, vacF].filter(Boolean).join('');
-  if(!base) base='無津貼產生';
+  if(!base) base='無人數津貼';
 
+  // 額外加給（皆為整數）
   const scCount = parseInt(row.querySelector('.specialCourse')?.value || '0',10);
   const defaultPrice = Math.max(0, parseFloat(document.getElementById('defaultSpecialCoursePrice')?.value || '180'));
   const scpRaw = row.querySelector('.specialCoursePrice')?.value ?? '';
   const scPrice = (scpRaw==='' || isNaN(parseFloat(scpRaw))) ? defaultPrice : Math.max(0, parseFloat(scpRaw));
   const scBonus = scCount*scPrice;
 
-  const signCount = parseInt(row.querySelector('.signBonus')?.value || '0',10);
-  const signBonus = signCount*1000;
+  const signBonus   = parseFloat(row.querySelector('.signBonus')?.value || '0') || 0;    // 簽約獎金直接金額
+  const seniorBonus = parseFloat(row.querySelector('.seniorBonus')?.value || '0') || 0;  // 高年級加給直接金額
 
-  const seniorCount = parseInt(row.querySelector('.seniorBonus')?.value || '0',10);
-  const seniorBonus = seniorCount*1000;
 
   const repeatBonus = parseInt(row.querySelector('.repeatBonus')?.value || '0',10);
 
-  const extras = signBonus + scBonus + seniorBonus + repeatBonus;
-  const finalTotal = finalBonus + extras;
+  const extras = scBonus + signBonus + seniorBonus + repeatBonus;
+  const finalTotal = finalBase + extras;
 
   row.querySelector('.finalBonusFormula').textContent =
-    `${finalTotal.toFixed(0)}=${base}`
-    + (seniorCount>0 ? `（高年級加給$${seniorBonus}）` : '')
-    + (scCount>0 ? `（特色課×${scCount}×$${scPrice}=$${scBonus}）` : '')
-    + (signCount>0 ? `（簽約金$${signBonus}）` : '')
-    + (repeatBonus>0 ? `（留班獎金$${repeatBonus}）` : '');
+  `${finalTotal}=${base}`
+  + (seniorBonus>0 ? `（高年級加給$${seniorBonus}）` : '')
+  + (scCount>0 ? `（特色課×${scCount}×$${scPrice}=$${scBonus}）` : '')
+  + (signBonus>0 ? `（簽約金$${signBonus}）` : '')
+  + (repeatBonus>0 ? `（留班獎金$${repeatBonus}）` : '');
+
 }
 
 function recalcAll(){ document.querySelectorAll('#rows tr').forEach(calcRow); }
@@ -569,51 +663,27 @@ function exportCSV(){
 /* ========= 摺疊切換 ========= */
 (function setupCollapseToggles(){
   const table = document.getElementById('dataTable');
-  document.getElementById('toggleSem')?.addEventListener('click', ()=>{
-    table.classList.toggle('collapse-semester');
-  });
-  document.getElementById('toggleSub')?.addEventListener('click', ()=>{
-    table.classList.toggle('collapse-sub');
-  });
-  document.getElementById('toggleSum')?.addEventListener('click', ()=>{
-    table.classList.toggle('collapse-summer');
-  });
+  document.getElementById('toggleSem')?.addEventListener('click', ()=> table.classList.toggle('collapse-semester'));
+  document.getElementById('toggleSub')?.addEventListener('click', ()=> table.classList.toggle('collapse-sub'));
+  document.getElementById('toggleSum')?.addEventListener('click', ()=> table.classList.toggle('collapse-summer'));
 })();
 
-// ===== 防呆提醒（專注於「開始輸入前」的提醒）=====
-(function setupGuards(){
-  const workdaysEl      = document.getElementById('workdays');
-  const requiredDaysEl  = document.getElementById('requiredDays');
-
-  // 用 focusin（事件會冒泡到 document），比 key 入才提醒更直覺
-  document.addEventListener('focusin', (e)=>{
-    const t = e.target;
-
-    // A. 需要先填「本月工作天數」的欄位
-    if (t.classList && (t.classList.contains('partialDays') ||
-                        t.classList.contains('subDays')     ||
-                        t.classList.contains('subHours'))) {
-      const workdays = parseFloat(workdaysEl.value) || 0;
-      if (workdays === 0) {
-        alert('請先填寫「本月工作天數」，再輸入 非全月/代課 欄位。');
-        t.blur();                 // 若只想提醒，不想禁止，刪掉這行
-      }
-    }
-
-    // B. 需要先填「寒暑責任額天數」的欄位
-    if (t.classList && (t.classList.contains('attend') ||
-                        t.classList.contains('camp1')  ||
-                        t.classList.contains('camp2'))) {
-      const reqDays = parseFloat(requiredDaysEl.value) || 0;
-      if (reqDays === 0) {
-        alert('請先填寫「寒暑責任額天數」，再輸入 點數 欄位。');
-        t.blur();                 // 若只想提醒，不想禁止，刪掉這行
-      }
-    }
-  });
-
-  // 備註：若使用者之後把數值清成 0，再點入欄位仍會提醒，符合你的需求。
-})();
+/* ========= 防呆提示 ========= */
+document.addEventListener('input', e=>{
+  const workdays = parseFloat(document.getElementById('workdays').value) || 0;
+  const requiredDays = parseFloat(document.getElementById('requiredDays').value) || 0;
+  const warn=(cond,msg)=>{ if(cond) alert(msg); };
+  if(e.target.classList.contains('partialDays')||
+     e.target.classList.contains('subDays')||
+     e.target.classList.contains('subHours')){
+    warn(workdays===0,'請先填寫「本月工作天數」再輸入相關欄位');
+  }
+  if(e.target.classList.contains('attend')||
+     e.target.classList.contains('camp1')||
+     e.target.classList.contains('camp2')){
+    warn(requiredDays===0,'請先填寫「寒暑責任額天數」再輸入點數');
+  }
+});
 </script>
 </body>
 </html>
