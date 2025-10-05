@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -51,12 +52,14 @@ th{background:#f3f4f6;text-align:left}
   --w-type: 160px;
   --w-subtotal: 120px;
 
-  /* 不支薪明細 表的欄寬（姓名沿用主表） */
-  --w-nopay-salary: 120px;
-  --w-nopay-info: 320px;     /* 你可再調大/小 */
-  --w-nopay-detail: 360px;   /* 你可再調大/小 */
-  --w-nopay-full: 110px;
+  /* 不支薪表專用欄寬 */
+  --w-nopay-name:   100px;  /* ← 姓名：原來視覺上約120，改窄 */
+  --w-nopay-salary: 100px;  /* ← 本薪：原來120，改窄 */
+  --w-nopay-info:   300px;  /* 各種不支薪假別…（可保留） */
+  --w-nopay-detail: 300px;  /* 不支薪明細…（可保留） */
+  --w-nopay-full:   160px;  /* ← 全勤?：原來110，改寬 */
 }
+
 
 /* 數字右對齊（小計／工時／金額） */
 td.num, th.num{ text-align:right }
@@ -143,6 +146,7 @@ window.addEventListener('unhandledrejection', e => {
   /* ===== 主程序 ===== */
   function run(){
     const wantedNames = ($("#names").value||"").trim().split(/[,\s、，]+/).map(s=>s.trim()).filter(Boolean);
+    const hasPT = wantedNames.length > 0;  // ← 新增：有填姓名才做 PT
     const text = ($("#raw").value||"").trim();
     const out = $("#out");
     if(!text){ out.innerHTML = '<div class="hint">（請先貼上打卡資料）</div>'; return; }
@@ -207,11 +211,14 @@ window.addEventListener('unhandledrejection', e => {
         addAgg(aggMap, ym, branch, name, leaveKind, leaveH, `${md} ${fmtHours(leaveH)}`);
       }
 
-      // 加班
-      const otFromTime = hhmmToHours(r[H_OT_TIME]);
-      const otH = H_OT_H && r[H_OT_H] ? toNumber(r[H_OT_H]) : 0;
-      const ot = (otFromTime || 0) > 0 ? otFromTime : otH;
-      if (ot>0) addAgg(aggMap, ym, branch, name, "超時", ot, `${md} ${fmtHours(ot)}`);
+      // 加班（只統計〈加班時數〉欄位；與「招生」分開）
+      const otFromHoursCol = hhmmToHours(r[H_OT_H]);  // 支援 2、2.5、01:30、01:30:00
+      if (otFromHoursCol > 0) {
+      addAgg(aggMap, ym, branch, name, "加班換補休", otFromHoursCol, `${md} ${fmtHours(otFromHoursCol)}`);
+      }
+      // ※ 不再使用〈加班時間〉，避免和「招生」或其他來源混淆/重覆
+
+
 
       // 招生(加班)偵測
       const reasonText = String(r[H_EARLY_REASON]||"") + " " + String(r[H_LATE_REASON]||"");
@@ -219,7 +226,7 @@ window.addEventListener('unhandledrejection', e => {
         let otRecruit=0;
         const m = reasonText.match(/招生.*?(\d+(?:\.\d+)?)\s*小時/);
         if (m) otRecruit = Number(m[1]);
-        if (otRecruit>0) addAgg(aggMap, ym, branch, name, "招生(加班)", otRecruit, `${md} ${fmtHours(otRecruit)}`);
+        if (otRecruit>0) addAgg(aggMap, ym, branch, name, "招生(企超)", otRecruit, `${md} ${fmtHours(otRecruit)}`);
         else addAgg(aggMap, ym, branch, name, "招生(待確認)", {cnt:1}, `${md} 招生？小時`, true);
       }
 
@@ -321,33 +328,9 @@ window.addEventListener('unhandledrejection', e => {
     }
     const notFullRows = [...notFullMap.values()].filter(x=>x.reasons.length>0);
 
-    // PT 工時（加上缺成對提醒）
+    // 取得本月（最新年月）
     const yms = new Set([...workAgg.values()].map(r=>r.ym));
     const latestYM = [...yms].sort().pop();
-    const ptRows=[];
-    if (latestYM){
-      const list = [...workAgg.values()].filter(r=>r.ym===latestYM);
-      const setWanted = new Set(wantedNames);
-      const baseList = (setWanted.size>0) ? list.filter(r=>setWanted.has(r.name)) : list;
-
-      const missByPerson = new Map();
-      missingPairs.filter(m=>m.ym===latestYM).forEach(m=>{
-        const k = `${m.branch}|${m.name}`;
-        const arr = missByPerson.get(k)||[]; arr.push(m.md+" "+m.which); missByPerson.set(k,arr);
-      });
-      baseList.forEach(x=>{
-        const key = `${x.branch}|${x.name}`;
-        const warns = missByPerson.get(key)||[];
-        if (warns.length) x.detail.push(`⚠️ 缺成對 ${warns.length} 筆：${warns.join("、")}`);
-      });
-
-      const found = new Set(baseList.map(r=>r.name));
-      if (setWanted.size>0){
-        wantedNames.forEach(n=>{ if(!found.has(n)) ptRows.push({ym:latestYM,branch:"—",name:n,hours:0,detail:["（未找到成對上下班打卡）"]}); });
-      }
-      ptRows.push(...baseList);
-      ptRows.sort((a,b)=> a.branch.localeCompare(b.branch)||a.name.localeCompare(b.name));
-    }
 
     /* ===== 畫面輸出 ===== */
     let html = "";
@@ -378,50 +361,65 @@ window.addEventListener('unhandledrejection', e => {
     </colgroup>`;
 
     html += `<div class="hint" style="margin-bottom:8px">
-      共 ${rowsOut.length} 列，
-      <button id="copyTSV" class="pill">複製給Candy的表格</button>
-      <button id="copyAllTSV" class="pill">複製給Candy+PT總時數表格</button>
-      可貼回 Google Sheet。
-      </div>
-      <div style="overflow:auto"><table data-kind="main">${colgroupMain}${thead}${tbody}</table></div>`;
+    共 ${rowsOut.length} 列，
+    <button id="copyCandyHTML" class="pill">複製給 CANDY 表格</button>
+    可貼回 Google Sheet。
+    </div>
+    <div style="overflow:auto"><table data-kind="main">${colgroupMain}${thead}${tbody}</table></div>`;
 
+    
+    // PT 工時（只有「有填 PT 姓名」才做）
+    if (hasPT && latestYM){
+    const list = [...workAgg.values()].filter(r=>r.ym===latestYM);
+    const setWanted = new Set(wantedNames);
+    const baseList = list.filter(r=>setWanted.has(r.name)); // 只取有填的 PT 名單
 
-    // PT 工時
-       if (ptRows.length>0){
-       const headerPT = ["年月","分校","姓名","本月工時","每日明細"];
-    // 表頭第 4 欄（本月工時）右對齊
-       const theadPT = `<thead><tr>${
-       headerPT.map((h,i)=>`<th${i===3?' class="num"':''}>${h}</th>`).join("")
-       }</tr></thead>`;
+    // 缺成對提醒
+    const missByPerson = new Map();
+    missingPairs.filter(m=>m.ym===latestYM).forEach(m=>{
+    const k = `${m.branch}|${m.name}`;
+    const arr = missByPerson.get(k)||[]; arr.push(m.md+" "+m.which); missByPerson.set(k,arr);
+    });
+    baseList.forEach(x=>{
+    const key = `${x.branch}|${x.name}`;
+    const warns = missByPerson.get(key)||[];
+    if (warns.length) x.detail.push(`⚠️ 缺成對 ${warns.length} 筆：${warns.join("、")}`);
+    });
 
-    // 表身第 4 欄加上 class="num"
-       const tbodyPT = `<tbody>${
-       ptRows.map(r=>`<tr>
-       <td>${escapeHtml(r.ym)}</td>
-       <td>${escapeHtml(r.branch)}</td>
-       <td>${escapeHtml(r.name)}</td>
-       <td class="num">${escapeHtml(fmtHoursNum(r.hours))}</td>
-       <td>${escapeHtml(r.detail.join("、"))}</td>
-         </tr>`).join("")
-       }</tbody>`;
+    // 只有真的有資料才顯示表格與按鈕
+    if (baseList.length > 0){
+    const ptRows = [...baseList].sort((a,b)=> a.branch.localeCompare(b.branch)||a.name.localeCompare(b.name));
 
-  // 套用共用欄寬
-  const colgroupPT = `<colgroup>
-    <col style="width:var(--w-ym)">
-    <col style="width:var(--w-branch)">
-    <col style="width:var(--w-name)">
-    <col style="width:var(--w-subtotal)">
-    <col style="width:auto">
-  </colgroup>`;
+    const headerPT = ["年月","分校","姓名","本月工時","每日明細"];
+    const theadPT = `<thead><tr>${
+      headerPT.map((h,i)=>`<th${i===3?' class="num"':''}>${h}</th>`).join("")
+      }</tr></thead>`;
+    const tbodyPT = `<tbody>${
+      ptRows.map(r=>`<tr>
+        <td>${escapeHtml(r.ym)}</td>
+        <td>${escapeHtml(r.branch)}</td>
+        <td>${escapeHtml(r.name)}</td>
+        <td class="num">${escapeHtml(fmtHoursNum(r.hours))}</td>
+        <td>${escapeHtml(r.detail.join("、"))}</td>
+      </tr>`).join("")
+    }</tbody>`;
+    const colgroupPT = `<colgroup>
+      <col style="width:var(--w-ym)">
+      <col style="width:var(--w-branch)">
+      <col style="width:var(--w-name)">
+      <col style="width:var(--w-subtotal)">
+      <col style="width:auto">
+    </colgroup>`;
 
-  html += `<div class="hint" style="margin:16px 0 8px">
+    html += `<div class="hint" style="margin:16px 0 8px">
     本月（${escapeHtml(latestYM||"—")}）PT 工時彙總，共 ${ptRows.length} 筆
-  </div>
-  <div style="overflow:auto; margin-bottom:16px">
+    </div>
+    <div style="overflow:auto; margin-bottom:16px">
     <table data-kind="pt">${colgroupPT}${theadPT}${tbodyPT}</table>
-  </div>`;
-  }
+    </div>`;
 
+      }
+    }
 
     // 不支薪送財務總表
     if (latestYM){
@@ -437,47 +435,57 @@ window.addEventListener('unhandledrejection', e => {
       const everyoneThisMonth = [...new Set(
         [...allCombos].map(k=>k.split("|")).filter(([ym])=>ym===latestYM).map(([ym,branch,name])=>`${branch}|${name}`)
       )];
-      const notFullSet = new Set(
-        (notFullRows||[]).filter(r=>r.ym===latestYM).map(r=>`${r.ym}|${r.branch}|${r.name}`)
-      );
+      // 建立一個 Map: key = ym|branch|name, value = 原因字串
+const notFullReasonMap = new Map();
+(notFullRows||[]).filter(r=>r.ym===latestYM).forEach(r=>{
+  notFullReasonMap.set(`${r.ym}|${r.branch}|${r.name}`, r.reasons.join("、"));
+});
 
-      const rowsPay = [];
-      const setPT = new Set(wantedNames);   // ← 新增這一行
-      for (const key of everyoneThisMonth) {
-        const [branch, name] = key.split("|");
-        if (setPT.has(name)) continue;      // ← 新增這一行（PT 不進不支薪表）
-        const hLeave      = getHours(latestYM,branch,name,"事假");
-        const hCare       = getHours(latestYM,branch,name,"家庭照顧假");
-        const hSick       = getHours(latestYM,branch,name,"病假");
-        const hPaidSick   = getHours(latestYM,branch,name,"有薪病假");
-        const hMenstrual  = getHours(latestYM,branch,name,"生理假");
-        const lateMin     = getLateMins(latestYM,branch,name);
+const rowsPay = [];
+const setPT = new Set(wantedNames);
+for (const key of everyoneThisMonth) {
+  const [branch, name] = key.split("|");
+  if (setPT.has(name)) continue; // PT 不進不支薪表
 
-        const parts = [];
-        if (hLeave)     parts.push(`事假 ${fmtHoursNum(hLeave)}小時`);
-        if (hCare)      parts.push(`家庭照顧假 ${fmtHoursNum(hCare)}小時`);
-        if (hSick)      parts.push(`病假 ${fmtHoursNum(hSick)}小時（半薪）`);
-        if (hPaidSick)  parts.push(`有薪病假 ${fmtHoursNum(hPaidSick)}小時（半薪）`);
-        if (hMenstrual) parts.push(`生理假 ${fmtHoursNum(hMenstrual)}小時（半薪）`);
-        if (lateMin)    parts.push(`遲到 ${lateMin}分`);
+  const hLeave      = getHours(latestYM,branch,name,"事假");
+  const hCare       = getHours(latestYM,branch,name,"家庭照顧假");
+  const hSick       = getHours(latestYM,branch,name,"病假");
+  const hPaidSick   = getHours(latestYM,branch,name,"有薪病假");
+  const hMenstrual  = getHours(latestYM,branch,name,"生理假");
+  const lateMin     = getLateMins(latestYM,branch,name);
 
-        const 扣全勤 = notFullSet.has(`${latestYM}|${branch}|${name}`) ? "沒全勤❌" : "是";
-        rowsPay.push({
-          name,
-          info: parts.join("、") || "—",
-          hLeave,hCare,hSick,hPaidSick,hMenstrual,lateMin,
-          扣全勤
-        });
-      }
+  const parts = [];
+  if (hLeave)     parts.push(`事假 ${fmtHoursNum(hLeave)}小時`);
+  if (hCare)      parts.push(`家庭照顧假 ${fmtHoursNum(hCare)}小時`);
+  if (hSick)      parts.push(`病假 ${fmtHoursNum(hSick)}小時（半薪）`);
+  if (hPaidSick)  parts.push(`有薪病假 ${fmtHoursNum(hPaidSick)}小時（半薪）`);
+  if (hMenstrual) parts.push(`生理假 ${fmtHoursNum(hMenstrual)}小時（半薪）`);
+  if (lateMin)    parts.push(`遲到 ${lateMin}分`);
+
+  // 判斷是否全勤，沒全勤就帶出原因
+  let 扣全勤 = "是";
+  const k = `${latestYM}|${branch}|${name}`;
+  if (notFullReasonMap.has(k)) {
+    扣全勤 = `沒全勤❌（${notFullReasonMap.get(k)}）`;
+  }
+
+  rowsPay.push({
+    name,
+    info: parts.join("、") || "—",
+    hLeave,hCare,hSick,hPaidSick,hMenstrual,lateMin,
+    扣全勤
+  });
+}
+
 
       if (rowsPay.length){
         const headerPay = ["姓名","本薪","各種不支薪假別天數/時數(含遲到要扣)","不支薪明細 不支薪總額","全勤?"];
         const colPay = `<colgroup>
-          <col style="width:120px">
-          <col style="width:120px">
-          <col style="width:300px">
-          <col style="width:300px">
-          <col style="width:110px">
+        <col style="width:var(--w-nopay-name)">
+        <col style="width:var(--w-nopay-salary)">
+        <col style="width:var(--w-nopay-info)">
+        <col style="width:var(--w-nopay-detail)">
+        <col style="width:var(--w-nopay-full)">
         </colgroup>`;
 
         const theadPay = `<thead><tr>${headerPay.map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
@@ -499,8 +507,8 @@ window.addEventListener('unhandledrejection', e => {
 
         html += `
           <div class="hint" style="margin:16px 0 8px">
-            不支薪明細表（${escapeHtml(latestYM)}）
-            <button id="copyNoPayTSV" class="pill" style="margin-left:8px">複製不支薪明細表（TSV）</button>
+           不支薪明細表（${escapeHtml(latestYM)}）
+           <button id="copyPTNoPayHTML" class="pill" style="margin-left:8px">複製 PT 時數彙總＋不支薪表格</button>
           </div>
           <div style="overflow:auto; margin-bottom:16px">
             <table id="noPayTable">${colPay}${theadPay}${tbodyPay}</table>
@@ -510,29 +518,35 @@ window.addEventListener('unhandledrejection', e => {
 
     $("#out").innerHTML = html;
 
-    /* ===== 綁定：主表/整頁複製 ===== */
-    const lastTSV = [ ["年月","分校","姓名","假別/類型","小計","備註"], ...rowsOut ]
-      .map(cols=>cols.map(v=>String(v??"").replaceAll("\t"," ")).join("\t")).join("\n");
-    $("#out #copyTSV")?.addEventListener("click", ()=>{
+    /* ===== 綁定：主表/整頁複製（只複製 HTML 表格） ===== */
+    /* ===== 1) 複製給 CANDY 表格（主表，HTML） ===== */
+    document.querySelector("#out #copyCandyHTML")?.addEventListener("click", ()=>{
+    const tableEl = document.querySelector('#out table[data-kind="main"]');
+    if (!tableEl) return toast("找不到主表", 3000);
+
+    // 直接複製整張 <table>（含格式）
+    const html = tableEl.outerHTML;
     navigator.clipboard.write([
-    new ClipboardItem({
-      "text/html": new Blob([`<table>${thead}${tbody}</table>`], { type: "text/html" }),
-      "text/plain": new Blob([lastTSV], { type: "text/plain" })
-    })
-  ]).then(()=>toast("已複製給Candy的表，可貼到 Google Sheet！", 3000));
-});
+    new ClipboardItem({ "text/html": new Blob([html], { type: "text/html" }) })
+    ]).then(()=>toast("已複製給 CANDY 的表（HTML 表格）！", 3000));
+    });
 
+    /* ===== 2) 複製 PT 時數彙總＋不支薪表格（HTML） ===== */
+    document.querySelector("#out #copyPTNoPayHTML")?.addEventListener("click", ()=>{
+    const ptTable  = document.querySelector('#out table[data-kind="pt"]');   // 可能沒有
+    const npTable  = document.querySelector('#noPayTable');                  // 可能沒有
+    if (!ptTable && !npTable) return toast("找不到 PT 或 不支薪 表格", 3000);
 
-    const allTSVParts = [];
-    allTSVParts.push("【給Candy的表】");
-    allTSVParts.push(lastTSV);
-    if (typeof ptRows!=="undefined" && ptRows.length>0){
-      const headerPT = ["年月","分校","姓名","本月工時(小時)","每日明細(整點半點上下班，漏打卡提醒)"];
-      const rowsPT = ptRows.map(r => [r.ym, r.branch, r.name, fmtHoursNum(r.hours), r.detail.join("、")]);
-      allTSVParts.push("【PT工時彙總】");
-      allTSVParts.push([headerPT, ...rowsPT].map(cols=>cols.join("\t")).join("\n"));
-    }
-    $("#out #copyAllTSV")?.addEventListener("click", ()=>navigator.clipboard.writeText(allTSVParts.join("\n\n")).then(()=>toast("已複製全部表格！", 3000)));
+    // 中間加標題與間距，避免兩張表黏在一起
+    const parts = [];
+    if (ptTable) parts.push(`<div style="margin:6px 0;font-weight:700">【PT 工時彙總】</div>${ptTable.outerHTML}`);
+    if (npTable) parts.push(`<div style="margin:12px 0 6px;font-weight:700">【不支薪明細表】</div>${npTable.outerHTML}`);
+
+    const html = `<div>${parts.join('<div style="height:12px"></div>')}</div>`;
+    navigator.clipboard.write([
+    new ClipboardItem({ "text/html": new Blob([html], { type: "text/html" }) })
+    ]).then(()=>toast("已複製 PT 時數彙總＋不支薪表格（HTML）！", 3000));
+    });
 
     /* ===== 不支薪：計算 & 複製 ===== */
     const table = document.querySelector("#noPayTable");
@@ -587,27 +601,6 @@ window.addEventListener('unhandledrejection', e => {
       table.querySelectorAll('tr').forEach(tr=>{
         const salTd = tr.querySelector('[data-col="salary"]');
         if (salTd && salTd.innerText.trim()) salTd.dispatchEvent(new Event('input', {bubbles:true}));
-      });
-
-      // 複製 TSV（照你要的欄序）
-      const btn = document.querySelector("#out #copyNoPayTSV");
-      btn && btn.addEventListener("click", ()=>{
-        const header = ["姓名","本薪","各種不支薪假別時數(含遲到要扣)","不支薪明細 不支薪總額","是否扣全勤"];
-        const rows = [];
-        const tb = table.querySelector("tbody");
-        tb.querySelectorAll("tr").forEach(tr=>{
-          const tds   = Array.from(tr.querySelectorAll("td"));
-          const name  = (tds[0]?.innerText||"").trim();
-          const sal   = (tds[1]?.innerText||"").trim();
-          const info  = (tds[2]?.innerText||"").trim();
-          const det   = (tds[3]?.innerText||"").trim();  // 明細+總額（單一欄）
-          const full  = (tds[4]?.innerText||"").trim();
-          rows.push([name, sal, info, det, full]);
-        });
-        const tsv = [header, ...rows]
-          .map(r=>r.map(v=>String(v??"").replaceAll("\t"," ")).join("\t"))
-          .join("\n");
-        navigator.clipboard.writeText(tsv).then(()=>toast("已複製不支薪明細表",3000));
       });
     }
   } // end run
@@ -684,4 +677,3 @@ function toast(msg, ms=3000){
 </script>
 </body>
 </html>
-
