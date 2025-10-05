@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -340,16 +339,23 @@ window.addEventListener('unhandledrejection', e => {
     const thead = `<thead><tr>${
     headerRow.map((h,i)=>`<th${i===4?' class="num"':''}>${h}</th>`).join("")
     }</tr></thead>`;
+    let lastPerson = '';
+    let alt = false; // 切換底色用 
     const tbody = `<tbody>${
-      rowsOut.map(r=>`<tr>${
-      r.map((c,i)=>{
-      const isDanger = (i===3 && /^(早退|曠職)$/.test(String(c)));
-      const isNum = (i===4); // 第5欄：小計
-      const cls = [isDanger?'danger':'', isNum?'num':''].filter(Boolean).join(' ');
-      return `<td${cls?` class="${cls}"`:''}>${escapeHtml(c)}</td>`;
+      rowsOut.map(r=>{
+      const name = r[2]; // 第三欄是姓名
+      if (name !== lastPerson) { alt = !alt; lastPerson = name; }
+      const bg = alt ? '#fafafa' : '#ffffff'; // 交錯色
+      const tds = r.map((c,i)=>{
+         const isDanger = (i===3 && /^(早退|曠職)$/.test(String(c)));
+         const isNum = (i===4);
+         const cls = [isDanger?'danger':'', isNum?'num':''].filter(Boolean).join(' ');
+         return `<td${cls?` class="${cls}"`:''}>${escapeHtml(c)}</td>`;
+       }).join('');
+       return `<tr style="background:${bg}">${tds}</tr>`;
       }).join("")
-     }</tr>`).join("")
     }</tbody>`;
+
 
     const colgroupMain = `<colgroup>
       <col style="width:var(--w-ym)">
@@ -522,31 +528,51 @@ for (const key of everyoneThisMonth) {
     /* ===== 1) 複製給 CANDY 表格（主表，HTML） ===== */
     document.querySelector("#out #copyCandyHTML")?.addEventListener("click", ()=>{
     const tableEl = document.querySelector('#out table[data-kind="main"]');
-    if (!tableEl) return toast("找不到主表", 3000);
-
-    // 直接複製整張 <table>（含格式）
-    const html = tableEl.outerHTML;
-    navigator.clipboard.write([
-    new ClipboardItem({ "text/html": new Blob([html], { type: "text/html" }) })
-    ]).then(()=>toast("已複製給 CANDY 的表（HTML 表格）！", 3000));
+    if (!tableEl) return toast("找不到給Candy的表", 3000);
+    // 直接選取主表節點並複製（會帶表格樣式，和你另一份相同做法）
+    selectAndCopyNode(tableEl, '✅ 已複製給Candy的表（相容模式）！');
     });
+
 
     /* ===== 2) 複製 PT 時數彙總＋不支薪表格（HTML） ===== */
     document.querySelector("#out #copyPTNoPayHTML")?.addEventListener("click", ()=>{
-    const ptTable  = document.querySelector('#out table[data-kind="pt"]');   // 可能沒有
-    const npTable  = document.querySelector('#noPayTable');                  // 可能沒有
+    const ptTable = document.querySelector('#out table[data-kind="pt"]');   // 可能沒有
+    const npTable = document.querySelector('#noPayTable');                  // 可能沒有
     if (!ptTable && !npTable) return toast("找不到 PT 或 不支薪 表格", 3000);
 
-    // 中間加標題與間距，避免兩張表黏在一起
-    const parts = [];
-    if (ptTable) parts.push(`<div style="margin:6px 0;font-weight:700">【PT 工時彙總】</div>${ptTable.outerHTML}`);
-    if (npTable) parts.push(`<div style="margin:12px 0 6px;font-weight:700">【不支薪明細表】</div>${npTable.outerHTML}`);
+    // 建一個螢幕外的暫存容器，放要複製的內容（避免動到原表）
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'position:fixed; left:-9999px; top:0; pointer-events:none;';
+    const wrap = document.createElement('div');
 
-    const html = `<div>${parts.join('<div style="height:12px"></div>')}</div>`;
-    navigator.clipboard.write([
-    new ClipboardItem({ "text/html": new Blob([html], { type: "text/html" }) })
-    ]).then(()=>toast("已複製 PT 時數彙總＋不支薪表格（HTML）！", 3000));
+    if (ptTable) {
+      const title = document.createElement('div');
+      title.style.margin = '6px 0';
+      title.style.fontWeight = '700';
+      title.textContent = '【PT 工時彙總】';
+      wrap.appendChild(title);
+      wrap.appendChild(ptTable.cloneNode(true));
+    }
+
+    if (npTable) {
+      const spacer = document.createElement('div');
+      spacer.style.height = '12px';
+      wrap.appendChild(spacer);
+
+      const title = document.createElement('div');
+      title.style.margin = '12px 0 6px';
+      title.style.fontWeight = '700';
+      title.textContent = '【不支薪明細表】';
+      wrap.appendChild(title);
+      wrap.appendChild(npTable.cloneNode(true));
+    }
+
+    tmp.appendChild(wrap);
+    document.body.appendChild(tmp);
+    selectAndCopyNode(wrap, '✅ 已複製 PT 時數彙總＋不支薪表格（相容模式）！');
+    document.body.removeChild(tmp);
     });
+
 
     /* ===== 不支薪：計算 & 複製 ===== */
     const table = document.querySelector("#noPayTable");
@@ -661,6 +687,18 @@ for (const key of everyoneThisMonth) {
   }
 
 })(); // IIFE
+// ==== 相容式複製工具：選取某個節點並呼叫 execCommand('copy') ====
+function selectAndCopyNode(node, okMsg='✅ 已複製！', errMsg='❌ 複製失敗，請手動選取表格再複製。'){
+  const range = document.createRange();
+  range.selectNode(node);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch(_) {}
+  sel.removeAllRanges();
+  toast(ok ? okMsg : errMsg);
+}
 
 /* ===== Toast ===== */
 function toast(msg, ms=3000){
