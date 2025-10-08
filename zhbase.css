@@ -1,4 +1,4 @@
-/* 🎨 正華主題 Base CSS（base.css） */
+/* 🎨 正華主題 Base CSS（base.css） */ 
 /* --------------------------------------------------
    品牌風格：溫暖專業、現代教育感、印刷友善
    適用：招生頁面、名條產生器、報名表、家長信件頁
@@ -63,38 +63,96 @@ input:focus, textarea:focus, select:focus {
   outline: none;
 }
 
-/* 🟨 按鈕組 */
+/* 🟨 按鈕組（升級質感版） */
 button {
+  /* 可客製化參數（預設主按鈕） */
+  --btn-bg: #4e73df;
+  --btn-bg-hover: #2e59d9;
+  --btn-bg-active: #2a4fc5;
+  --btn-bg-hi: rgba(255,255,255,0.18);     /* 漸層高光 */
+  --btn-border: rgba(0,0,0,0.08);          /* 外描邊 */
+  --btn-inset-hi: rgba(255,255,255,0.35);  /* 內嵌高光 */
+  --btn-shadow: rgba(16,24,40,0.18);       /* 外陰影 */
+  --btn-shadow-press: rgba(16,24,40,0.28);
+
+  position: relative;
   padding: 0.8rem 1.5rem;
   font-size: 17px;
-  border: none;
-  border-radius: 8px;
+  font-weight: 600;
+  border: 1px solid var(--btn-border);
+  border-radius: 10px;
   cursor: pointer;
-  background-color: #4e73df;
-  color: white;
+  color: #fff;
+  background:
+    linear-gradient(to bottom, var(--btn-bg-hi), transparent),
+    var(--btn-bg);
+  box-shadow:
+    0 8px 20px var(--btn-shadow),
+    inset 0 1px 0 var(--btn-inset-hi);
   margin-right: 0.8rem;
   margin-top: 1rem;
-  transition: background-color 0.3s, transform 0.2s;
+  transition:
+    transform 150ms ease,
+    box-shadow 180ms ease,
+    background-color 200ms ease,
+    border-color 200ms ease,
+    opacity 200ms ease;
+  will-change: transform, box-shadow;
 }
 button:hover {
-  background-color: #2e59d9;
   transform: translateY(-2px);
+  background:
+    linear-gradient(to bottom, var(--btn-bg-hi), transparent),
+    var(--btn-bg-hover);
+  box-shadow:
+    0 10px 24px rgba(16,24,40,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+}
+button:active {
+  transform: translateY(0);
+  background:
+    linear-gradient(to bottom, var(--btn-bg-hi), transparent),
+    var(--btn-bg-active);
+  box-shadow:
+    0 4px 12px var(--btn-shadow-press),
+    inset 0 2px 0 rgba(255,255,255,0.25);
+}
+button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(78,115,223,0.35),
+    0 8px 20px var(--btn-shadow),
+    inset 0 1px 0 var(--btn-inset-hi);
 }
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow:
+    0 4px 12px rgba(16,24,40,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.25);
 }
+
+/* 針對列印與清除按鈕維持品牌色，但沿用質感樣式 */
 #printButton {
-  background: #28a745;
-}
-#printButton:hover {
-  background: #218838;
+  --btn-bg: #28a745;
+  --btn-bg-hover: #218838;
+  --btn-bg-active: #1e7e34;
 }
 #clearButton {
-  background: #dc3545;
+  --btn-bg: #dc3545;
+  --btn-bg-hover: #c82333;
+  --btn-bg-active: #b21f2d;
 }
-#clearButton:hover {
-  background: #c82333;
+
+/* 使用者偏好：減少動態 */
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+  button:hover, button:active {
+    transform: none;
+  }
 }
 
 /* 🟧 收合說明卡 */
