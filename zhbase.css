@@ -63,18 +63,22 @@ input:focus, textarea:focus, select:focus {
   outline: none;
 }
 
-/* 🟨 按鈕組（升級質感版） */
-button {
-  /* 可客製化參數（預設主按鈕） */
+/* 🟨 按鈕通用質感（基底） */
+button, .btn, .btn-primary, .btn-secondary, .btn-clear {
+  /* 預設主題（若直接用 <button> 不加類別，預設為主要藍色系） */
   --btn-bg: #4e73df;
   --btn-bg-hover: #2e59d9;
   --btn-bg-active: #2a4fc5;
-  --btn-bg-hi: rgba(255,255,255,0.18);     /* 漸層高光 */
-  --btn-border: rgba(0,0,0,0.08);          /* 外描邊 */
-  --btn-inset-hi: rgba(255,255,255,0.35);  /* 內嵌高光 */
-  --btn-shadow: rgba(16,24,40,0.18);       /* 外陰影 */
+  --btn-fg: #ffffff;
+
+  /* 質感參數 */
+  --btn-hi: rgba(255,255,255,0.18);     /* 上緣高光漸層 */
+  --btn-border: rgba(0,0,0,0.08);       /* 外描邊 */
+  --btn-inset-hi: rgba(255,255,255,0.35);
+  --btn-shadow: rgba(16,24,40,0.18);    /* 外陰影 */
   --btn-shadow-press: rgba(16,24,40,0.28);
 
+  display: inline-block;
   position: relative;
   padding: 0.8rem 1.5rem;
   font-size: 17px;
@@ -82,9 +86,9 @@ button {
   border: 1px solid var(--btn-border);
   border-radius: 10px;
   cursor: pointer;
-  color: #fff;
+  color: var(--btn-fg);
   background:
-    linear-gradient(to bottom, var(--btn-bg-hi), transparent),
+    linear-gradient(to bottom, var(--btn-hi), transparent),
     var(--btn-bg);
   box-shadow:
     0 8px 20px var(--btn-shadow),
@@ -99,32 +103,32 @@ button {
     opacity 200ms ease;
   will-change: transform, box-shadow;
 }
-button:hover {
+button:hover, .btn:hover, .btn-primary:hover, .btn-secondary:hover, .btn-clear:hover {
   transform: translateY(-2px);
   background:
-    linear-gradient(to bottom, var(--btn-bg-hi), transparent),
+    linear-gradient(to bottom, var(--btn-hi), transparent),
     var(--btn-bg-hover);
   box-shadow:
     0 10px 24px rgba(16,24,40,0.22),
     inset 0 1px 0 rgba(255,255,255,0.4);
 }
-button:active {
+button:active, .btn:active, .btn-primary:active, .btn-secondary:active, .btn-clear:active {
   transform: translateY(0);
   background:
-    linear-gradient(to bottom, var(--btn-bg-hi), transparent),
+    linear-gradient(to bottom, var(--btn-hi), transparent),
     var(--btn-bg-active);
   box-shadow:
     0 4px 12px var(--btn-shadow-press),
     inset 0 2px 0 rgba(255,255,255,0.25);
 }
-button:focus-visible {
+button:focus-visible, .btn:focus-visible, .btn-primary:focus-visible, .btn-secondary:focus-visible, .btn-clear:focus-visible {
   outline: none;
   box-shadow:
-    0 0 0 3px rgba(78,115,223,0.35),
+    0 0 0 3px rgba(78,115,223,0.35),   /* 依主要藍色的可近用外圈 */
     0 8px 20px var(--btn-shadow),
     inset 0 1px 0 var(--btn-inset-hi);
 }
-button:disabled {
+button:disabled, .btn:disabled, .btn-primary:disabled, .btn-secondary:disabled, .btn-clear:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
@@ -133,24 +137,52 @@ button:disabled {
     inset 0 1px 0 rgba(255,255,255,0.25);
 }
 
-/* 針對列印與清除按鈕維持品牌色，但沿用質感樣式 */
-#printButton {
-  --btn-bg: #28a745;
+/* 🎯 三種類型（無紅色系） */
+/* 1) 主要：藍色系（凸顯主要行動） */
+.btn-primary {
+  --btn-bg: #4e73df;
+  --btn-bg-hover: #2e59d9;
+  --btn-bg-active: #2a4fc5;
+  --btn-fg: #ffffff;
+}
+
+/* 2) 次要：不搶眼（中性灰藍，略低飽和） */
+.btn-secondary {
+  --btn-bg: #6c757d;      /* 中性灰藍 */
+  --btn-bg-hover: #5f676e;/* 輕微加深，避免太顯眼 */
+  --btn-bg-active: #555c62;
+  --btn-fg: #ffffff;
+}
+
+/* 3) 清空：灰暗（明確但不刺眼） */
+.btn-clear {
+  --btn-bg: #495057;      /* 深灰 */
+  --btn-bg-hover: #3f454b;
+  --btn-bg-active: #363b40;
+  --btn-fg: #ffffff;
+}
+
+/* 與舊有 ID 相容（列印＝主要、清空＝灰暗） */
+#printButton { /* primary mapping */
+  --btn-bg: #2d673a;        /* 仍保留原綠色列印品牌調性 */
   --btn-bg-hover: #218838;
   --btn-bg-active: #1e7e34;
+  --btn-fg: #ffffff;
 }
-#clearButton {
-  --btn-bg: #dc3545;
-  --btn-bg-hover: #c82333;
-  --btn-bg-active: #b21f2d;
+#clearButton { /* clear mapping（灰暗） */
+  --btn-bg: #495057;
+  --btn-bg-hover: #3f454b;
+  --btn-bg-active: #363b40;
+  --btn-fg: #ffffff;
 }
 
 /* 使用者偏好：減少動態 */
 @media (prefers-reduced-motion: reduce) {
-  button {
+  button, .btn, .btn-primary, .btn-secondary, .btn-clear {
     transition: none;
   }
-  button:hover, button:active {
+  button:hover, .btn:hover, .btn-primary:hover, .btn-secondary:hover, .btn-clear:hover,
+  button:active, .btn:active, .btn-primary:active, .btn-secondary:active, .btn-clear:active {
     transform: none;
   }
 }
