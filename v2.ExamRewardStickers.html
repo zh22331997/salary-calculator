@@ -85,7 +85,15 @@ select::-ms-expand{display:none;}
 .grade-settings h3{font-size:1.1em;margin:0.5em 0;color:#333;}
 .grade-settings label{display:inline-block;width:40px;margin-right:0.2em;margin-bottom:0.2em;font-weight:normal;font-size:0.95em;}
 .grade-settings input[type="number"]{
-  width:50px;padding:0.2em;border:1px solid #ccc;border-radius:3px;text-align:center;font-size:0.9em;margin-right:0.5em;vertical-align:middle;
+  width:50px;
+  padding:0.2em;
+  border:1px solid #ccc;
+  border-radius:3px;
+  text-align:center;
+  font-size:0.9em;
+  margin-right:0.5em;
+  vertical-align:middle;
+  transition: border-color 0.3s, box-shadow 0.2s;
 }
 .hint{display:inline-block;font-size:0.85em;color:#888;margin-left:0.2em;}
 .settings-button-group{text-align:right;margin-top:1em;}
@@ -114,6 +122,18 @@ select::-ms-expand{display:none;}
   .slip pre{font-size:10.5pt;line-height:1.1;}
   .student-name{font-size:13pt;}
   .total-voucher-info, .no-data-message{display:none!important;}
+}
+/* 統一輸入框聚焦樣式：亮藍框 */
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #6a9aff !important;
+  box-shadow: 0 0 0 3px rgba(106, 154, 255, 0.25);
 }
 </style>
 </head>
