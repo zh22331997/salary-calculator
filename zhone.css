@@ -1,0 +1,170 @@
+/* 🎨 正華主題 Base CSS（base.css） */
+/* --------------------------------------------------
+   品牌風格：溫暖專業、現代教育感、印刷友善
+   適用：招生頁面、名條產生器、報名表、家長信件頁
+-------------------------------------------------- */
+
+/* 🟦 基礎排版 */
+body {
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+  background: #f0f2f5;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  color: #333;
+}
+.container {
+  background: #fff;
+  padding: 2rem;
+  margin: 2rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  max-width: 960px;
+  width: 100%;
+  box-sizing: border-box;
+}
+h1 {
+  margin-top: 0;
+  color: #0056b3;
+  text-align: center;
+}
+h2, h3 {
+  color: #333;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+p {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* 🟩 表單輸入框 */
+input[type="text"], input[type="number"], textarea, select {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+textarea {
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #6a9aff;
+  outline: none;
+}
+
+/* 🟨 按鈕組 */
+button {
+  padding: 0.8rem 1.5rem;
+  font-size: 17px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #4e73df;
+  color: white;
+  margin-right: 0.8rem;
+  margin-top: 1rem;
+  transition: background-color 0.3s, transform 0.2s;
+}
+button:hover {
+  background-color: #2e59d9;
+  transform: translateY(-2px);
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+#printButton {
+  background: #28a745;
+}
+#printButton:hover {
+  background: #218838;
+}
+#clearButton {
+  background: #dc3545;
+}
+#clearButton:hover {
+  background: #c82333;
+}
+
+/* 🟧 收合說明卡 */
+.instructions-wrapper { margin: 0.8em 0 1.2em; }
+.instructions-toggle {
+  display: inline-block;
+  background: #4e73df;
+  color: #fff;
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s, transform 0.2s;
+}
+.instructions-toggle:hover {
+  background: #2e59d9;
+  transform: translateY(-1px);
+}
+.instructions-content {
+  display: none;
+  background: #f8fbff;
+  border: 1px solid #e1eefc;
+  border-left: 5px solid #4e73df;
+  border-radius: 8px;
+  padding: 1em 1.2em;
+  color: #1b3a57;
+  margin-top: 0.8em;
+  line-height: 1.6;
+  font-size: 1em;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.instructions-content ul {
+  margin: 0.4em 0 0.8em 1.2em;
+  padding: 0;
+}
+.instructions-content pre {
+  background: #fff;
+  border: 1px solid #e6edf7;
+  border-radius: 6px;
+  padding: 0.6em 0.8em;
+  white-space: pre-wrap;
+  margin: 0.4em 0;
+  font-size: 0.95em;
+}
+
+/* 🩵 Form 排版（直式預設） */
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.helper {
+  color: #888;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* 🩶 印刷設定 */
+@media print {
+  @page { size: A4 portrait; margin: 0.8cm; }
+  body {
+    background: white;
+  }
+  body > *:not(.container),
+  .container > *:not(.output-container):not(.namecard-output) {
+    display: none !important;
+  }
+  .container {
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+  }
+}
