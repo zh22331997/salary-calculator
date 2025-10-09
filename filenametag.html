@@ -1,114 +1,168 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>正華資料夾名條產生器</title>
+  <title>正華資料夾名條產生器（印A4切3×7張）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body{
-      font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif;
-      background:#f0f2f5;margin:0;padding:0;
-      display:flex;justify-content:center;align-items:flex-start;min-height:100vh;
-    }
-    .container{
-      background:#fff;padding:2rem;margin:2rem 1rem;border-radius:12px;
-      box-shadow:0 4px 20px rgba(0,0,0,0.1);max-width:960px;width:100%;box-sizing:border-box;
-    }
-    h1{margin-top:0;color:#0056b3;text-align:center;}
-    h2,h3{color:#333;border-bottom:2px solid #e0e0e0;padding-bottom:0.5rem;margin-top:1.5rem;margin-bottom:1rem;}
-    label{font-weight:bold;display:block;color:#555;margin-bottom:0.5rem;}
-    p{color:#666;font-size:0.95rem;line-height:1.6;}
+/* =========================
+   Design System (Tokens)
+   ========================= */
+:root{
+  /* 主色：你的品牌色 */
+  --brand-500:#A1C6EA;   /* 主要：產生 */
+  --brand-600:#8FB9E2;   /* 主要 hover */
 
-    /* 輸入框 */
-    textarea{
-      width:calc(100% - 1rem);
-      padding:0.75rem;margin-bottom:1rem;border-radius:8px;border:1px solid #ccc;
-      font-size:16px;line-height:1.5;height:220px;min-height:200px;resize:vertical;
-      box-sizing:border-box;transition:border-color 0.3s;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
-    }
-    /* 聚焦一律亮藍框 */
-    textarea:focus,
-    .input-area input:focus{
-      border-color:#6a9aff;outline:none;
-      box-shadow:0 0 0 3px rgba(106,154,255,0.25);
-    }
+  --secondary-500:#BBD1EA; /* 次要：列印 */
+  --secondary-600:#A8C5E6; /* 次要 hover */
 
-    /* 按鈕 */
-    button{
-      padding:0.8rem 1.5rem;font-size:17px;border:none;border-radius:8px;cursor:pointer;
-      background-color:#4e73df;color:#fff;margin-right:0.8rem;margin-top:1rem;
-      transition:background-color 0.3s,transform 0.2s;
-    }
-    button:hover{background-color:#2e59d9;transform:translateY(-2px);}
-    #printBtn{background:#28a745;}
-    #printBtn:hover{background:#218838;}
-    #clearBtn{background:#6c757d;}
-    #clearBtn:hover{background:#5a6268;}
+  --clear-500:#DAE3E5;   /* 清空 */
+  --clear-600:#CFD9DC;   /* 清空 hover */
 
-    /* 使用說明（可收合） */
-    .instructions-wrapper{margin:0.8em 0 1.2em;}
-    .instructions-toggle{
-      display:inline-block;background:#4e73df;color:#fff;padding:0.6em 1.2em;
-      border-radius:8px;cursor:pointer;font-weight:600;
-      transition:background 0.3s,transform 0.2s;
-    }
-    .instructions-toggle:hover{background:#2e59d9;transform:translateY(-1px);}
-    .instructions-content{
-      display:none;background:#f8fbff;border:1px solid #e1eefc;border-left:5px solid #4e73df;
-      border-radius:8px;padding:1em 1.2em;color:#1b3a57;margin-top:0.8em;
-      line-height:1.6;font-size:1em;box-shadow:0 2px 6px rgba(0,0,0,0.05);
-    }
-    .instructions-content ul{margin:0.4em 0 0.8em 1.2em;padding:0;}
-    .instructions-content pre{
-      background:#fff;border:1px solid #e6edf7;border-radius:6px;padding:0.6em 0.8em;
-      white-space:pre-wrap;margin:0.4em 0;font-size:0.95em;
-    }
+  /* 其他系統色 */
+  --text-strong:#1f2937; --text-normal:#374151; --text-mute:#6b7280;
+  --border:#d1d5db; --border-strong:#9ca3af;
+  --bg-page:#f0f2f5; --bg-card:#ffffff; --bg-info:#f8fbff; --bg-info-border:#e1eefc;
 
-    /* 字型 */
-    @font-face{
-      font-family:'XiaolaiMonoSC';
-      src:url('https://cdn.jsdelivr.net/gh/zh22331997/salary-calculator/ttf_XiaolaiMonoSC-Regular.ttf') format('truetype');
-    }
+  --font-sans:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC","Heiti TC",sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
 
-    .input-area{
-      max-width:720px;margin:0 auto 30px auto;background:#fff;padding:20px;border-radius:8px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.1);
-    }
-    .input-area label{display:block;margin-top:10px;}
-    .input-area input,.input-area textarea{
-      width:100%;padding:8px;margin-top:5px;box-sizing:border-box;
-      font-family:'XiaolaiMonoSC','Noto Sans TC',sans-serif;border:1px solid #ccc;border-radius:8px;
-    }
+  --radius-sm:6px; --radius-md:8px; --radius-lg:12px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:0 2px 10px rgba(0,0,0,0.10);
+  --shadow-lg:0 4px 20px rgba(0,0,0,0.12);
 
-    /* 名條（A4 3x7） */
-    .namecard{
-      width:63mm;height:39mm;margin:0;padding:2mm 0 0 0;border:0.3px solid #000;
-      box-sizing:border-box;text-align:center;page-break-inside:avoid;
-    }
-    #output{display:flex;flex-wrap:wrap;gap:1px;justify-content:center;}
-    .output-page{
-      width:100%;font-size:0;page-break-after:always;margin:0;padding:0;
-      display:flex;flex-wrap:wrap;justify-content:center;
-    }
+  --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem;
+  --input-height:2.75rem; --btn-height:2.9rem;
 
-    .line1{font-size:13pt;font-weight:normal;}
-    .line2{font-size:12pt;font-weight:normal;margin:1mm 0;}
-    .class{font-size:12pt;font-weight:normal;margin:1mm 0;}
-    .name{font-size:18pt;font-weight:bold;display:inline-block;text-align:left;line-height:1.2;}
+  --focus-ring:0 0 0 3px rgba(106,154,255,0.25);
+  --focus-border:#6a9aff;
 
-    .name-row{
-      display:flex;justify-content:center;align-items:center;flex-direction:row;
-      gap:6mm;margin-top:2mm;max-width:80%;margin-left:auto;margin-right:auto;
-    }
-    .logo{max-height:12mm;max-width:16mm;object-fit:contain;display:block;}
+  --btn-text:#17324A;  /* 淺色按鈕上的深字 */
+}
 
-    @media print{
-      @page{size:A4 portrait;margin:0;}
-      .input-area,h1,#printBtn{display:none !important;}
-      .output-page{display:flex;flex-wrap:wrap;justify-content:center;page-break-after:always;}
-      .namecard{page-break-inside:avoid;}
-    }
+/* =========================
+   Base
+   ========================= */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg-page);
+  margin:0; padding:0;
+  display:flex; justify-content:center; align-items:flex-start; min-height:100vh;
+  color:var(--text-normal);
+}
+.container{
+  background:var(--bg-card); padding:2rem; margin:2rem 1rem; border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg); max-width:960px; width:100%;
+}
+h1{margin:0 0 var(--space-4); color:#0056b3; text-align:center; font-weight:800;}
+h2,h3{color:var(--text-strong); border-bottom:2px solid #e0e0e0; padding-bottom:.5rem; margin-top:1.5rem; margin-bottom:1rem;}
+label{font-weight:700; display:block; color:#555; margin-bottom:.5rem;}
+p{color:#444; font-size:.95rem; line-height:1.6}
+
+/* =========================
+   表單/輸入
+   ========================= */
+.input-area{
+  max-width:720px; margin:0 auto 30px auto; background:#fff; padding:20px;
+  border-radius:var(--radius-md); box-shadow:var(--shadow-sm);
+}
+textarea,
+.input-area input[type="text"]{
+  width:100%;
+  height:var(--input-height);
+  padding:0 var(--space-4);
+  border-radius:var(--radius-md);
+  border:1px solid var(--border);
+  font-size:16px; background:#fff; color:var(--text-normal);
+  transition:border-color .2s, box-shadow .2s, background-color .2s;
+}
+textarea{
+  height:auto; min-height:200px; resize:vertical;
+  padding:var(--space-3); line-height:1.5; font-family:var(--font-mono);
+  width:calc(100% - 1rem);
+}
+textarea:focus,
+.input-area input[type="text"]:focus{
+  outline:none; border-color:var(--focus-border)!important; box-shadow:var(--focus-ring);
+}
+
+/* =========================
+   使用說明（可收合）
+   ========================= */
+.instructions-wrapper{margin:.8em 0 1.2em;}
+.instructions-toggle{
+  display:inline-block; background:var(--secondary-500); color:var(--btn-text);
+  padding:.6em 1.2em; border-radius:var(--radius-md); cursor:pointer; font-weight:700;
+  transition:background .2s, transform .15s; box-shadow:var(--shadow-sm);
+}
+.instructions-toggle:hover{background:var(--secondary-600); transform:translateY(-1px);}
+.instructions-content{
+  display:none; background:var(--bg-info); border:1px solid var(--bg-info-border);
+  border-left:5px solid var(--secondary-500);
+  border-radius:var(--radius-md); padding:1em 1.2em; color:#1b3a57; margin-top:.8em;
+  line-height:1.6; font-size:1em; box-shadow:var(--shadow-sm);
+}
+.instructions-content ul{margin:.4em 0 .8em 1.2em; padding:0;}
+.instructions-content pre{
+  background:#fff; border:1px solid #e6edf7; border-radius:var(--radius-sm);
+  padding:.6em .8em; white-space:pre-wrap; margin:.4em 0; font-size:.95em;
+}
+
+/* =========================
+   按鈕（統一組件）
+   ========================= */
+button{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:var(--btn-height); padding:0 var(--space-5);
+  font-size:17px; font-weight:700; border:none; border-radius:var(--radius-md);
+  cursor:pointer; color:var(--btn-text); background:var(--brand-500);
+  transition:background-color .15s ease, transform .12s ease, box-shadow .2s;
+  box-shadow:var(--shadow-sm);
+}
+button:hover{background:var(--brand-600); transform:translateY(-2px)}
+button:active{transform:translateY(-1px)}
+button:focus{outline:none; box-shadow:var(--focus-ring)}
+
+.btn-secondary{ background:var(--secondary-500); color:var(--btn-text); }
+.btn-secondary:hover{ background:var(--secondary-600); }
+.btn-clear{ background:var(--clear-500); color:var(--btn-text); }
+.btn-clear:hover{ background:var(--clear-600); }
+
+/* 按鈕列：置中/同寬 */
+.btn-row{ display:flex; gap:12px; justify-content:center; align-items:center; flex-wrap:wrap; margin-top:.5rem; }
+.btn-row > button{ width:200px; margin:0; }
+
+/* =========================
+   名條排版（A4 3×7）
+   ========================= */
+.namecard{
+  width:63mm; height:39mm; margin:0; padding:2mm 0 0 0; border:.3px solid #000;
+  box-sizing:border-box; text-align:center; page-break-inside:avoid; background:#fff; border-radius:4px;
+}
+#output{display:flex;flex-wrap:wrap;gap:1px;justify-content:center;}
+.output-page{
+  width:100%; font-size:0; page-break-after:always; margin:0; padding:0;
+  display:flex; flex-wrap:wrap; justify-content:center;
+}
+.line1{font-size:13pt;}
+.line2{font-size:12pt; margin:1mm 0;}
+.class{font-size:12pt; margin:1mm 0;}
+.name{font-size:18pt; font-weight:800; display:inline-block; text-align:left; line-height:1.2;}
+.name-row{display:flex; justify-content:center; align-items:center; gap:6mm; margin-top:2mm; max-width:80%; margin-left:auto; margin-right:auto;}
+.logo{max-height:12mm; max-width:16mm; object-fit:contain; display:block;}
+
+/* =========================
+   列印
+   ========================= */
+@media print{
+  @page{size:A4 portrait; margin:0;}
+  .input-area, h1, #printBtn{ display:none !important; }
+  .output-page{ display:flex; flex-wrap:wrap; justify-content:center; page-break-after:always; }
+  .namecard{ page-break-inside:avoid; }
+}
   </style>
 </head>
 <body>
@@ -143,9 +197,12 @@
       <textarea id="rawData" rows="8" placeholder="班級	姓名
 二A	   陳小慈
 二 	   劉小綸"></textarea>
-      <button id="genBtn" onclick="generateNamecards()">產生名條</button>
-      <button id="printBtn" onclick="window.print()" style="display:none;">列印名牌</button>
-      <button id="clearBtn" onclick="clearAll()">清空</button>
+
+      <div class="btn-row">
+        <button id="genBtn" onclick="generateNamecards()">產生名條</button>
+        <button id="printBtn" class="btn-secondary" onclick="window.print()" style="display:none;">列印名牌</button>
+        <button id="clearBtn" class="btn-clear" onclick="clearAll()">清空</button>
+      </div>
     </div>
 
     <div id="output"></div>
@@ -170,7 +227,7 @@
       output.innerHTML='';
       if(!raw || !raw.trim()){ alert('請先貼上資料（需含標題列）。'); return; }
 
-      // 使用：TSV 解析器（尊重引號＋欄內換行）
+      // 解析 TSV（尊重引號＋欄內換行）
       const rows = parseTsvRespectingQuotes(raw);
       if(rows.length < 2){ alert('內容不足，請確認包含標題列與至少一筆資料。'); return; }
 
@@ -214,8 +271,7 @@
         }
       });
 
-      document.getElementById('printBtn').style.display='inline-block';
-      // 捲到結果區
+      document.getElementById('printBtn').style.display='inline-flex';
       output.scrollIntoView({behavior:'smooth',block:'start'});
     }
 
@@ -233,11 +289,7 @@
       return div;
     }
 
-    /* ===== TSV 解析器（尊重引號與欄內換行） =====
-       - 欄分隔：\t（Excel 貼上即為 Tab）
-       - 欄位可被 " 包住；欄內可以含換行、Tab，會被保留在同一格
-       - 連續兩個 "" 代表字面上的 "
-    */
+    /* ===== TSV 解析器（尊重引號與欄內換行） ===== */
     function parseTsvRespectingQuotes(text){
       const rows=[]; let row=[]; let cell='';
       let inQuotes=false;
@@ -251,34 +303,26 @@
           continue;
         }
 
-        if(ch === '\t' && !inQuotes){ // 分欄
-          row.push(cell); cell=''; continue;
-        }
-
-        if((ch === '\n' || ch === '\r') && !inQuotes){ // 分列
+        if(ch === '\t' && !inQuotes){ row.push(cell); cell=''; continue; }
+        if((ch === '\n' || ch === '\r') && !inQuotes){
           if(ch === '\r' && next === '\n') i++; // CRLF
           row.push(cell); cell='';
-          // 若整列都是空白就跳過
           if(row.some(c => (c && c.trim().length))) rows.push(row);
           row = [];
           continue;
         }
-
-        // 其他字元（包含欄內換行）
         cell += ch;
       }
-      // 收尾
       row.push(cell);
       if(row.some(c => (c && c.trim().length))) rows.push(row);
 
-      // 去除每格外圍空白
       for(let r=0;r<rows.length;r++){
         rows[r] = rows[r].map(c => (c ?? '').replace(/\r?\n/g,' ').trim());
       }
       return rows;
     }
 
-    // 標題正規化：去換行、引號、空白、全形空白、括號、點號，轉小寫
+    // 標題正規化
     function normalizeHeader(h){
       return (h||'')
         .toLowerCase()
@@ -290,7 +334,7 @@
         .replace(/\./g,'');
     }
 
-    // 只取中文字（保留常見連字）
+    // 抽中文姓名
     function extractZh(text){
       const m = (text||'').match(/[\u4E00-\u9FFF·．・‧－—\-\s]+/g);
       if(!m) return '';
