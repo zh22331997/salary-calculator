@@ -1,285 +1,359 @@
-
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>聯絡簿封面名條產生器</title>
+  <title>聯絡簿名條產生器（63.5×50mm｜28pt/18pt｜行距35pt｜固定3欄）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    h1 {
-  text-align: center;
-   }
-    @font-face {
-      font-family: 'XiaolaiMonoSC';
-      src: url('https://cdn.jsdelivr.net/gh/zh22331997/salary-calculator/ttf_XiaolaiMonoSC-Regular.ttf') format('truetype');
-    }
+/* =========================
+   Design System (Tokens)
+   ========================= */
+:root{
+  /* 主色：你指定的色票 */
+  --brand-500:#A1C6EA;   /* 主要：產生 */
+  --brand-600:#8FB9E2;   /* 主要 hover（略深） */
 
-    body {
-      font-family: 'XiaolaiMonoSC', 'Noto Sans TC', sans-serif;
-      background: #ffffff;
-      margin: 0;
-      padding: 20px;
-    }
+  --secondary-500:#BBD1EA; /* 次要：下載 */
+  --secondary-600:#A8C5E6; /* 次要 hover（略深） */
 
-    .input-area {
-      max-width: 600px;
-      margin: 0 auto 30px auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+  --clear-500:#DAE3E5;   /* 清空 */
+  --clear-600:#CFD9DC;   /* 清空 hover（略深） */
 
-    .input-area label {
-      display: block;
-      margin-top: 10px;
-    }
+  /* 其他系統色（保留） */
+  --text-strong:#1f2937; --text-normal:#374151; --text-mute:#6b7280;
+  --border:#d1d5db; --border-strong:#9ca3af;
+  --bg-page:#f0f2f5; --bg-card:#ffffff; --bg-info:#f8fbff; --bg-info-border:#e1eefc;
 
-    .input-area input,
-    .input-area textarea {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-      font-family: 'XiaolaiMonoSC', sans-serif;
-    }
+  --font-sans:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC","Heiti TC",sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
 
-    .input-area button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+  --radius-sm:6px; --radius-md:8px; --radius-lg:12px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:0 2px 10px rgba(0,0,0,0.10);
+  --shadow-lg:0 4px 20px rgba(0,0,0,0.12);
 
-    .namecard {
-      width: 60mm;
-      height: 53mm;
-      box-sizing: border-box;
-      text-align: left;
-      padding: 2mm 0 0 2mm; /* 名條內部上邊距 2mm，左右下邊距 0 */
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      border: 0.3px solid black;
-      page-break-inside: avoid;
-    }
+  --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem;
+  --input-height:2.75rem; --btn-height:2.9rem;
 
-    #output {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1px;
-      justify-content: flex-start;
-    }
+  --focus-ring:0 0 0 3px rgba(106,154,255,0.25);
+  --focus-border:#6a9aff;
 
-    .output-page {
-      width: 100%;
-      font-size: 0;
-      page-break-after: always;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-start;
-    }
+  /* 按鈕文字顏色（深色→與淡色背景有足夠對比） */
+  --btn-text:#17324A;
+}
 
-    .name {
-      font-size: 10mm;
-      line-height: 14mm; /* 姓名行的行高，決定了姓名與下一行之間的垂直空間 */
-      font-weight: bold;
-      margin: 0 0 1mm 0; /* 姓名下方有 1mm 的間距 */
-    }
+/* =========================
+   Base
+   ========================= */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--font-sans); background:var(--bg-page);
+  margin:0; padding:0; display:flex; justify-content:center; align-items:flex-start; min-height:100vh;
+  color:var(--text-normal);
+}
+.container{
+  background:var(--bg-card); padding:2rem; margin:2rem 1rem; border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg); max-width:960px; width:100%;
+}
+h1{margin:0 0 var(--space-4); color:#0056b3; text-align:center; font-weight:800;}
+h2,h3{color:var(--text-strong); border-bottom:2px solid #e0e0e0; padding-bottom:.5rem; margin-top:1.5rem; margin-bottom:1rem;}
+label{font-weight:700; display:block; color:#555; margin-bottom:.5rem;}
+p{color:#444; font-size:.95rem; line-height:1.6}
 
-    .field {
-      font-size: 6mm;
-      line-height: 10mm; /* 班級、導師、電話等欄位的行高，決定了這些行之間的垂直空間 */
-      margin: 0 0 1mm 0; /* 每個欄位下方有 1mm 的間距 */
-    }
-      #errorLog div {
-    background-color: #ffecec;
-    border-left: 4px solid red;
-    padding: 6px 10px;
-    margin: 5px 0;
-    font-weight: bold;
-  }
+/* =========================
+   表單元件
+   ========================= */
+textarea,
+input[type="text"],
+input[type="number"],
+input[type="search"],
+input[type="email"],
+input[type="tel"],
+select{
+  width:100%; height:var(--input-height); padding:0 var(--space-4);
+  border-radius:var(--radius-md); border:1px solid var(--border);
+  font-size:16px; transition:border-color .2s, box-shadow .2s, background-color .2s;
+  background:#fff; color:var(--text-normal);
+}
+textarea{
+  height:auto; min-height:220px; resize:vertical; padding:var(--space-3); line-height:1.5;
+  font-family:var(--font-mono); width:calc(100% - 1rem);
+}
+textarea:focus, input:focus, select:focus{ outline:none; border-color:var(--focus-border)!important; box-shadow:var(--focus-ring); }
 
-    @media print {
-      @page {
-        size: A4 portrait;
-        margin: 0;
-      }
-      .input-area, #printBtn {
-        display: none !important;
-      }
-      .output-page {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        page-break-after: always;
-      }
-      .namecard {
-        page-break-inside: avoid;
-      }
-    }
+/* 下拉：延用舊藍作為辨識（可改成你的品牌色也行） */
+select{
+  appearance:none; -webkit-appearance:none; -moz-appearance:none;
+  cursor:pointer; color:#fff; background:#4e73df; border-color:#4e73df;
+  padding-right:2.2rem;
+  background-image:
+    linear-gradient(45deg,transparent 50%,#fff 50%),
+    linear-gradient(135deg,#fff 50%,transparent 50%);
+  background-position: calc(100% - 16px) calc(50% - 3px), calc(100% - 11px) calc(50% - 3px);
+  background-size:6px 6px; background-repeat:no-repeat;
+}
+select:hover{background:#2e59d9; border-color:#2e59d9}
+select:focus{box-shadow:var(--focus-ring); border-color:var(--focus-border)}
+select::-ms-expand{display:none}
+
+/* =========================
+   按鈕
+   ========================= */
+button{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:var(--btn-height); padding:0 var(--space-5);
+  font-size:17px; font-weight:700; border:none; border-radius:var(--radius-md);
+  cursor:pointer; color:var(--btn-text);
+  background:var(--brand-500);
+  transition:background-color .15s ease, transform .12s ease, box-shadow .2s;
+  box-shadow:var(--shadow-sm);
+}
+button:hover{background:var(--brand-600); transform:translateY(-2px)}
+button:active{transform:translateY(-1px)}
+button:focus{outline:none; box-shadow:var(--focus-ring)}
+
+/* 次要（下載） */
+.btn.btn-secondary{ background:var(--secondary-500); color:var(--btn-text); }
+.btn.btn-secondary:hover{ background:var(--secondary-600); }
+
+/* 清空（使用你指定的灰藍） */
+.btn--clear{ background:var(--clear-500); color:var(--btn-text); }
+.btn--clear:hover{ background:var(--clear-600); }
+
+/* 按鈕列置中 + 同寬 */
+.row.buttons{
+  display:flex; gap:12px; justify-content:center; align-items:center; flex-wrap:wrap; margin-top:.5rem;
+}
+.row.buttons .btn{ width:200px; margin:0; }
+.row{ display:flex; gap:10px; flex-wrap:wrap; }
+
+/* =========================
+   預覽區（保持不變）
+   ========================= */
+#previewWrap{ overflow:auto; border:1px solid #ddd; padding:10px; border-radius:var(--radius-md); background:#fff; box-shadow:var(--shadow-sm); }
+table.nameTable{ border-collapse:collapse; table-layout:fixed; }
+td.namecell{ width:63.5mm; height:50mm; border:1pt solid black; vertical-align:top; padding:4mm 3mm; box-sizing:border-box; }
+.nm{ font-size:28pt; line-height:35pt; font-weight:bold; letter-spacing:1pt; }
+.fd{ font-size:18pt; line-height:35pt; }
+.hint{ margin-top:8px; color:#444; font-size:14px; }
+
+/* =========================
+   列印（保留）
+   ========================= */
+@media print{
+  @page{ size:A4 portrait; margin:.8cm; }
+  body>*:not(.container), .container>*:not(.output-container){ display:none!important; }
+  .output-container{ margin-top:0; padding:0; box-shadow:none; }
+  .output-grid{ grid-template-columns:repeat(3,6.5cm); gap:0; margin:0 auto; }
+  .slip{ border:.5px solid #000; }
+  .slip pre{ font-size:10.5pt; line-height:1.1; }
+  .student-name{ font-size:13pt; }
+  .total-voucher-info, .no-data-message{ display:none!important; }
+}
+
+/* 統一聚焦防呆 */
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+textarea:focus,
+select:focus{
+  outline:none; border-color:var(--focus-border)!important; box-shadow:var(--focus-ring);
+}
   </style>
 </head>
 <body>
-  <h1>聯絡本姓名條產生器</h1>
-  <div class="input-area">
-    <label>貼上學生姓名與班級資料(可從點名表貼上或直接打字)</label>
-    <textarea id="rawData" rows="12" placeholder="例：陳小文 江翠101"></textarea>
-    
-    <label>安親班級（會顯示在名條上）</label>
-    <input type="text" id="groupClass" value="2A">
+  <div class="container">
+    <h1>聯絡本封面名條產生器</h1>
 
-    <label>安親導師</label>
-    <input type="text" id="teacher" value="Nana老師">
+    <div class="input-area">
+      <label>貼上學生姓名與班級資料（清水、江翠可從點名表貼上資料）</label>
+      <textarea id="rawData" rows="12" placeholder='例：
+姓名　班級
+張小飛 江101
+或 
+姓名　班級/美語班
+張小飛Fly　清水101 美TE
+系統會抓出中文姓名與國小班級，
+可直接從 Excel/試算表整塊複製貼上'></textarea>
 
-    <label>聯絡電話</label>
-    <input type="text" id="phone" value="2233-1997分機11">
+      <div class="row">
+        <div style="flex:1 1 180px">
+          <label>課輔班級（顯示於名條）</label>
+          <input type="text" id="groupClass" value="一A">
+        </div>
+        <div style="flex:1 1 180px">
+          <label>導師</label>
+          <input type="text" id="teacher" value="圈圈老師">
+        </div>
+        <div style="flex:1 1 180px">
+          <label>聯絡電話</label>
+          <input type="text" id="phone" value="2233-1997#123">
+        </div>
+      </div>
 
-    
-    <button onclick="generateNamecards()">產生名條</button>
-    <button id="printBtn" onclick="window.print()" style="display: none;">列印名條</button>
+      <div class="row buttons">
+        <button class="btn" onclick="generateNamecards()">產生名條</button>
+        <button class="btn btn-secondary" onclick="downloadDocNarrow()">⬇️ 下載 Word</button>
+        <button class="btn btn--clear" onclick="clearAll()">🧹 清空</button>
+      </div>
+      <p class="hint">📎 小提醒：下載後請在 <b>Word → 版面配置 → 邊界 → 選「窄」</b>（1.27cm），才能正確顯示為 3 欄 63.5×50mm。</p>
+    </div>
+
+    <div id="errorLog"></div>
+    <div id="previewWrap"><div id="outputTable" contenteditable="true"></div></div>
   </div>
 
-  <div id="output"></div>
-  <div id="errorLog" style="color: red; margin-top: 20px;"></div>
-<h3>👇可複製到 Word 的表格，按下複製，再到 Word 貼上</h3>
-<div id="outputTable" contenteditable="true" style="margin-top:20px; border:1px solid #ccc; padding:10px;"></div>
-<button onclick="copyTableToClipboard()">📋 複製表格到剪貼簿</button>
-
-
-
   <script>
-    function generateNamecards() {
-      const teacher = document.getElementById('teacher').value;
-      const phone = document.getElementById('phone').value;
-      const groupClass = document.getElementById('groupClass').value;
-      const raw = document.getElementById('rawData').value.trim();
-      const output = document.getElementById('output');
-      const errorLog = document.getElementById('errorLog'); 
-      errorLog.innerHTML = ''; 
-
-
-      output.innerHTML = '';
-      const rows = raw.split(/\n+/);
-
-      for (let i = 0; i < rows.length; i++) {
-        let row = rows[i].trim();
-        if (!row) continue;
-
-        while (i + 1 < rows.length && !rows[i + 1].match(/\d{4}-?\d{4,}|[\u4e00-\u9fa5]{1,4}\d{3}/)) {
-          row += ' ' + rows[++i].trim();
-        }
-        if (!/^[\u4e00-\u9fa5]{1,4}[\t\u3000\s]+[\u4e00-\u9fa5]{1,4}\d{3}$/.test(row)) {
-  const errorLine = `❌ 第 ${i + 1} 行無法解析：${row}`;
-  const errorItem = document.createElement('div');
-  errorItem.textContent = errorLine;
-  errorLog.appendChild(errorItem);
-  continue;
-}
-
-
-        let cleaned = row.replace(/"/g, '').trim();
-        let phoneMatch = cleaned.match(/\d{4}-?\d{4,}/);
-        let extractedPhone = phoneMatch ? phoneMatch[0] : phone;
-        cleaned = cleaned.replace(/\d{4}-?\d{4,}/g, '').trim();
-
-        // 嘗試使用正則表達式解析姓名與班級
-        const match = cleaned.match(/^([\u4e00-\u9fa5]{1,4})[\t\u3000\s]+([\u4e00-\u9fa5]{1,4}\d{3})/);
-
-        if (!match) {
-          const errorLine = `❌ 第 ${i + 1} 行無法解析：${row}`;
-          const errorItem = document.createElement('div');
-          errorItem.textContent = errorLine;
-          errorLog.appendChild(errorItem);
-          continue;
-        }
-
-        const name = match[1];
-        const className = match[2];
-
-
-      
-
-        const card = document.createElement('div');
-        card.className = 'namecard';
-        card.innerHTML = `
-          <div class="name">${name}</div>
-          <div class="field">${groupClass}/${className}</div>
-          <div class="field">${teacher}</div>
-          <div class="field">${extractedPhone}</div>
-        `;
-
-        output.appendChild(card);
-        
+    /* ========= TSV 解析（支援引號與儲存格內換行） ========= */
+    function parseTSVWithQuotes(raw) {
+      const rows = []; let row=[]; let cell=''; let inQ=false;
+      for(let i=0;i<raw.length;i++){
+        const ch = raw[i];
+        if(ch === '"'){ if(inQ && raw[i+1] === '"'){ cell+='"'; i++; } else { inQ=!inQ; } continue; }
+        if(!inQ && ch === '\t'){ row.push(cell); cell=''; continue; }
+        if(!inQ && ch === '\n'){ row.push(cell); rows.push(row); row=[]; cell=''; continue; }
+        if(ch !== '\r') cell += ch;
       }
-
-// 👉 同時產出 Word 用表格
-// 👉 同時產出 Word 用的多欄名條表格（4欄為一行）
-let tableHTML = '<table border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse; font-family:DFKai-sb, PMingLiU, sans-serif; font-size:18pt; line-height:28pt; table-layout: fixed; width: 100%;">';
-let rowCells = [];
-
-for (let i = 0; i < output.children.length; i++) {
-  const card = output.children[i];
-  const name = card.querySelector('.name')?.innerText || '';
-  const fields = card.querySelectorAll('.field');
-  const classField = fields[0]?.innerText || '';
-  const teacherField = fields[1]?.innerText || '';
-  const phoneField = fields[2]?.innerText || '';
-
-  const tdHTML = `
-    <td style="width: 25%; vertical-align: top; padding: 12pt 10pt 12pt 10pt;">
-      <div style="font-size:20pt; font-weight:bold;">${name}</div>
-      <div>${classField}</div>
-      <div>${teacherField}</div>
-      <div>${phoneField}</div>
-    </td>
-  `;
-  rowCells.push(tdHTML);
-
-  if (rowCells.length === 4) {
-    tableHTML += `<tr>${rowCells.join('')}</tr>`;
-    rowCells = [];
-  }
-}
-// 若不足4欄，用空欄補足
-if (rowCells.length > 0) {
-  while (rowCells.length < 4) {
-    rowCells.push('<td></td>');
-  }
-  tableHTML += `<tr>${rowCells.join('')}</tr>`;
-}
-
-tableHTML += '</tbody></table>';
-document.getElementById('outputTable').innerHTML = tableHTML;
-
-
-      document.getElementById('printBtn').style.display = 'inline-block';
-      document.querySelector('button[onclick="copyTableToClipboard()"]').style.display = 'inline-block';
+      row.push(cell); rows.push(row);
+      return rows.map(r => r.map(c => String(c).replace(/^\s+|\s+$/g,'').replace(/^"|"$/g,'')));
     }
-function copyTableToClipboard() {
-  const outputTable = document.getElementById('outputTable');
-  const range = document.createRange();
-  range.selectNode(outputTable);
-  const selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.addRange(range);
 
-  try {
-    const success = document.execCommand('copy');
-    if (success) {
-      alert('✅ 表格已複製到剪貼簿！請到 Word 貼上即可。');
-    } else {
-      alert('❌ 複製失敗，請手動選取內容後按 Ctrl+C');
+    function detectHeader(cells){
+      const isName  = (h)=>/^(中文姓名|姓名)/.test(h);
+      const isClass = (h)=>/(學校班級|英文班級|班級\s*\/?\s*美語班|^\s*班級\s*$)/.test(h);
+      const nameIdx = cells.findIndex(isName);
+      const classIdx= cells.findIndex(isClass);
+      if(nameIdx!==-1 && classIdx!==-1) return {nameIdx,classIdx};
+      return null;
     }
-  } catch (err) {
-    alert('❌ 發生錯誤：' + err);
-  }
 
-  selection.removeAllRanges();
-}
+    function parseInput(raw){
+      if(raw.includes('\t')){
+        const rows = parseTSVWithQuotes(raw);
+        let header = detectHeader(rows[0].map(x=>x.replace(/"/g,'').trim()));
+        let start = header ? 1 : 0;
+        const out = [];
+        for(let i=start;i<rows.length;i++){
+          const r = rows[i];
+          if(!r || r.every(x=>!String(x).trim())) continue;
+          if(header){
+            const nameCell = r[header.nameIdx]||'';
+            const classCell= r[header.classIdx]||'';
+            const name = (String(nameCell).match(/[\u4e00-\u9fa5]{1,6}/)||[''])[0];
+            const sc   = (String(classCell).match(/[\u4e00-\u9fa5]{1,12}\s*\d{3}/)||[''])[0].replace(/\s+/g,'');
+            if(name && sc) out.push({name, schoolClass: sc});
+            else out.push({error:`❌ 無法解析：${r.join('  |  ')}`});
+          }else{
+            const name = (String(r[0]).match(/^[\u4e00-\u9fa5]{1,6}/)||[''])[0];
+            const sc   = (String(r[1]||'').match(/[\u4e00-\u9fa5]{1,12}\s*\d{3}/)||[''])[0].replace(/\s+/g,'');
+            if(name && sc) out.push({name, schoolClass: sc});
+            else out.push({error:`❌ 無法解析：${r.join('  |  ')}`});
+          }
+        }
+        return out;
+      }
+      return raw.replace(/\r/g,'').split(/\n+/).map(s=>{
+        s=s.trim(); if(!s) return null;
+        const name=(s.match(/^[\u4e00-\u9fa5]{1,6}/)||[''])[0];
+        const sc=(s.match(/[\u4e00-\u9fa5]{1,12}\s*\d{3}/)||[''])[0].replace(/\s+/g,'');
+        return (name&&sc)?{name,schoolClass:sc}:{error:`❌ 無法解析：${s}`};
+      }).filter(Boolean);
+    }
 
+    /* ---------- 產出（固定 3 欄 63.5×50mm） ---------- */
+    function buildTable(records, teacher, phone, groupClass){
+      const perRow = 3;
+      const tdStyle = 'width:63.5mm;height:50mm;border:1pt solid black;vertical-align:top;padding:4mm 3mm;box-sizing:border-box;';
+      const nmStyle = 'font-size:28pt;line-height:35pt;font-weight:bold;letter-spacing:1pt;';
+      const fdStyle = 'font-size:18pt;line-height:35pt;';
+      let html = '<table class="nameTable" style="border-collapse:collapse;table-layout:fixed;mso-table-lspace:0pt;mso-table-rspace:0pt;"><tbody>';
+      let row = [];
+      records.forEach(r=>{
+        const cell = `
+<td class="namecell" style="${tdStyle}">
+  <div class="nm" style="${nmStyle}">${r.name}</div>
+  <div class="fd" style="${fdStyle}">${r.schoolClass} ／ ${groupClass}</div>
+  <div class="fd" style="${fdStyle}">${teacher}</div>
+  <div class="fd" style="${fdStyle}">${phone}</div>
+</td>`;
+        row.push(cell);
+        if(row.length===perRow){ html += `<tr>${row.join('')}</tr>`; row=[]; }
+      });
+      if(row.length){ while(row.length<perRow) row.push(`<td class="namecell" style="${tdStyle}"></td>`); html += `<tr>${row.join('')}</tr>`; }
+      html += '</tbody></table>';
+      return html;
+    }
+
+    function generateNamecards(){
+      const teacher = document.getElementById('teacher').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const groupClass = document.getElementById('groupClass').value.trim();
+      const raw = document.getElementById('rawData').value;
+
+      const parsed = parseInput(raw);
+      const errorLog = document.getElementById('errorLog'); errorLog.innerHTML = '';
+      const ok = parsed.filter(x=>!x.error).length;
+      parsed.filter(x=>x.error).forEach(e=>{ errorLog.innerHTML += `<div>${e.error}</div>`; });
+
+      const records = parsed.filter(x=>!x.error);
+      document.getElementById('outputTable').innerHTML = buildTable(records, teacher, phone, groupClass);
+      if(ok===0 && !errorLog.innerHTML){ errorLog.innerHTML = '<div>沒有成功解析的資料，請檢查格式。</div>'; }
+    }
+
+    /* ---------- Word 下載（〈窄〉1.27cm） + 自動檔名 ---------- */
+    function buildWordHTML_Narrow(inner){
+      return `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="UTF-8">
+  <title>名條</title>
+  <style>
+    @page { margin: 1.27cm; } /* Word 〈窄〉 */
+    body, td, div { font-family: "Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC","Heiti TC",sans-serif; }
+    table { border-collapse: collapse; table-layout: fixed; mso-table-lspace:0pt; mso-table-rspace:0pt; }
+    td.namecell { width:63.5mm; height:50mm; border:1pt solid black; vertical-align:top; padding:4mm 3mm; box-sizing:border-box; }
+    .nm { font-size:28pt; line-height:35pt; font-weight:bold; letter-spacing:1pt; }
+    .fd { font-size:18pt; line-height:35pt; }
+  </style>
+</head>
+<body>
+${inner}
+</body>
+</html>`;
+    }
+
+    function downloadDocNarrow(){
+      const container = document.getElementById('outputTable');
+      if(!container.innerHTML.trim()){ alert('請先產生名條。'); return; }
+      const html = buildWordHTML_Narrow(container.innerHTML);
+      const blob = new Blob([html], {type: 'application/msword;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+
+      // 自動檔名：班級 + 日期
+      const cls = (document.getElementById('groupClass').value || '').trim().replace(/[\\/:*?"<>|]/g,'_');
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      const filename = `${cls||'班級'}_聯絡本名條_${yyyy}-${mm}-${dd}.doc`;
+
+      const a = document.createElement('a'); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+
+      alert('貼心提醒：開啟 Word 後，請到「版面配置 → 邊界 → 選『窄』（1.27cm）」才能顯示正確大小。');
+    }
+
+    /* ---------- 清空 ---------- */
+    function clearAll(){
+      document.getElementById('rawData').value = '';
+      document.getElementById('outputTable').innerHTML = '';
+      document.getElementById('errorLog').innerHTML = '';
+    }
   </script>
 </body>
 </html>
