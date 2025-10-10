@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8" />
+<title>英文教材 姓名貼 產生器</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+/* ===== 防爆欄 ===== */
+*,*::before,*::after{ box-sizing:border-box }
+
+/* ===== Tokens ===== */
+:root{
+  --brand-500:#A1C6EA; --brand-600:#8FB9E2;
+  --secondary-500:#BBD1EA; --secondary-600:#A8C5E6;
+  --clear-500:#E6EDF0; --clear-600:#D8E3E8;
+  --text-strong:#0f172a; --text-normal:#334155; --text-mute:#64748b;
+  --border:#d1d5db; --bg-page:#f6f8fb; --bg-card:#ffffff;
+  --font-sans:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC","Heiti TC",sans-serif;
+  --radius-md:12px; --shadow-sm:0 1px 3px rgba(2,6,23,.08); --shadow-md:0 8px 24px rgba(2,6,23,.1);
+  --input-height:3.1rem; --btn-height:3.2rem; --focus-ring:0 0 0 3px rgba(106,154,255,.25);
+  --cell-h-mm:29.7mm; /* 版型切換時會更新 */
+}
+
+/* ===== Base ===== */
+html,body{height:100%}
+body{
+  font-family:var(--font-sans); background:var(--bg-page);
+  margin:0; padding:0; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; color:var(--text-normal);
+}
+.container{ background:#fff; padding:2.2rem 2rem; margin:2rem 1rem; border-radius:16px; box-shadow:var(--shadow-md); max-width:1240px; width:100%;}
+h1{margin:0 0 1.25rem; color:#0A57C6; text-align:center; font-weight:900; letter-spacing:.02em;}
+.small-muted{font-size:13px;color:var(--text-mute)}
+
+/* ===== 兩欄（Flex 等高） ===== */
+.panel{ display:flex; gap:22px; align-items:stretch; }
+.left-col,.right-col{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; }
+@media (max-width:1100px){ .panel{ flex-direction:column; } }
+
+/* ===== 卡片 ===== */
+.card{ background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; box-shadow:var(--shadow-sm);}
+.card + .card{ margin-top:14px; }
+.section-title{font-weight:900; color:#0f172a; letter-spacing:.02em;}
+.card.flex-1{ display:flex; flex-direction:column; flex:1 1 0; }
+
+/* Step 1 標題列：標題 + 說明鈕 並排 */
+.card-head{ display:flex; align-items:center; gap:10px; justify-content:flex-start; margin-bottom:.5rem; }
+
+/* 按鈕 */
+button{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:var(--btn-height); padding:0 1.1rem;
+  font-size:17px; font-weight:900; border:none; border-radius:12px;
+  cursor:pointer; color:#0f2740; background:var(--brand-500);
+  transition:background .12s, transform .08s, box-shadow .18s;
+  box-shadow:var(--shadow-sm);
+}
+button:hover{background:var(--brand-600); transform:translateY(-1px)}
+.btn-secondary{ background:var(--secondary-500); } .btn-secondary:hover{ background:var(--secondary-600); }
+.btn-clear{ background:var(--clear-500); }     .btn-clear:hover{ background:var(--clear-600); }
+.btn-sm{ min-height:2.3rem; padding:0 .9rem; font-size:14px; }
+
+/* 表單 */
+textarea, input, select{
+  width:100%; max-width:100%;
+  height:var(--input-height);
+  padding:0 1rem; border-radius:12px; border:1px solid var(--border);
+  font-size:16px; background:#f9fafb;
+  transition:border-color .18s, box-shadow .18s, background-color .18s;
+}
+textarea{
+  height:auto; min-height:360px; resize:vertical; padding:1rem; line-height:1.6;
+  font-family:ui-monospace,Menlo,Consolas,monospace; background:#fff;
+  flex:1; /* 讓 Step1 卡片可伸展，與右側等高 */
+}
+textarea:focus, input:focus, select:focus{outline:none; border-color:#6a9aff!important; box-shadow:var(--focus-ring); background:#eef6ff;}
+select:hover{background:#f1f5f9; border-color:#a1c6ea}
+
+/* 右側兩欄列 */
+.row-2{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
+
+/* Step 4 按鈕列（不包卡片；吸附在右欄底部） */
+.actions-bar{
+  margin-top:14px;
+  display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px;
+  margin-left:auto; margin-right:auto; width:100%;
+}
+@media (max-width:680px){ .actions-bar{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (max-width:420px){ .actions-bar{ grid-template-columns:1fr; } }
+
+/* ===== 預覽 ===== */
+#previewWrap{margin-top:18px; border:1px solid #e5e7eb; border-radius:12px; padding:12px; background:#fff; position:relative;}
+.sheet{width:calc(4 * 52.5mm); margin:0 auto 14px;}
+.grid{display:grid; grid-template-columns:repeat(4, 52.5mm); gap:0;}
+.label{width:52.5mm; height:var(--cell-h-mm); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 6mm; border:0.25pt dotted #d0d0d0; background:#fff;}
+.class-code{font-size:24px; font-weight:900; letter-spacing:2px; margin-bottom:2px; text-decoration:underline;}
+.student-name{font-size:24px; font-weight:700; white-space:nowrap;}
+.toast{position:sticky; top:8px; float:right; margin-left:auto; background:#0f2740; color:#fff; padding:.5rem .75rem; border-radius:999px; font-size:14px; font-weight:800; box-shadow:var(--shadow-sm); opacity:0; transform:translateY(-6px); transition:opacity .18s, transform .18s; z-index:10; width:max-content;}
+.toast.show{opacity:1; transform:translateY(0)}
+@keyframes flashPulse{0%{box-shadow:0 0 0 0 rgba(161,198,234,0); background:#fff; border-color:#e5e7eb;} 30%{box-shadow:0 0 0 6px rgba(161,198,234,.35); background:#f4f9ff; border-color:#8FB9E2;} 100%{box-shadow:0 0 0 0 rgba(161,198,234,0); background:#fff; border-color:#e5e7eb;}}
+.preview-flash{animation:flashPulse .6s ease-out 1;}
+@media print{ @page{size:A4;margin:0} .container > *:not(#previewWrap){display:none!important;} #previewWrap{border:none; padding:0; box-shadow:none;} }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>英文教材 姓名貼 產生器</h1>
+
+    <div class="panel">
+      <!-- 左欄 -->
+      <div class="left-col">
+        <div class="card flex-1">
+          <div class="card-head">
+            <div class="section-title">Step 1．貼上資料</div>
+            <button id="toggleHelp" class="btn-secondary btn-sm">貼上資料的說明</button>
+          </div>
+
+          <textarea id="raw" placeholder="例：
+張小飛    FLY
+（或）
+&quot;張小飛
+FLY&quot;"></textarea>
+
+          <!-- 說明 -->
+          <div class="instructions-content" id="helpBox" style="display:none; margin-top:.8rem; background:#f8fbff; border:1px solid #e1eefc; border-left:5px solid var(--secondary-500); border-radius:10px; padding:1em 1.2em; color:#1b3a57; line-height:1.6;">
+            <ul>
+              <li><b>永平、清水</b>：貼上「<b>中文姓名</b>」「<b>英文姓名</b>」兩欄。<br><pre style="background:#fff;border:1px solid #e6edf7;border-radius:8px;padding:.6em .8em;white-space:pre-wrap;margin:.4em 0;">張小飛    FLY</pre></li>
+              <li><b>江翠</b>：貼上「<b>中英姓名</b>」欄（中文在上一行、英文在下一行）。<br><pre style="background:#fff;border:1px solid #e6edf7;border-radius:8px;padding:.6em .8em;white-space:pre-wrap;margin:.4em 0;">張小飛
+FLY</pre></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右欄 -->
+      <div class="right-col">
+        <div class="card">
+          <div class="section-title">Step 2．選擇版型（A4 滿版）</div>
+          <div class="row-2">
+            <div>
+              <label>版型</label>
+              <select id="layoutSelect">
+                <option value="4x9">4×9（每頁 36 張；高 33 mm）</option>
+                <option value="4x10" selected>4×10（每頁 40 張；高 29.7 mm）</option>
+              </select>
+              <div class="small-muted" id="layoutHint">目前：4×10（每格 29.7mm）</div>
+            </div>
+            <div>
+              <label>每人幾排貼紙（4 張一排）</label>
+              <select id="rowsPerStudent">
+                <option value="2" selected>4×2（每人 8 張）</option>
+                <option value="3">4×3（每人 12 張）</option>
+              </select>
+              <div class="small-muted" id="rowsHint">目前：每人 8 張</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card flex-1">
+          <div class="section-title">Step 3．內容與字級</div>
+          <div class="row-2">
+            <div>
+              <label>英文班級代碼</label>
+              <input id="commonClass" type="text" placeholder="例如：TA 或 YQA">
+            </div>
+            <div>
+              <label>班級字級（px）</label>
+              <input id="codeSize" type="number" value="24">
+            </div>
+          </div>
+          <div class="row-2" style="margin-top:12px">
+            <div>
+              <label>姓名字級（px）</label>
+              <input id="nameSize" type="number" value="24">
+            </div>
+          </div>
+
+          <!-- Step 4：底部按鈕列 -->
+          <div class="actions-bar" style="margin-top:auto">
+            <button id="gen">產生標籤</button>
+            <button class="btn-secondary" id="copyHtml">複製到 Word</button>
+            <button class="btn-clear" id="clear">清空</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="previewWrap">
+      <div id="pages"></div>
+      <div id="toast" class="toast" aria-live="polite"></div>
+    </div>
+  </div>
+
+<script>
+/* ---------- 說明收合 ---------- */
+document.getElementById('toggleHelp').addEventListener('click', ()=>{
+  const box=document.getElementById('helpBox');
+  box.style.display = box.style.display==='block' ? 'none' : 'block';
+});
+
+/* ========== DOM ========= */
+const pages=document.getElementById('pages');
+const layoutSel=document.getElementById('layoutSelect');
+const layoutHintEl=document.getElementById('layoutHint');
+const rowsSel=document.getElementById('rowsPerStudent');
+const nameSizeEl=document.getElementById('nameSize');
+const codeSizeEl=document.getElementById('codeSize');
+const rawEl=document.getElementById('raw');
+const commonClassEl=document.getElementById('commonClass');
+const rowsHintEl=document.getElementById('rowsHint');
+const toastEl=document.getElementById('toast');
+const previewWrap=document.getElementById('previewWrap'); // 重要：供捲動/閃爍
+
+/* 小工具：Toast */
+let toastTimer=null;
+function showToast(msg){
+  toastEl.textContent=msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>toastEl.classList.remove('show'),1500);
+}
+
+/* 版型設定 */
+function getLayoutConfig(){
+  const v=layoutSel.value;
+  const cellH=(v==='4x10'?'29.7mm':'33mm');
+  const rowsPerPage=(v==='4x10'?10:9);
+  const hint=`目前：${v==='4x10'?'4×10':'4×9'}（每格 ${cellH}）`;
+  return {rowsPerPage,cellH,hint};
+}
+
+/* 解析輸入（支援：兩欄/引號包雙行/每行一欄成對） */
+function parseQuotedPairs(raw){
+  const list=[]; const re=/"([\s\S]*?)"/g; let m;
+  while((m=re.exec(raw))!==null){
+    const block=m[1].replace(/\r/g,'').trim();
+    if(!block) continue;
+    const parts=block.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+    if(parts.length>=2) list.push({cls:'', zh:parts[0], en:parts[1]});
+  }
+  return list;
+}
+function looksLikeHeader(cells){
+  const s=cells.join(' ').toLowerCase();
+  return /(chinese|english|name|中文|英文)/.test(s);
+}
+function parseLine(line){
+  if(!line) return null;
+  line=line.replace(/\u3000/g,' ').trim();
+  const cells=line.split(/\t|,| {2,}/).map(s=>s.trim()).filter(Boolean);
+  if(!cells.length) return null;
+  if(looksLikeHeader(cells)) return null;
+  if(cells.length===2) return {cls:'', zh:cells[0], en:cells[1]};
+  if(cells.length>=3) return {cls:cells[0], zh:cells[1], en:cells[2]};
+  return null;
+}
+function parseInput(raw){
+  const q=parseQuotedPairs(raw);
+  if(q.length) return q;
+
+  const lines=raw.replace(/\r/g,'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const recs=[]; const leftovers=[];
+  for(const line of lines){
+    const r=parseLine(line);
+    if(r) recs.push(r); else leftovers.push(line);
+  }
+  for(let i=0;i+1<leftovers.length;i+=2){
+    recs.push({cls:'', zh:leftovers[i], en:leftovers[i+1]});
+  }
+  return recs;
+}
+
+/* 同一人連續 N 排（N=2/3），計算某頁 items */
+function buildPageItemsByVerticalRows(recs, rowsPerStudent, pageIndex, rowsPerPage){
+  const PER_ROW = 4;
+  const CELLS_PER_PAGE = PER_ROW * rowsPerPage;        // 4×9=36 或 4×10=40
+  const labelsPerStudent = rowsPerStudent * PER_ROW;    // 每學生要幾格
+
+  const startStudent = Math.floor(pageIndex * CELLS_PER_PAGE / labelsPerStudent);
+  const startOffset  = (pageIndex * CELLS_PER_PAGE) % labelsPerStudent;
+
+  const out = [];
+  let sIdx = startStudent, offset = startOffset;
+
+  while(out.length < CELLS_PER_PAGE){
+    const stu = recs[sIdx];
+    if(!stu) break;
+    const startRowOfThisStu = Math.floor(offset / PER_ROW);
+    for(let r = startRowOfThisStu; r < rowsPerStudent && out.length < CELLS_PER_PAGE; r++){
+      for(let c = 0; c < PER_ROW && out.length < CELLS_PER_PAGE; c++) out.push(stu);
+    }
+    sIdx++; offset = 0;
+  }
+  while(out.length < CELLS_PER_PAGE) out.push(null);
+  return out;
+}
+
+/* 產生預覽：與 Word 版演算法一致 */
+function buildPreview(){
+  const recs=parseInput(rawEl.value);
+  const common=(commonClassEl.value||'').trim();
+  if(common) recs.forEach(r=>r.cls=common);
+
+  const rowsPerStudent=+rowsSel.value||2;
+  const {rowsPerPage,cellH,hint}=getLayoutConfig();
+  layoutHintEl.textContent=hint;
+  document.documentElement.style.setProperty('--cell-h-mm',cellH);
+
+  const PER_PAGE=rowsPerPage*4;
+  pages.innerHTML='';
+  const totalCells=recs.length*(rowsPerStudent*4);
+  const totalPages=Math.max(1,Math.ceil(totalCells/PER_PAGE));
+
+  for(let p=0;p<totalPages;p++){
+    const sheet=document.createElement('div');
+    sheet.className='sheet';
+    const grid=document.createElement('div');
+    grid.className='grid';
+
+    const items = buildPageItemsByVerticalRows(recs, rowsPerStudent, p, rowsPerPage);
+    for(let i=0;i<PER_PAGE;i++){
+      const it = items[i];
+      const cell=document.createElement('div');
+      cell.className='label';
+      if(it){
+        cell.innerHTML=`<div class='class-code'>${it.cls||''}</div><div class='student-name'>${it.zh} ${it.en}</div>`;
+      }
+      grid.appendChild(cell);
+    }
+    sheet.appendChild(grid);
+    pages.appendChild(sheet);
+  }
+  applyStyles();
+}
+
+function applyStyles(){
+  const namePx=+nameSizeEl.value||24;
+  const codePx=+codeSizeEl.value||24;
+  document.querySelectorAll('.student-name').forEach(e=>e.style.fontSize=namePx+'px');
+  document.querySelectorAll('.class-code').forEach(e=>e.style.fontSize=codePx+'px');
+}
+
+/* 產出 Word HTML（含格式） */
+function buildWordHTML(){
+  const recs = parseInput(rawEl.value);
+  const common = (commonClassEl.value || '').trim();
+  if(common) recs.forEach(r => r.cls = common);
+
+  const rowsPerStudent = +rowsSel.value || 2;
+  const { rowsPerPage, cellH } = getLayoutConfig();
+
+  const namePt = (+nameSizeEl.value || 24) * 0.75;
+  const codePt = (+codeSizeEl.value || 24) * 0.75;
+
+  const CELL_W = '52.5mm';
+  const PER_PAGE = rowsPerPage * 4;
+  const totalCells = recs.length * (rowsPerStudent * 4);
+  const totalPages = Math.max(1, Math.ceil(totalCells / PER_PAGE));
+
+  const cellStyle =
+    `width:${CELL_W};height:${cellH};vertical-align:middle;text-align:center;`+
+    `padding:0 6mm;box-sizing:border-box;border:0.25pt dotted #d0d0d0;`+
+    `background:transparent;mso-background-source:auto;`;
+  const codeStyle = `font-size:${codePt}pt;font-weight:900;line-height:1.2;text-decoration:underline;`;
+  const nameStyle = `font-size:${namePt}pt;font-weight:bold;line-height:1.22;`;
+
+  let body = '';
+  for(let p=0; p<totalPages; p++){
+    const items = buildPageItemsByVerticalRows(recs, rowsPerStudent, p, rowsPerPage);
+    body += `<table style="border-collapse:collapse;table-layout:fixed;width:calc(4*${CELL_W});mso-table-lspace:0pt;mso-table-rspace:0pt;mso-table-layout-alt:fixed;mso-table-overlap:never;">`;
+    for(let r=0; r<rowsPerPage; r++){
+      body += '<tr>';
+      for(let c=0; c<4; c++){
+        const it = items[r*4 + c];
+        const inner = it
+          ? `<div style="${codeStyle}">${it.cls || ''}</div><div style="${nameStyle}">${it.zh} ${it.en}</div>`
+          : '';
+        body += `<td style="${cellStyle}">${inner}</td>`;
+      }
+      body += '</tr>';
+    }
+    body += '</table>';
+    if(p !== totalPages-1) body += '<div style="page-break-after:always;"></div>';
+  }
+
+  return `<!doctype html>
+<html><head><meta charset="UTF-8">
+<style>@page{size:A4;margin:0}
+body,td,div{font-family:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC","Heiti TC",sans-serif}
+table{border-collapse:collapse}
+</style></head><body>${body}</body></html>`;
+}
+
+/* 事件（不自動捲動：版型/班級/字級；只有「每人幾排」會捲到貼紙區） */
+
+// 版型切換：只重算，不自動捲動
+layoutSel.addEventListener('change', () => {
+  buildPreview();
+  showToast('版型已切換');
+});
+
+// 每人幾排：重算 + 捲到貼紙區 + 閃爍提示（保留你要的行為）
+rowsSel.addEventListener('change', () => {
+  buildPreview();
+
+  const perPerson = (+rowsSel.value || 2) * 4;
+  rowsHintEl.textContent = `目前：每人 ${perPerson} 張`;   // ← 新增這行
+  showToast(`每人 ${perPerson} 張`);
+
+  previewWrap.classList.add('preview-flash');
+  previewWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(()=>previewWrap.classList.remove('preview-flash'), 650);
+});
+
+
+// 班級代碼：即時套用，不捲動
+commonClassEl.addEventListener('input', () => {
+  buildPreview();
+  showToast('📘 班級代碼已套用');
+});
+
+// 字級：即時套用，不捲動
+nameSizeEl.addEventListener('input', () => {
+  applyStyles();
+  showToast('Aa 姓名字級已更新');
+});
+codeSizeEl.addEventListener('input', () => {
+  applyStyles();
+  showToast('🏷 班級字級已更新');
+});
+
+// 產生按鈕（手動重算）
+document.getElementById('gen').addEventListener('click', buildPreview);
+
+// 複製到 Word（含格式）：保留你的相容性 fallback，但不捲動
+document.getElementById('copyHtml').addEventListener('click', async () => {
+  const html = buildWordHTML();
+
+  if (navigator.clipboard && window.ClipboardItem) {
+    try{
+      const blob = new Blob([html], { type:'text/html' });
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
+      showToast('✅ 已複製（含格式）。到 Word 選取 4×N 區塊後貼上即可。');
+      return;
+    }catch(e){ /* 失敗則走 fallback */ }
+  }
+
+  // Fallback：contentEditable copy
+  const box = document.createElement('div');
+  box.contentEditable = 'true';
+  box.style.position = 'fixed';
+  box.style.left = '-9999px';
+  box.innerHTML = html;
+  document.body.appendChild(box);
+
+  const range = document.createRange();
+  range.selectNodeContents(box);
+  const sel = window.getSelection();
+  sel.removeAllRanges(); sel.addRange(range);
+
+  const ok = document.execCommand('copy');
+  sel.removeAllRanges();
+  document.body.removeChild(box);
+
+  alert(ok ? '✅ 已複製（含格式）。到 Word 全選貼上即可。'
+           : '⚠️ 複製失敗，請再試一次或改用新版瀏覽器。');
+});
+
+// 清空
+document.getElementById('clear').addEventListener('click', () => {
+  rawEl.value = '';
+  commonClassEl.value = '';
+  pages.innerHTML = '';
+  showToast('已清空');
+});
+
+/* 初始 */
+buildPreview();
+</script>
+</body>
+</html>
