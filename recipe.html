@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <title>三聯收據產生器｜機構存根＋家長收據＋繳費通知｜每頁 A4 三位</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --brand:#0b7;
+      --ink:#222;
+      --muted:#666;
+      --line:#8a8f94;   /* 邊框（加深） */
+      --cut:#6a6a6a;    /* 可撕式虛線（更深） */
+      --font:"Noto Sans TC","PingFang TC","Heiti TC",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    }
+    html,body{ margin:0; padding:0; background:#f6f7f8; color:var(--ink); font-family:var(--font); font-size:15px; }
+    .container{ max-width:1100px; margin:24px auto 80px; padding:0 16px; }
+    h1{ font-size:24px; margin:0 0 8px; }
+    .subtitle{ color:var(--muted); margin-bottom:16px; }
+
+    .panel{
+      background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.04);
+      margin-bottom:16px;
+    }
+    .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:12px; }
+    .col-3{ grid-column:span 3; } .col-6{ grid-column:span 6; } .col-12{ grid-column:span 12; }
+
+    label{ font-size:13px; color:var(--muted); display:block; margin:0 0 6px; }
+    input[type="text"], input[type="date"], textarea{
+      width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:15px; background:#fff;
+    }
+    textarea{ min-height:140px; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Noto Sans TC",monospace; white-space:pre; }
+    input::placeholder, textarea::placeholder{ color:#999; }
+
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; align-items:center;}
+    button{
+      border:0; padding:10px 14px; border-radius:10px; font-size:14px; cursor:pointer; transition:transform .02s ease;
+      box-shadow:0 1px 2px rgba(0,0,0,.05);
+    }
+    button:active{ transform:translateY(1px); }
+    .btn-primary{ background:var(--brand); color:#fff; }
+    .btn-outline{ background:#fff; color:var(--ink); border:1px solid var(--line); }
+    .btn-danger{ background:#fff0f0; color:#b00; border:1px solid #ffdede; }
+    .preview-count{ font-size:13px; color:var(--muted); margin-left:auto; }
+
+    /* 列印區塊 */
+    .print-area{ margin-top:16px; }
+
+    /* 一頁容器：固定 3 位學生 */
+    .page{
+      background:#fff; border:1px solid var(--line); border-radius:12px; padding:10mm 6mm; margin-bottom:16px;
+      page-break-after:always;
+    }
+    .page:last-child{ page-break-after:auto; }
+
+    /* 每位學生區塊 */
+    .student-block{ position:relative; margin:0 0 6mm 0; }
+    .page .student-block:not(:last-child)::after{
+      content:""; position:absolute; left:-6mm; right:-6mm; bottom:-3mm; border-bottom:2px dashed var(--cut);
+    }
+
+    /* 三聯：第三聯 30mm + 第二聯 + 第一聯（等分） */
+    .triplet-grid{
+      display:grid; grid-template-columns:30mm 1fr 1fr; gap:6mm; align-items:stretch;
+    }
+
+    /* 卡片外觀 */
+    .receipt{
+      border:1px solid var(--line); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:6px; background:#fff; position:relative;
+    }
+    .receipt-header{
+      display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding-bottom:6px; border-bottom:1px solid var(--line);
+    }
+    .title{ font-weight:700; }
+    .tag{ font-size:12px; color:#555; background:#f3f5f6; padding:2px 8px; border-radius:999px; border:1px solid #e7eaed; }
+
+    .meta{ font-size:12px; color:#555; display:flex; flex-wrap:wrap; gap:10px; }
+    .row{ display:flex; align-items:flex-start; gap:8px; margin:4px 0; }     /* 行距更緊 */
+    .row label{ width:84px; font-size:13px; color:#555; margin:0; }          /* 標籤 +1 級 */
+    .row .val{ flex:1; font-size:16px; }                                      /* 內容 +1~2 級 */
+    .money{ font-weight:700; }
+    .note{ color:#444; white-space:pre-wrap; }
+
+    /* 第三聯（機構存根）單欄：姓名、班級、代收項目、備註（不顯示金額） */
+    .receipt[data-copy="slip"] .meta{ display:none; }
+    .receipt[data-copy="slip"] .row{ flex-direction:column; gap:2px; margin:3px 0; }
+    .receipt[data-copy="slip"] .row label{ width:auto; min-width:unset; font-size:12px; }
+    .receipt[data-copy="slip"] .row .val{ font-size:14px; }
+    .receipt[data-copy="slip"] .hide-on-slip{ display:none !important; }
+
+    /* 第二聯：簽名左、日期右，置底且更大 */
+    .sign-area{
+      display:flex; justify-content:space-between; gap:16px; margin-top:8px;
+      border-top:1px dashed var(--line); padding-top:8px;
+    }
+    .sign-box{ display:flex; align-items:center; gap:10px; flex:1; }
+    .sign-label{ width:auto; min-width:max-content; font-size:13px; color:#555; }
+    .sign-line{ flex:1; border-bottom:1px solid var(--line); height:34px; }   /* 簽名欄變大 */
+
+    .tiny{ font-size:11px; color:#666; margin-top:4px; }
+
+    /* 垂直可撕線：第三聯與第二聯後方 */
+    .cut-right::after{
+      content:""; position:absolute; top:-6px; bottom:-6px; right:-3mm; border-right:2px dashed var(--cut);
+    }
+
+    /* 列印加深：確保線條清楚 */
+    @media print{
+      body{ background:#fff; }
+      .panel, .subtitle, .actions, .header-area{ display:none !important; }
+      .container{ max-width:none; margin:0; padding:0; }
+      @page{ size:A4 portrait; margin:10mm; }
+      .page{ border:0; border-radius:0; padding:8mm 0mm; margin:0; }
+      .triplet-grid{ gap:6mm; grid-template-columns:30mm 1fr 1fr; }
+      .receipt{ border-color:#666; }
+      .sign-line{ border-bottom-color:#555; }
+      .cut-right::after{ border-right-color:#555; }
+      .page .student-block:not(:last-child)::after{ border-bottom-color:#555; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-area">
+      <h1>三聯收據產生器（每頁 A4：3 位）</h1>
+      <div class="subtitle">依序：第三聯（機構存根，30mm） → 第二聯（家長收據） → 第一聯（繳費通知）</div>
+    </div>
+
+    <div class="panel">
+      <div class="grid">
+        <div class="col-3">
+          <label>收費區間</label>
+          <input type="text" id="yearMonth" placeholder="例：2025/11" />
+        </div>
+        <div class="col-3">
+          <label>繳費截止日</label>
+          <input type="date" id="deadline" />
+        </div>
+        <div class="col-6">
+          <label>代收項目</label>
+          <input type="text" id="feeItem" placeholder="例：11月羊奶費" />
+        </div>
+        <div class="col-12">
+          <label>共用備註（套用於所有名單，可留空）</label>
+          <input type="text" id="globalNote" placeholder="例：請準時繳費，逾期依規定加收手續費" />
+        </div>
+        <div class="col-12">
+          <label>貼上 Excel 名單（每列：姓名【tab】金額【tab】備註【tab】班級〈可選〉）</label>
+          <textarea id="pasteArea" placeholder="蔡沛甯\t700\t無\t小一A\n王小明\t3500\t午餐費\t小一B\n..."></textarea>
+          <div style="font-size:12px;color:#666;margin-top:6px;">
+            ● 支援 3 欄或 4 欄資料：若有第 4 欄則視為「班級」，系統會自動依班級→姓名排序。<br/>
+            ● 金額自動加千分位與「NT$」。每頁固定 3 位，跨頁自動切分。
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" id="btnGenerate">生成收據</button>
+        <button class="btn-outline" id="btnPrint">預覽 / 列印（匯出 PDF）</button>
+        <button class="btn-danger" id="btnClear">清除結果</button>
+        <span class="preview-count" id="previewCount"></span>
+      </div>
+    </div>
+
+    <div class="print-area" id="printArea" aria-live="polite"></div>
+  </div>
+
+  <!-- 三聯模板：第三聯（slip）→ 第二聯（parent）→ 第一聯（notice） -->
+  <template id="tripletTemplate">
+    <div class="student-block">
+      <div class="triplet-grid">
+        <!-- 第三聯：機構存根（單欄：姓名/班級/代收項目/備註） -->
+        <div class="receipt cut-right" data-copy="slip">
+          <div class="receipt-header">
+            <div class="title">機構存根</div>
+            <div class="tag">第三聯</div>
+          </div>
+          <div class="row"><label>學生姓名</label><div class="val name"></div></div>
+          <div class="row"><label>班級</label><div class="val klass"></div></div>
+          <div class="row"><label>代收項目</label><div class="val item"></div></div>
+          <div class="row"><label>備註</label><div class="val note"></div></div>
+        </div>
+
+        <!-- 第二聯：家長收據（備註下放保留訊息；簽收區置底放大） -->
+        <div class="receipt cut-right" data-copy="parent">
+          <div class="receipt-header">
+            <div class="title">家長收據</div>
+            <div class="tag">第二聯</div>
+          </div>
+          <div class="meta">
+            <span class="ym"></span>
+          </div>
+          <div class="row"><label>學生姓名</label><div class="val name"></div></div>
+          <div class="row"><label>班級</label><div class="val klass"></div></div>
+          <div class="row"><label>代收項目</label><div class="val item"></div></div>
+          <div class="row"><label>金額</label><div class="val money amount"></div></div>
+          <div class="row"><label>備註</label><div class="val note"></div></div>
+          <div class="tiny">※ 本聯為家長留存，收據請保留六個月</div>
+          <div class="sign-area">
+            <div class="sign-box">
+              <div class="sign-label">經辦簽收</div>
+              <div class="sign-line"></div>
+            </div>
+            <div class="sign-box">
+              <div class="sign-label">日期</div>
+              <div class="sign-line"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 第一聯：繳費通知（含截止日與提示句） -->
+        <div class="receipt" data-copy="notice">
+          <div class="receipt-header">
+            <div class="title">繳費通知</div>
+            <div class="tag">第一聯</div>
+          </div>
+          <div class="meta">
+            <span class="ym"></span>
+          </div>
+          <div class="row"><label>學生姓名</label><div class="val name"></div></div>
+          <div class="row"><label>班級</label><div class="val klass"></div></div>
+          <div class="row"><label>代收項目</label><div class="val item"></div></div>
+          <div class="row"><label>金額</label><div class="val money amount"></div></div>
+          <div class="row"><label>備註</label><div class="val note"></div></div>
+          <div class="row"><label>繳費截止日</label><div class="val deadline"></div></div>
+          <div class="tiny">※ 如對金額或項目有疑問，請於三日內與我們聯繫。</div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    const $ = (sel, ctx=document) => ctx.querySelector(sel);
+    const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+    const printArea = $('#printArea');
+    const template = $('#tripletTemplate');
+
+    function formatMoney(v){
+      const num = Number(String(v).replace(/[^\d.-]/g,'') || 0);
+      return 'NT$ ' + num.toLocaleString('zh-Hant-TW', { maximumFractionDigits: 0 });
+    }
+
+    function detectDelimiter(sample){
+      const tab = (sample.match(/\t/g) || []).length;
+      const comma = (sample.match(/,/g) || []).length;
+      return tab >= comma ? '\t' : ',';
+    }
+
+    // 嘗試解析「姓名 金額 備註 班級(可選)」
+    function parseRows(text){
+      return text
+        .split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(l => l.length>0)
+        .map(line=>{
+          const d = detectDelimiter(line);
+          const parts = line.split(d).map(s=>s.trim());
+          const [name='', amount='', note='', klass=''] = parts;
+          return { name, amount, note, klass };
+        });
+    }
+
+    // 依班級→姓名排序（空班級排最後）
+    function sortByClassName(rows){
+      const collator = new Intl.Collator('zh-Hant-u-co-stroke', { numeric:true, sensitivity:'base' });
+      return rows.sort((a,b)=>{
+        const ka = a.klass || '～～～';  // 空的放後面
+        const kb = b.klass || '～～～';
+        const c1 = collator.compare(ka, kb);
+        if(c1 !== 0) return c1;
+        return collator.compare(a.name || '', b.name || '');
+      });
+    }
+
+    // 每頁 3 位
+    function chunk3(arr){
+      const pages = [];
+      for(let i=0; i<arr.length; i+=3){
+        pages.push(arr.slice(i, i+3));
+      }
+      return pages;
+    }
+
+    function fillTriplet(node, data, globals){
+      const {yearMonth, deadline, feeItem, globalNote} = globals;
+
+      // 抬頭（僅顯示年月）
+      const ym = yearMonth ? `收費區間${yearMonth}` : '';
+      $$('.ym', node).forEach(e => e.textContent = ym);
+
+      // 內容欄位
+      $$('.name', node).forEach(e => e.textContent = data.name || '（未填）');
+      $$('.klass', node).forEach(e => e.textContent = data.klass || '—');
+      $$('.item', node).forEach(e => e.textContent = feeItem || '（未填）');
+      $$('.amount', node).forEach(e => e.textContent = formatMoney(data.amount));
+      const mergedNote = [data.note, globalNote].filter(Boolean).join('；');
+      $$('.note', node).forEach(e => e.textContent = (mergedNote || '—'));
+      $$('.deadline', node).forEach(e => e.textContent = deadline || '—');
+    }
+
+    function generate(){
+      const rows0 = parseRows($('#pasteArea').value);
+      printArea.innerHTML = '';
+
+      const globals = {
+        yearMonth: $('#yearMonth').value.trim(),
+        deadline: $('#deadline').value, // yyyy-mm-dd
+        feeItem: $('#feeItem').value.trim(),
+        globalNote: $('#globalNote').value.trim()
+      };
+
+      if(rows0.length === 0){
+        $('#previewCount').textContent = '尚未產生任何收據。請先貼上名單。';
+        return;
+      }
+
+      const rows = sortByClassName(rows0);
+      const pages = chunk3(rows);
+
+      pages.forEach(group => {
+        const page = document.createElement('div');
+        page.className = 'page';
+        group.forEach(r => {
+          const node = template.content.cloneNode(true);
+          fillTriplet(node, r, globals);
+          page.appendChild(node);
+        });
+        printArea.appendChild(page);
+      });
+
+      $('#previewCount').textContent = `共 ${rows.length} 位（已依班級排序）；每頁 3 位，共 ${pages.length} 頁。`;
+    }
+
+    $('#btnGenerate').addEventListener('click', generate);
+    $('#btnClear').addEventListener('click', ()=>{
+      $('#pasteArea').value = '';
+      $('#previewCount').textContent = '';
+      printArea.innerHTML = '';
+    });
+    $('#btnPrint').addEventListener('click', ()=>{
+      if(!printArea.children.length){ generate(); }
+      window.print();
+    });
+  </script>
+</body>
+</html>
