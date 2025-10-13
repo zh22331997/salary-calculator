@@ -125,12 +125,18 @@
     <select id="examType"><option>中</option><option>末</option></select>考 學生成績單
   </p>
 
-  <h3>請貼上全班成績資料（含標題列）</h3>
+  <h3 id="rawTitle">請貼上全班成績資料（含標題列）</h3>
   <textarea id="rawInput" placeholder="姓名\t國語\t數學\t自然\t社會\t英文"></textarea>
+  <div id="rawHint" class="small-text" style="margin-top:4px;color:#555;">
+    標題列需包含：姓名、國語、數學、自然、社會、英文（年級不同會自動調整必填科目）
+  </div>
   <br><br>
 
-  <h3>班平均成績（貼上格式：國語\t數學\t自然\t社會\t英文）</h3>
-  <textarea id="avgPaste" placeholder="請貼上班平均五科成績（例如：91.29\t91.54\t94.37\t92.28\t93.57）"></textarea>
+  <h3 id="avgTitle">班平均成績（貼上格式：國語\t數學\t自然\t社會\t英文）</h3>
+  <textarea id="avgPaste" placeholder="例如：91.29\t91.54\t94.37\t92.28\t93.57"></textarea>
+  <div id="avgHint" class="small-text" style="margin-top:4px;color:#555;">
+    依年級自動調整科目數：一～二年級（2 科），三～六年級（5 科）
+  </div>
   <br><br>
 
   正華班排前 <input id="targetIndex" type="number" value="5" style="width:50px"> 名（若有並列名次，會自動包含）
@@ -150,7 +156,74 @@
 <script>
 function formatNumber(n) {
   const f = parseFloat(n);
+  if (Number.isNaN(f)) return '';
   return f % 1 === 0 ? parseInt(f) : f.toFixed(2);
+}
+function num(v){ const x = parseFloat(v); return Number.isNaN(x) ? 0 : x; }
+
+function isLowerGrade(grade){ return grade === '一' || grade === '二'; }
+
+function getSubjectConfig(grade){
+  if (isLowerGrade(grade)) {
+    return [
+      { key: 'c', label: '國語' },
+      { key: 'm', label: '數學' }
+    ];
+  }
+  return [
+    { key: 'c', label: '國語' },
+    { key: 'm', label: '數學' },
+    { key: 's', label: '自然' },
+    { key: 'so', label: '社會' },
+    { key: 'e', label: '英文' }
+  ];
+}
+
+function updatePlaceholders(){
+  const grade = document.getElementById("grade").value;
+  const subs = getSubjectConfig(grade).map(s=>s.label);
+  const rawPH = ["姓名"].concat(subs).join("\\t");
+  document.getElementById("rawInput").placeholder = rawPH;
+
+  const avgTitle = document.getElementById("avgTitle");
+  const avgPH = subs.join("\\t");
+  avgTitle.innerText = `班平均成績（貼上格式：${avgPH}）`;
+  document.getElementById("avgPaste").placeholder = `例如：${subs.map(()=> (90 + Math.random()*10).toFixed(2)).join("\\t")}`;
+
+  const rawHint = document.getElementById("rawHint");
+  rawHint.innerText = `標題列需包含：姓名、${subs.join('、')}（可任意順序，系統會自動對應）`;
+}
+
+function buildHeaderMap(headers, grade){
+  const map = { name: 0 }; // 預設第 0 欄是姓名（常見）
+  // 嘗試尋找「姓名」欄位
+  headers.forEach((t, idx)=>{
+    const title = (t || '').trim();
+    if (title.includes('姓名') || title.toLowerCase() === 'name') map.name = idx;
+  });
+
+  const subjects = getSubjectConfig(grade);
+  subjects.forEach(sub=>{
+    headers.forEach((t, idx)=>{
+      const title = (t || '').trim();
+      if (title.includes(sub.label)) map[sub.key] = idx;
+    });
+  });
+  return map;
+}
+
+function validateHeaderMap(map, grade){
+  const subjects = getSubjectConfig(grade);
+  const missing = subjects.filter(s=> typeof map[s.key] !== 'number');
+  return { ok: missing.length === 0, missing: missing.map(m=>m.label) };
+}
+
+function parseAvgBySubjects(avgRawArr, grade){
+  const subjects = getSubjectConfig(grade);
+  const vals = subjects.map((_, i)=> num(avgRawArr[i]||0));
+  const total = vals.reduce((a,b)=>a+b,0);
+  const avg = (vals.length>0) ? (total/vals.length) : 0;
+  return { vals, total, avg, subjects };
 }
 
 function generateReports() {
@@ -162,53 +235,50 @@ function generateReports() {
   const comment = document.getElementById("teacherComment").value;
   const topN = parseInt(document.getElementById("targetIndex").value);
 
+  // 班平均
   const avgRaw = document.getElementById("avgPaste").value.trim().split("\t");
-  const avgC = Number(avgRaw[0] || 0).toFixed(2);
-  const avgM = Number(avgRaw[1] || 0).toFixed(2);
-  const avgS = Number(avgRaw[2] || 0).toFixed(2);
-  const avgSo = Number(avgRaw[3] || 0).toFixed(2);
-  const avgE = Number(avgRaw[4] || 0).toFixed(2);
+  const { vals: avgVals, total: avgTotal, avg: avgAverage, subjects } = parseAvgBySubjects(avgRaw, grade);
 
-  const avgTotal = (+avgC + +avgM + +avgS + +avgSo + +avgE).toFixed(2);
-  const avgAverage = ((+avgC + +avgM + +avgS + +avgSo + +avgE)/5).toFixed(2);
-
+  // 原始資料
   const raw = document.getElementById("rawInput").value.trim();
-  const lines = raw.split("\n");
-  const headers = lines[0].split("\t");
-  const headerMap = {};
-  headers.forEach((title, index) => {
-    if (title.includes('國語')) headerMap.c = index;
-    if (title.includes('數學')) headerMap.m = index;
-    if (title.includes('自然')) headerMap.s = index;
-    if (title.includes('社會')) headerMap.so = index;
-    if (title.includes('英文')) headerMap.e = index;
-  });
+  if (!raw) { alert("請先貼上全班成績資料（含標題列）。"); return; }
+  const lines = raw.split("\n").filter(l => l.trim().length > 0);
+  if (lines.length < 2) { alert("資料筆數不足，請確認至少包含標題列與一位學生資料。"); return; }
 
+  const headers = lines[0].split("\t");
+  const headerMap = buildHeaderMap(headers, grade);
+  const headerCheck = validateHeaderMap(headerMap, grade);
+  if (!headerCheck.ok) {
+    alert(`找不到必要欄位：${headerCheck.missing.join('、')}。\n請確認標題列是否包含這些欄位。`);
+    return;
+  }
+
+  // 解析學生資料
   const students = lines.slice(1).map(l => l.split("\t"));
   const scoreList = students.map(fields => {
-    const total = [
-      +fields[headerMap.c],
-      +fields[headerMap.m],
-      +fields[headerMap.s],
-      +fields[headerMap.so],
-      +fields[headerMap.e]
-    ].reduce((a, b) => a + b, 0);
+    const name = fields[headerMap.name] || fields[0] || '';
+    const subsScores = subjects.map(s => num(fields[headerMap[s.key]]));
+    const total = subsScores.reduce((a,b)=>a+b,0);
+    const avg = subjects.length ? (total / subjects.length) : 0;
     return {
-      name: fields[0],
-      data: fields,
-      total: total,
-      avg: (total / 5).toFixed(1)
+      name,
+      raw: fields,
+      scores: subsScores,
+      total,
+      avg
     };
-  }).sort((a, b) => b.total - a.total);
+  }).sort((a,b)=> b.total - a.total);
 
+  // 前 N 名（含並列）
   const cutoffScore = scoreList.length >= topN ? scoreList[topN - 1].total : 0;
   const topStudents = scoreList.filter(stu => stu.total >= cutoffScore);
 
+  // 產出
   const output = document.getElementById("output");
   output.innerHTML = "";
 
   scoreList.forEach((student) => {
-    const s = student.data;
+    // 前 N 名表格（處理並列名次）
     let currentRank = 1;
     let lastScore = null;
     let displayRank = 1;
@@ -218,19 +288,33 @@ function generateReports() {
       }
       lastScore = stu.total;
       currentRank++;
+      const cells = subjects.map((s, idx)=> `<td>${formatNumber(stu.scores[idx])}</td>`).join("");
       return `
         <tr>
           <td>${displayRank}</td>
           <td>${stu.name}</td>
-          <td>${formatNumber(stu.data[headerMap.c])}</td>
-          <td>${formatNumber(stu.data[headerMap.m])}</td>
-          <td>${formatNumber(stu.data[headerMap.s])}</td>
-          <td>${formatNumber(stu.data[headerMap.so])}</td>
-          <td>${formatNumber(stu.data[headerMap.e])}</td>
+          ${cells}
           <td>${formatNumber(stu.total)}</td>
           <td>${formatNumber(stu.avg)}</td>
         </tr>`;
     }).join("");
+
+    // 個人成績列
+    const personCells = subjects.map((s, idx)=>{
+      const colIndex = headerMap[s.key];
+      return `<td>${formatNumber(student.raw[colIndex])}</td>`;
+    }).join("");
+
+    // 班平均列
+    const avgCells = avgVals.map(v => `<td>${formatNumber(v.toFixed ? v.toFixed(2) : v)}</td>`).join("");
+
+    // 動態表頭
+    const theadCols = ['學生'].concat(subjects.map(s=>s.label)).concat(['總分','平均']);
+    const theadHtml = theadCols.map(t=>`<th>${t}</th>`).join("");
+
+    // 前 N 名表頭
+    const rankHead = ['名次','姓名'].concat(subjects.map(s=>s.label)).concat(['總分','平均']);
+    const rankHeadHtml = rankHead.map(t=>`<th>${t}</th>`).join("");
 
     const page = `
     <div class="b5">
@@ -238,24 +322,16 @@ function generateReports() {
       <p style="text-align:center; margin-top: 0; line-height: 1.2;">${schoolYear}學年${semester}學期 期${examType}考 ${grade}年級學生個人成績單</p>
 
       <table>
-        <tr><th>學生</th><th>國語</th><th>數學</th><th>自然</th><th>社會</th><th>英文</th><th>總分</th><th>平均</th></tr>
+        <tr>${theadHtml}</tr>
         <tr>
-          <td>${s[0]}</td>
-          <td>${formatNumber(s[headerMap.c])}</td>
-          <td>${formatNumber(s[headerMap.m])}</td>
-          <td>${formatNumber(s[headerMap.s])}</td>
-          <td>${formatNumber(s[headerMap.so])}</td>
-          <td>${formatNumber(s[headerMap.e])}</td>
+          <td>${student.name}</td>
+          ${personCells}
           <td>${formatNumber(student.total)}</td>
           <td>${formatNumber(student.avg)}</td>
         </tr>
         <tr>
           <td>班平均</td>
-          <td>${formatNumber(avgC)}</td>
-          <td>${formatNumber(avgM)}</td>
-          <td>${formatNumber(avgS)}</td>
-          <td>${formatNumber(avgSo)}</td>
-          <td>${formatNumber(avgE)}</td>
+          ${avgCells}
           <td>${formatNumber(avgTotal)}</td>
           <td>${formatNumber(avgAverage)}</td>
         </tr>
@@ -263,7 +339,7 @@ function generateReports() {
 
       <div class="red-title">正華班排前${topN}名</div>
       <table>
-        <tr><th>名次</th><th>姓名</th><th>國語</th><th>數學</th><th>自然</th><th>社會</th><th>英文</th><th>總分</th><th>平均</th></tr>
+        <tr>${rankHeadHtml}</tr>
         ${topRows}
       </table>
 
@@ -283,7 +359,7 @@ function generateReports() {
   });
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+function initSemesterMeta(){
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
@@ -303,6 +379,11 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("schoolYear").value = semesterYear;
   document.getElementById("semester").value = semester;
   document.getElementById("examType").value = examType;
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  initSemesterMeta();
+  updatePlaceholders();
 
   // 字數計算功能啟動
   const teacherComment = document.getElementById("teacherComment");
@@ -312,8 +393,12 @@ window.addEventListener("DOMContentLoaded", () => {
     wordCountDisplay.innerText = `目前字數：${count} / 建議上限 600`;
     wordCountDisplay.style.color = count > 600 ? 'red' : '#666';
   });
+
+  // 年級切換 → 動態切換科目數與提示
+  document.getElementById("grade").addEventListener("change", updatePlaceholders);
 });
 </script>
 
 </body>
 </html>
+
