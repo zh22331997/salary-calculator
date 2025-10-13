@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
@@ -9,17 +9,10 @@
    Design System (Tokens)
    ========================= */
 :root{
-  /* 主色：你的品牌色 */
-  --brand-500:#A1C6EA;   /* 主要：產生 */
-  --brand-600:#8FB9E2;   /* 主要 hover */
+  --brand-500:#A1C6EA; --brand-600:#8FB9E2;
+  --secondary-500:#BBD1EA; --secondary-600:#A8C5E6;
+  --clear-500:#DAE3E5; --clear-600:#CFD9DC;
 
-  --secondary-500:#BBD1EA; /* 次要：列印 */
-  --secondary-600:#A8C5E6; /* 次要 hover */
-
-  --clear-500:#DAE3E5;   /* 清空 */
-  --clear-600:#CFD9DC;   /* 清空 hover */
-
-  /* 其他系統色 */
   --text-strong:#1f2937; --text-normal:#374151; --text-mute:#6b7280;
   --border:#d1d5db; --border-strong:#9ca3af;
   --bg-page:#f0f2f5; --bg-card:#ffffff; --bg-info:#f8fbff; --bg-info-border:#e1eefc;
@@ -38,7 +31,7 @@
   --focus-ring:0 0 0 3px rgba(106,154,255,0.25);
   --focus-border:#6a9aff;
 
-  --btn-text:#17324A;  /* 淺色按鈕上的深字 */
+  --btn-text:#17324A;
 }
 
 /* =========================
@@ -131,22 +124,39 @@ button:focus{outline:none; box-shadow:var(--focus-ring)}
 .btn-clear{ background:var(--clear-500); color:var(--btn-text); }
 .btn-clear:hover{ background:var(--clear-600); }
 
-/* 按鈕列：置中/同寬 */
 .btn-row{ display:flex; gap:12px; justify-content:center; align-items:center; flex-wrap:wrap; margin-top:.5rem; }
 .btn-row > button{ width:200px; margin:0; }
 
 /* =========================
-   名條排版（A4 3×7）
+   名條排版（A4 3×7）— 關鍵修正
    ========================= */
+/* 每一頁固定 A4 尺寸與「剛好放入 3×7」的內距：上/下 6mm、左/右 10.5mm */
+.sheet{
+  width:210mm; height:297mm;
+  padding:6mm 10.5mm;  /* 297 - 7*39 = 24 -> 上下各 6mm；210 - 3*63 = 21 -> 左右各 10.5mm */
+  margin:0;
+  background:#fff;
+  display:grid;
+  grid-template-columns:repeat(3, 63mm);
+  grid-template-rows:repeat(7, 39mm);
+  gap:0;               /* 不留縫，確保精準對齊 */
+  align-content:start; /* 多頁時保險 */
+  box-shadow:var(--shadow-md); /* 只影響螢幕預覽，列印會隱藏 */
+}
+
+#output{display:flex; flex-direction:column; gap:24px; align-items:center;}
+.output-page{ /* 保留 class 名稱以相容你的 JS，但實際樣式由 .sheet 控制 */}
+.output-page.sheet{}
+
+/* 名條本體以 mm 定尺寸，含邊框 */
 .namecard{
-  width:63mm; height:39mm; margin:0; padding:2mm 0 0 0; border:.3px solid #000;
-  box-sizing:border-box; text-align:center; page-break-inside:avoid; background:#fff; border-radius:4px;
+  width:63mm; height:39mm;
+  margin:0; padding:2mm 0 0 0;
+  border:.3px solid #000; border-radius:0;
+  box-sizing:border-box; background:#fff; text-align:center;
+  page-break-inside:avoid;
 }
-#output{display:flex;flex-wrap:wrap;gap:1px;justify-content:center;}
-.output-page{
-  width:100%; font-size:0; page-break-after:always; margin:0; padding:0;
-  display:flex; flex-wrap:wrap; justify-content:center;
-}
+
 .line1{font-size:13pt;}
 .line2{font-size:12pt; margin:1mm 0;}
 .class{font-size:12pt; margin:1mm 0;}
@@ -158,11 +168,33 @@ button:focus{outline:none; box-shadow:var(--focus-ring)}
    列印
    ========================= */
 @media print{
-  @page{size:A4 portrait; margin:0;}
-  .input-area, h1, #printBtn{ display:none !important; }
-  .output-page{ display:flex; flex-wrap:wrap; justify-content:center; page-break-after:always; }
+  @page{ size:A4 portrait; margin:0; }
+
+  /* 只隱藏不必要的 UI */
+  .input-area,
+  .instructions-wrapper,
+  h1,
+  #printBtn{
+    display:none !important;
+  }
+
+  /* 讓容器在列印時像一張白紙，保留裡面的 #output 與 .sheet */
+  .container{
+    display:block !important;
+    background:#fff !important;
+    box-shadow:none !important;
+    padding:0 !important;
+    margin:0 !important;
+    border-radius:0 !important;
+  }
+
+  body{ background:#fff; }
+  #output{ display:block; }
+  .sheet{ box-shadow:none !important; }
+  .output-page{ break-after:page; page-break-after:always; }
   .namecard{ page-break-inside:avoid; }
 }
+
   </style>
 </head>
 <body>
@@ -252,7 +284,7 @@ button:focus{outline:none; box-shadow:var(--focus-ring)}
       }
       if(parsed.length===0){ alert('標題已找到，但資料列未能擷取到有效的班級與中文姓名。'); return; }
 
-      // 繪製
+      // 繪製：每 21 張一頁（A4 3×7）
       let page=createNewPage(); output.appendChild(page);
       parsed.forEach((item,idx)=>{
         const card=document.createElement('div');
@@ -285,7 +317,7 @@ button:focus{outline:none; box-shadow:var(--focus-ring)}
 
     function createNewPage(){
       const div=document.createElement('div');
-      div.className='output-page';
+      div.className='output-page sheet';
       return div;
     }
 
@@ -298,14 +330,14 @@ button:focus{outline:none; box-shadow:var(--focus-ring)}
         const ch=text[i], next=text[i+1];
 
         if(ch === '"'){
-          if(next === '"'){ cell+='"'; i++; } // 轉義的雙引號
+          if(next === '"'){ cell+='"'; i++; }
           else { inQuotes = !inQuotes; }
           continue;
         }
 
         if(ch === '\t' && !inQuotes){ row.push(cell); cell=''; continue; }
         if((ch === '\n' || ch === '\r') && !inQuotes){
-          if(ch === '\r' && next === '\n') i++; // CRLF
+          if(ch === '\r' && next === '\n') i++;
           row.push(cell); cell='';
           if(row.some(c => (c && c.trim().length))) rows.push(row);
           row = [];
