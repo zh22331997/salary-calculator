@@ -231,11 +231,11 @@ p select {
     <select id="examType"><option>中</option><option>末</option></select>考 學生成績單
   </p>
 
-  <h3>請貼上全班成績資料（含標題列）</h3>
-  <textarea id="rawInput" placeholder="姓名\t國語\t數學\t自然\t社會\t英文"></textarea>
+  <h3>請從EXCEL貼上全班成績資料（含標題列）</h3>
+  <textarea id="rawInput" placeholder="姓名\國語\數學\自然\社會\英文"></textarea>
 
-  <h3>班平均成績（貼上格式：依年級自動）</h3>
-  <textarea id="avgPaste" placeholder="一二年級：國語\t數學；三～六年級：國語\t數學\t自然\t社會\t英文"></textarea>
+  <h3>請從EXCEL貼上班平均成績（不含標題列，請務必依照下列順序)</h3>
+  <textarea id="avgPaste" placeholder="一二年級：國語\數學\總分\平均；三～六年級：國語\數學\自然\社會\英文\總分\平均"></textarea>
 
   <div class="small-text" style="margin-top:6px">
     正華班排前 <input id="targetIndex" type="number" value="5" style="width:60px; height:2rem"> 名（若有並列名次，會自動包含）
