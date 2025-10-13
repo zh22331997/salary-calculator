@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -308,11 +309,14 @@ button:focus{outline:none; box-shadow:var(--focus-ring)}
     }
 
     function clearAll(){
-      document.getElementById('line1').value='';
-      document.getElementById('line2').value='';
-      document.getElementById('rawData').value='';
-      document.getElementById('output').innerHTML='';
-      document.getElementById('printBtn').style.display='none';
+    // 僅清除使用者輸入，不清空預設值
+    document.getElementById('line1').value = document.getElementById('line1').defaultValue || '2025正華夏令營';
+    document.getElementById('line2').value = document.getElementById('line2').defaultValue || '學習單資料夾';
+
+    // 清空貼上的 Excel 資料區域與產生結果
+    document.getElementById('rawData').value = '';
+    document.getElementById('output').innerHTML = '';
+    document.getElementById('printBtn').style.display = 'none';
     }
 
     function createNewPage(){
