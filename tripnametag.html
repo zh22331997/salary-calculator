@@ -1,8 +1,9 @@
+
 <!DOCTYPE html> 
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8" />
-<title>正華戶外活動名牌產生器 v0713</title>
+<title>正華戶外成長營or活動名牌產生器 v0713</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
@@ -68,16 +69,18 @@ code{background-color:#f0f0f0;padding:2px 5px;border-radius:4px;font-family:mono
   <h3>📚 學生資料</h3>
   <p>
       ✅ 貼資料有兩種方式：<br>
-      ① 直接貼 Excel（含標題列）— 自動辨識 <code>參加?、姓名、車次、桌次、帶隊老師</code>。<br>
-      ② 只貼需要的欄位：<code>姓名  車次  桌次  老師與電話</code><br><br>
+      ① 從 Excel（含標題列）複製貼上，系統會自動辨識以下資訊<code>參加?、姓名、車次、桌次、帶隊老師</code>。<br>
+      ② 只貼需要的欄位（含標題列）：<code>姓名  車次  桌次  老師與電話</code><br><br>
       🧭 規則：<br>
-      • <code>一定</code>要從 Excel 複製貼上（保持 Tab 分隔）。<br>
-      • 若偵測到「參加?」欄：只輸出 TRUE；否則輸出全部。<br>
+      • <code>一定</code>要從 Excel 複製貼上。<br>
+      • 若偵測到「參加?」的勾選欄：系統只會輸出勾要參加的名單。<br>
       • 有時並無分桌用餐，因此資料 <code>可以沒有「桌次」</code>。<br>
-      • 手機會自動整理為 <code>09xx-xxx-xxx</code>。
+      • 手機會自動整理為 <code>09xx-xxx-xxx</code>格式。<br>
+      • 列印時請記得<code>勾"背景圖形"</code>，才會有正華LOGO在名牌上喔!
   </p>
 
-  <textarea id="inputArea" rows="8" placeholder="王小明 第1車 第1桌 Tina老師 0900-111-222"></textarea>
+  <textarea id="inputArea" rows="8" placeholder="姓名   車次   桌次   帶隊老師與電話
+王小明 第1車 第1桌 Tina老師 0900-111-222"></textarea>
   <button onclick="generateCards()">生成名牌</button>
   <button onclick="window.print()">列印名牌</button>
   <button style="background-color:#999" onclick="clearAll()">🧹 清空內容</button>
