@@ -195,6 +195,17 @@ button:focus{outline:none; box-shadow:var(--focus-ring)}
   .output-page{ break-after:page; page-break-after:always; }
   .namecard{ page-break-inside:avoid; }
 }
+/* 只調整空白名條的 LOGO 位置（靠左、預留手寫空間） */
+.blank-card .name-row{
+  justify-content: flex-start;   /* 不置中，靠左 */
+  padding-left: 22mm;            /* 預留右側手寫空間，可視需要微調 18–26mm */
+  max-width: 100%;               /* 讓 padding 生效的空間更彈性 */
+  margin-left: 0; margin-right: 0;
+}
+.blank-card .logo{
+  /* 如果覺得太大，可開啟下一行微縮 */
+  /* max-height: 11mm; */
+}
 
   </style>
 </head>
@@ -249,64 +260,101 @@ button:focus{outline:none; box-shadow:var(--focus-ring)}
     });
 
     // 產生名條（必須含標題列）
-    function generateNamecards(){
-      const line1El=document.getElementById('line1');
-      const line2El=document.getElementById('line2');
-      const line1=(line1El.value||'').trim() || line1El.defaultValue || line1El.placeholder || '';
-      const line2=(line2El.value||'').trim() || line2El.defaultValue || line2El.placeholder || '';
-      const raw =document.getElementById('rawData').value;
-      const output=document.getElementById('output');
+   function generateNamecards(){
+  const line1El = document.getElementById('line1');
+  const line2El = document.getElementById('line2');
+  const line1 = (line1El.value||'').trim() || line1El.defaultValue || line1El.placeholder || '';
+  const line2 = (line2El.value||'').trim() || line2El.defaultValue || line2El.placeholder || '';
+  const raw   = document.getElementById('rawData').value;
+  const output = document.getElementById('output');
 
-      output.innerHTML='';
-      if(!raw || !raw.trim()){ alert('請先貼上資料（需含標題列）。'); return; }
+  output.innerHTML = '';
 
-      // 解析 TSV（尊重引號＋欄內換行）
-      const rows = parseTsvRespectingQuotes(raw);
-      if(rows.length < 2){ alert('內容不足，請確認包含標題列與至少一筆資料。'); return; }
+  // 允許沒有貼資料也能只產生空白名條；若有資料就照既有規則解析
+  let parsed = [];
+  if(raw && raw.trim()){
+    const rows = parseTsvRespectingQuotes(raw);
+    if(rows.length < 2){ alert('內容不足，請確認包含標題列與至少一筆資料。'); return; }
 
-      // 只依標題列判斷欄位
-      const header = rows[0].map(normalizeHeader);
-      const idxClass = header.findIndex(h => h === '班級');
-      const nameCandidates = new Set(['姓名','學生','學生姓名','中文姓名','中文姓名英文姓名']);
-      let idxName = -1;
-      for(let i=0;i<header.length;i++){ if(nameCandidates.has(header[i])){ idxName=i; break; } }
+    const header = rows[0].map(normalizeHeader);
+    const idxClass = header.findIndex(h => h === '班級');
+    const nameCandidates = new Set(['姓名','學生','學生姓名','中文姓名','中文姓名英文姓名']);
+    let idxName = -1;
+    for(let i=0;i<header.length;i++){ if(nameCandidates.has(header[i])){ idxName = i; break; } }
 
-      if(idxClass < 0){ alert('找不到「班級」欄位，請確認標題列名稱為「班級」。'); return; }
-      if(idxName < 0){ alert('找不到姓名欄位，請使用「姓名／學生／學生姓名／中文姓名／中文姓名英文姓名」。'); return; }
+    if(idxClass < 0){ alert('找不到「班級」欄位，請確認標題列名稱為「班級」。'); return; }
+    if(idxName < 0){ alert('找不到姓名欄位，請使用「姓名／學生／學生姓名／中文姓名／中文姓名英文姓名」。'); return; }
 
-      const parsed = [];
-      for(let r=1;r<rows.length;r++){
-        const cells = rows[r];
-        if(!cells || cells.length===0) continue;
-        const className = (cells[idxClass] ?? '').trim();
-        const rawName   = (cells[idxName]  ?? '').trim();
-        const nameZh    = extractZh(rawName);
-        if(className && nameZh) parsed.push({ className, nameZh });
-      }
-      if(parsed.length===0){ alert('標題已找到，但資料列未能擷取到有效的班級與中文姓名。'); return; }
-
-      // 繪製：每 21 張一頁（A4 3×7）
-      let page=createNewPage(); output.appendChild(page);
-      parsed.forEach((item,idx)=>{
-        const card=document.createElement('div');
-        card.className='namecard';
-        card.innerHTML = `
-          <div class="line1">${escapeHtml(line1)}</div>
-          <div class="line2">${escapeHtml(line2)}</div>
-          <div class="class">${escapeHtml(item.className)}</div>
-          <div class="name-row">
-            <img class="logo" src="https://github.com/zh22331997/salary-calculator/blob/main/2019%20zh%20logo.png?raw=true" alt="logo">
-            <div class="name">${escapeHtml(item.nameZh)}</div>
-          </div>`;
-        page.appendChild(card);
-        if((idx+1)%21===0 && (idx+1)!==parsed.length){
-          page=createNewPage(); output.appendChild(page);
-        }
-      });
-
-      document.getElementById('printBtn').style.display='inline-flex';
-      output.scrollIntoView({behavior:'smooth',block:'start'});
+    for(let r=1;r<rows.length;r++){
+      const cells = rows[r];
+      if(!cells || cells.length===0) continue;
+      const className = (cells[idxClass] ?? '').trim();
+      const rawName   = (cells[idxName]  ?? '').trim();
+      const nameZh    = extractZh(rawName);
+      if(className && nameZh) parsed.push({ className, nameZh });
     }
+  }
+
+  // 開始繪製頁面；統一用計數器管理跨頁
+  let page = createNewPage(); 
+  output.appendChild(page);
+  let count = 0;
+
+  // 先放入有名單的卡片
+  parsed.forEach(item=>{
+    const card = document.createElement('div');
+    card.className = 'namecard';
+    card.innerHTML = `
+      <div class="line1">${escapeHtml(line1)}</div>
+      <div class="line2">${escapeHtml(line2)}</div>
+      <div class="class">${escapeHtml(item.className)}</div>
+      <div class="name-row">
+        <img class="logo" src="https://github.com/zh22331997/salary-calculator/blob/main/2019%20zh%20logo.png?raw=true" alt="logo">
+        <div class="name">${escapeHtml(item.nameZh)}</div>
+      </div>`;
+    page.appendChild(card);
+    count++;
+    if(count % 21 === 0){
+      page = createNewPage(); 
+      output.appendChild(page);
+    }
+  });
+
+  // 詢問要加印幾張空白名條（沒有班級、沒有姓名）
+  const extraStr = window.prompt('需要加印幾張「空白名條」？（直接按確定或取消表示 0）', '0');
+  const extra = parseInt(extraStr, 10);
+  if(Number.isFinite(extra) && extra > 0){
+    for(let i=0;i<extra;i++){
+      const blank = document.createElement('div');
+      blank.className = 'namecard blank-card';
+      blank.innerHTML = `
+      <div class="line1">${escapeHtml(line1)}</div>
+      <div class="line2">${escapeHtml(line2)}</div>
+      <div class="class"></div>
+      <div class="name-row">
+        <img class="logo" src="https://github.com/zh22331997/salary-calculator/blob/main/2019%20zh%20logo.png?raw=true" alt="logo">
+        <div class="name"></div>
+      </div>`;
+      page.appendChild(blank);
+      count++;
+      if(count % 21 === 0 && i !== extra-1){
+        page = createNewPage(); 
+        output.appendChild(page);
+      }
+    }
+  }
+  // 若最後一頁是空的（例如剛好 21 的倍數、或完全沒卡片），就移除
+    if (page && page.childElementCount === 0) {
+     output.removeChild(page);
+    }
+
+
+  // 顯示列印鈕並捲到輸出區
+  document.getElementById('printBtn').style.display='inline-flex';
+  output.scrollIntoView({behavior:'smooth', block:'start'});
+
+
+}
 
     function clearAll(){
     // 僅清除使用者輸入，不清空預設值
