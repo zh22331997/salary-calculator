@@ -4,322 +4,336 @@
   <meta charset="UTF-8">
   <title>個人成績單產生器</title>
   <style>
-    @page {
-      size: B4 landscape;
-      margin: 0.5cm;
-    }
+/* =========================
+   Design System (Tokens)
+   ========================= */
+:root{
+  --brand-500:#A1C6EA; --brand-600:#8FB9E2;
+  --secondary-500:#BBD1EA; --secondary-600:#A8C5E6;
+  --clear-500:#DAE3E5; --clear-600:#CFD9DC;
 
-    @media print {
-      html, body {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-      .b5 {
-        width: 17.6cm !important;
-        height: 25cm !important;
-        padding: 1.5cm;
-        box-sizing: border-box;
-        page-break-inside: avoid;
-      }
-    }
+  --text-strong:#1f2937; --text-normal:#374151; --text-mute:#6b7280;
+  --border:#d1d5db; --border-strong:#9ca3af;
+  --bg-page:#f0f2f5; --bg-card:#ffffff; --bg-info:#f8fbff; --bg-info-border:#e1eefc;
 
-    textarea, input, select {
-      font-family: inherit;
-      font-size: 14px;
-    }
+  --font-sans:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC","Heiti TC",sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
 
-    .b5 {
-      width: 50%;
-      float: left;
-      box-sizing: border-box;
-      page-break-inside: avoid;
-      page-break-before: avoid;
-      break-inside: avoid;
-      height: 100%;
-      min-height: 100%;
-      padding: 1.5cm;
-      margin: 0.5cm;
-      background: white;
-    }
+  --radius-sm:6px; --radius-md:8px; --radius-lg:12px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:0 2px 10px rgba(0,0,0,0.10);
+  --shadow-lg:0 4px 20px rgba(0,0,0,0.12);
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
+  --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem;
+  --input-height:2.75rem; --btn-height:2.9rem;
 
-    th, td {
-      border: 1px solid black;
-      text-align: center;
-      padding: 5px;
-    }
+  --focus-ring:0 0 0 3px rgba(106,154,255,0.25);
+  --focus-border:#6a9aff;
 
-    textarea {
-      width: 100%;
-      height: 120px;
-    }
+  --btn-text:#17324A;
+}
 
-    #output {
-      margin-top: 20px;
-    }
+/* =========================
+   Base（不動原版面，只做風格一致）
+   ========================= */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg-page);
+  margin:0; padding:0;
+  color:var(--text-normal);
+}
+#controls{
+  background:var(--bg-card);
+  padding:2rem; margin:2rem auto 1rem; border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg); max-width:1100px; width:calc(100% - 2rem);
+}
+h2{margin:0 0 var(--space-4); color:#0056b3; text-align:center; font-weight:800;}
+h3{color:var(--text-strong); border-bottom:2px solid #e0e0e0; padding-bottom:.5rem; margin-top:1.25rem; margin-bottom:.75rem;}
+label{font-weight:700; color:#555;}
+p{color:#444; font-size:.95rem; line-height:1.6}
 
-    .small-text {
-      font-size: 10pt;
-    }
+/* 表單元件（風格一致） */
+textarea, input, select{
+  font-family:inherit; font-size:16px;
+}
+textarea,
+input[type="text"],
+input[type="number"],
+select{
+  width:100%; height:var(--input-height); padding:0 var(--space-4);
+  border-radius:var(--radius-md); border:1px solid var(--border);
+  background:#fff; transition:border-color .2s, box-shadow .2s;
+}
+textarea{
+  height:auto; min-height:160px; padding:var(--space-3);
+  line-height:1.5; font-family:var(--font-mono);
+}
+textarea:focus, input:focus, select:focus{ outline:none; border-color:var(--focus-border)!important; box-shadow:var(--focus-ring); }
 
-    .red-title {
-      color: red;
-      font-weight: bold;
-      margin-top: 10px;
-    }
+/* 下拉外觀（藍） */
+select{
+  appearance:none; -webkit-appearance:none; -moz-appearance:none;
+  cursor:pointer; color:#fff; background:#4e73df; border-color:#4e73df;
+  padding-right:2.2rem;
+  background-image:
+    linear-gradient(45deg,transparent 50%,#fff 50%),
+    linear-gradient(135deg,#fff 50%,transparent 50%);
+  background-position: calc(100% - 16px) calc(50% - 3px), calc(100% - 11px) calc(50% - 3px);
+  background-size:6px 6px; background-repeat:no-repeat;
+}
+select:hover{background:#2e59d9; border-color:#2e59d9}
 
-    @media print {
-      textarea, input, select {
-        border: none;
-        color: black;
-      }
-      button, #controls {
-        display: none;
-      }
-    }
+/* 按鈕 */
+button{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:var(--btn-height); padding:0 var(--space-5);
+  font-size:17px; font-weight:700; border:none; border-radius:var(--radius-md);
+  cursor:pointer; color:var(--btn-text);
+  background:var(--brand-500); box-shadow:var(--shadow-sm);
+  transition:background-color .15s ease, transform .12s ease, box-shadow .2s;
+}
+button:hover{background:var(--brand-600); transform:translateY(-2px)}
+button:active{transform:translateY(-1px)}
+.btn-secondary{ background:var(--secondary-500); }
+.btn-secondary:hover{ background:var(--secondary-600); }
+.btn-clear{ background:var(--clear-500); }
+.btn-clear:hover{ background:var(--clear-600); }
+.btn-row{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:.75rem; }
 
-    @media screen {
-      .b5 {
-        width: 17.6cm;
-        height: 25cm;
-        margin: 0.5cm auto;
-        border: 1px solid #ccc;
-        box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
-        background: white;
-      }
-    }
+/* 成績表格（維持結構，風格一致） */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+th, td{
+  border:1px solid var(--border);
+  text-align:center;
+  padding:6px;
+  font-size:14px;
+}
+th{ background:var(--bg-info); color:var(--text-strong); border-color:var(--bg-info-border); }
+
+.small-text{ font-size:10pt; color:var(--text-mute); }
+.red-title{ color:#b91c1c; font-weight:bold; margin-top:10px; }
+
+/* === 原本 .b5 版面：不修改尺寸 === */
+.b5 {
+  width: 50%;
+  float: left;
+  box-sizing: border-box;
+  page-break-inside: avoid;
+  page-break-before: avoid;
+  break-inside: avoid;
+  height: 100%;
+  min-height: 100%;
+  padding: 1.5cm;
+  margin: 0.5cm;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 4px rgba(0,0,0,.2);
+}
+
+/* 老師的話：保留換行 + 末尾多一空行（維持黑框） */
+.teacher-box{
+  border:1px solid black; padding:8px; white-space:pre-line; line-height:1.6;
+}
+.teacher-box::after{ content:"\A"; white-space:pre; }
+
+/* 簽名區整塊無框線 */
+.signature-table{ border:none!important; box-shadow:none!important; background:transparent!important; margin-top:12px; }
+.signature-table td, .signature-table th{ border:none!important; background:transparent!important; }
+
+/* =========================
+   列印：橫式 B4、兩張併排一頁
+   ========================= */
+@page { size:B4 landscape; margin:0.5cm; }
+@media print{
+  html, body{ width:100%; height:100%; margin:0; padding:0; background:#fff; }
+  #controls{ display:none!important; }
+  /* 讓兩張固定併排：使用 flex-wrap，並把 .b5 邊距在列印時歸零避免擠不進去 */
+  #output{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; }
+  .b5{
+    width:17.6cm !important;
+    height:25cm !important;
+    margin:0 !important;
+    padding:1.5cm !important;
+    page-break-inside: avoid;
+    border:1px solid #000;
+    box-shadow:none;
+  }
+  textarea, input, select{ border:none; color:#000; }
+}
+/* === 恢復 select 原樣式（白底、黑字、自動寬度） === */
+select {
+  appearance: auto;
+  -webkit-appearance: auto;
+  -moz-appearance: auto;
+  background: #fff;
+  color: #000;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0 0.5rem;
+  height: var(--input-height);
+  cursor: pointer;
+}
+
+/* 滑過或聚焦時維持簡潔邊框效果 */
+select:hover {
+  border-color: var(--focus-border);
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--focus-border);
+  box-shadow: var(--focus-ring);
+}
+/* === 修正標題區的 select 樣式（恢復原樣排版）=== */
+h2 select,
+p select {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  -moz-appearance: auto !important;
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 4px !important;
+  padding: 0 0.3rem !important;
+  height: 1.8rem !important;
+  font-size: 14px !important;
+  vertical-align: middle !important;
+  width: auto !important;
+}
+
   </style>
 </head>
 
 <body>
 
 <div id="controls">
-  <h2 style="text-align:center">正華資優教育學苑
+  <h2>正華資優教育學苑
     <select id="branch">
-      <option>永平</option>
-      <option>秀朗</option>
-      <option>清水</option>
-      <option>永和</option>
-      <option>江翠</option>
+      <option>永平</option><option>秀朗</option><option>清水</option><option>永和</option><option>江翠</option>
     </select>分校
   </h2>
 
   <p style="text-align:center">
     <input id="schoolYear" size="4" readonly>學年
-    <select id="grade">
-      <option>一</option>
-      <option>二</option>
-      <option>三</option>
-      <option>四</option>
-      <option>五</option>
-      <option selected>六</option>
-    </select>年級
+    <select id="grade"><option>一</option><option>二</option><option>三</option><option>四</option><option>五</option><option selected>六</option></select>年級
     <select id="semester"><option>上</option><option>下</option></select>學期
     <select id="examType"><option>中</option><option>末</option></select>考 學生成績單
   </p>
 
-  <h3 id="rawTitle">請貼上全班成績資料（含標題列）</h3>
+  <h3>請貼上全班成績資料（含標題列）</h3>
   <textarea id="rawInput" placeholder="姓名\t國語\t數學\t自然\t社會\t英文"></textarea>
-  <div id="rawHint" class="small-text" style="margin-top:4px;color:#555;">
-    標題列需包含：姓名、國語、數學、自然、社會、英文（年級不同會自動調整必填科目）
+
+  <h3>班平均成績（貼上格式：依年級自動）</h3>
+  <textarea id="avgPaste" placeholder="一二年級：國語\t數學；三～六年級：國語\t數學\t自然\t社會\t英文"></textarea>
+
+  <div class="small-text" style="margin-top:6px">
+    正華班排前 <input id="targetIndex" type="number" value="5" style="width:60px; height:2rem"> 名（若有並列名次，會自動包含）
   </div>
-  <br><br>
 
-  <h3 id="avgTitle">班平均成績（貼上格式：國語\t數學\t自然\t社會\t英文）</h3>
-  <textarea id="avgPaste" placeholder="例如：91.29\t91.54\t94.37\t92.28\t93.57"></textarea>
-  <div id="avgHint" class="small-text" style="margin-top:4px;color:#555;">
-    依年級自動調整科目數：一～二年級（2 科），三～六年級（5 科）
-  </div>
-  <br><br>
-
-  正華班排前 <input id="targetIndex" type="number" value="5" style="width:50px"> 名（若有並列名次，會自動包含）
-  <br><br>
-
-  老師的話：<br>
+  <h3>老師的話</h3>
   <textarea id="teacherComment" placeholder="請輸入老師的話，會出現在成績單上"></textarea>
-  <div id="wordCount" style="font-size:12px; color:#666; margin-top:4px;">目前字數：0 / 建議上限 600</div>
-  <br><br>
+  <div id="wordCount" class="small-text" style="margin-top:4px;">目前字數：0 / 建議上限 600</div>
 
-  <button onclick="generateReports()">產生成績單</button>
-  <button onclick="window.print()">🖨️ 列印所有成績單</button>
+  <div class="btn-row">
+    <button onclick="generateReports()">產生成績單</button>
+    <button class="btn-secondary" onclick="window.print()">🖨️ 列印所有成績單</button>
+    <button class="btn-clear" onclick="clearAll()">清空</button>
+  </div>
 </div>
 
 <div id="output"></div>
 
 <script>
-function formatNumber(n) {
-  const f = parseFloat(n);
-  if (Number.isNaN(f)) return '';
-  return f % 1 === 0 ? parseInt(f) : f.toFixed(2);
-}
-function num(v){ const x = parseFloat(v); return Number.isNaN(x) ? 0 : x; }
-
-function isLowerGrade(grade){ return grade === '一' || grade === '二'; }
-
+/* ====== 工具 & 年級科目規則 ====== */
+function formatNumber(n){ const f=parseFloat(n); return Number.isNaN(f)?'':(f%1===0?parseInt(f):f.toFixed(2)); }
+function num(v){ const x=parseFloat(v); return Number.isNaN(x)?0:x; }
+function isLowerGrade(g){ return g==='一'||g==='二'; }
 function getSubjectConfig(grade){
-  if (isLowerGrade(grade)) {
-    return [
-      { key: 'c', label: '國語' },
-      { key: 'm', label: '數學' }
-    ];
-  }
-  return [
-    { key: 'c', label: '國語' },
-    { key: 'm', label: '數學' },
-    { key: 's', label: '自然' },
-    { key: 'so', label: '社會' },
-    { key: 'e', label: '英文' }
-  ];
+  return isLowerGrade(grade)
+    ? [{key:'c',label:'國語'},{key:'m',label:'數學'}]
+    : [{key:'c',label:'國語'},{key:'m',label:'數學'},{key:'s',label:'自然'},{key:'so',label:'社會'},{key:'e',label:'英文'}];
 }
-
-function updatePlaceholders(){
-  const grade = document.getElementById("grade").value;
-  const subs = getSubjectConfig(grade).map(s=>s.label);
-  const rawPH = ["姓名"].concat(subs).join("\\t");
-  document.getElementById("rawInput").placeholder = rawPH;
-
-  const avgTitle = document.getElementById("avgTitle");
-  const avgPH = subs.join("\\t");
-  avgTitle.innerText = `班平均成績（貼上格式：${avgPH}）`;
-  document.getElementById("avgPaste").placeholder = `例如：${subs.map(()=> (90 + Math.random()*10).toFixed(2)).join("\\t")}`;
-
-  const rawHint = document.getElementById("rawHint");
-  rawHint.innerText = `標題列需包含：姓名、${subs.join('、')}（可任意順序，系統會自動對應）`;
-}
-
 function buildHeaderMap(headers, grade){
-  const map = { name: 0 }; // 預設第 0 欄是姓名（常見）
-  // 嘗試尋找「姓名」欄位
-  headers.forEach((t, idx)=>{
-    const title = (t || '').trim();
-    if (title.includes('姓名') || title.toLowerCase() === 'name') map.name = idx;
-  });
-
-  const subjects = getSubjectConfig(grade);
-  subjects.forEach(sub=>{
-    headers.forEach((t, idx)=>{
-      const title = (t || '').trim();
-      if (title.includes(sub.label)) map[sub.key] = idx;
-    });
+  const map={name:0};
+  headers.forEach((t,idx)=>{ const title=(t||'').trim(); if(title.includes('姓名')||title.toLowerCase()==='name') map.name=idx; });
+  getSubjectConfig(grade).forEach(sub=>{
+    headers.forEach((t,idx)=>{ const title=(t||'').trim(); if(title.includes(sub.label)) map[sub.key]=idx; });
   });
   return map;
 }
 
-function validateHeaderMap(map, grade){
-  const subjects = getSubjectConfig(grade);
-  const missing = subjects.filter(s=> typeof map[s.key] !== 'number');
-  return { ok: missing.length === 0, missing: missing.map(m=>m.label) };
-}
-
-function parseAvgBySubjects(avgRawArr, grade){
-  const subjects = getSubjectConfig(grade);
-  const vals = subjects.map((_, i)=> num(avgRawArr[i]||0));
-  const total = vals.reduce((a,b)=>a+b,0);
-  const avg = (vals.length>0) ? (total/vals.length) : 0;
-  return { vals, total, avg, subjects };
-}
-
-function generateReports() {
-  const branch = document.getElementById("branch").value;
-  const schoolYear = document.getElementById("schoolYear").value;
-  const grade = document.getElementById("grade").value;
-  const semester = document.getElementById("semester").value;
-  const examType = document.getElementById("examType").value;
-  const comment = document.getElementById("teacherComment").value;
-  const topN = parseInt(document.getElementById("targetIndex").value);
+/* ====== 產生成績單 ====== */
+function generateReports(){
+  const branch=document.getElementById("branch").value;
+  const schoolYear=document.getElementById("schoolYear").value;
+  const grade=document.getElementById("grade").value;
+  const semester=document.getElementById("semester").value;
+  const examType=document.getElementById("examType").value;
+  const comment=document.getElementById("teacherComment").value;
+  const topN=parseInt(document.getElementById("targetIndex").value)||5;
 
   // 班平均
-  const avgRaw = document.getElementById("avgPaste").value.trim().split("\t");
-  const { vals: avgVals, total: avgTotal, avg: avgAverage, subjects } = parseAvgBySubjects(avgRaw, grade);
+  const subjects=getSubjectConfig(grade);
+  const avgRaw=document.getElementById("avgPaste").value.trim().split("\t");
+  const avgVals=subjects.map((_,i)=>num(avgRaw[i]||0));
+  const avgTotal=avgVals.reduce((a,b)=>a+b,0);
+  const avgAverage=subjects.length?avgTotal/subjects.length:0;
 
   // 原始資料
-  const raw = document.getElementById("rawInput").value.trim();
-  if (!raw) { alert("請先貼上全班成績資料（含標題列）。"); return; }
-  const lines = raw.split("\n").filter(l => l.trim().length > 0);
-  if (lines.length < 2) { alert("資料筆數不足，請確認至少包含標題列與一位學生資料。"); return; }
+  const raw=document.getElementById("rawInput").value.trim();
+  if(!raw){ alert("請先貼上全班成績資料（含標題列）。"); return; }
+  const lines=raw.split("\n").filter(l=>l.trim().length>0);
+  if(lines.length<2){ alert("資料筆數不足，請確認至少包含標題列與一位學生資料。"); return; }
 
-  const headers = lines[0].split("\t");
-  const headerMap = buildHeaderMap(headers, grade);
-  const headerCheck = validateHeaderMap(headerMap, grade);
-  if (!headerCheck.ok) {
-    alert(`找不到必要欄位：${headerCheck.missing.join('、')}。\n請確認標題列是否包含這些欄位。`);
-    return;
-  }
+  const headers=lines[0].split("\t");
+  const headerMap=buildHeaderMap(headers,grade);
+  const missing=subjects.filter(s=> typeof headerMap[s.key]!=='number').map(s=>s.label);
+  if(missing.length){ alert(`找不到必要欄位：${missing.join('、')}。\n請確認標題列是否包含這些欄位。`); return; }
 
-  // 解析學生資料
-  const students = lines.slice(1).map(l => l.split("\t"));
-  const scoreList = students.map(fields => {
-    const name = fields[headerMap.name] || fields[0] || '';
-    const subsScores = subjects.map(s => num(fields[headerMap[s.key]]));
-    const total = subsScores.reduce((a,b)=>a+b,0);
-    const avg = subjects.length ? (total / subjects.length) : 0;
-    return {
-      name,
-      raw: fields,
-      scores: subsScores,
-      total,
-      avg
-    };
-  }).sort((a,b)=> b.total - a.total);
+  const students=lines.slice(1).map(l=>l.split("\t"));
+  const scoreList=students.map(fields=>{
+    const subs=subjects.map(s=>num(fields[headerMap[s.key]]));
+    const total=subs.reduce((a,b)=>a+b,0);
+    return { name: fields[headerMap.name]||fields[0]||'', raw:fields, scores:subs, total, avg: subjects.length?(total/subjects.length):0 };
+  }).sort((a,b)=>b.total-a.total);
 
-  // 前 N 名（含並列）
-  const cutoffScore = scoreList.length >= topN ? scoreList[topN - 1].total : 0;
-  const topStudents = scoreList.filter(stu => stu.total >= cutoffScore);
+  const cutoff=scoreList.length>=topN?scoreList[topN-1].total:0;
+  const topStudents=scoreList.filter(stu=>stu.total>=cutoff);
 
-  // 產出
-  const output = document.getElementById("output");
-  output.innerHTML = "";
+  const output=document.getElementById("output");
+  output.innerHTML="";
 
-  scoreList.forEach((student) => {
-    // 前 N 名表格（處理並列名次）
-    let currentRank = 1;
-    let lastScore = null;
-    let displayRank = 1;
-    const topRows = topStudents.map((stu) => {
-      if (lastScore !== null && stu.total < lastScore) {
-        displayRank = currentRank;
-      }
-      lastScore = stu.total;
-      currentRank++;
-      const cells = subjects.map((s, idx)=> `<td>${formatNumber(stu.scores[idx])}</td>`).join("");
-      return `
-        <tr>
-          <td>${displayRank}</td>
-          <td>${stu.name}</td>
-          ${cells}
-          <td>${formatNumber(stu.total)}</td>
-          <td>${formatNumber(stu.avg)}</td>
-        </tr>`;
+  scoreList.forEach(student=>{
+    // 前N名（含並列）
+    let currentRank=1,lastScore=null,displayRank=1;
+    const topRows=topStudents.map(stu=>{
+      if(lastScore!==null && stu.total<lastScore){ displayRank=currentRank; }
+      lastScore=stu.total; currentRank++;
+      const cells=subjects.map((s,idx)=>`<td>${formatNumber(stu.scores[idx])}</td>`).join("");
+      return `<tr><td>${displayRank}</td><td>${stu.name}</td>${cells}<td>${formatNumber(stu.total)}</td><td>${formatNumber(stu.avg)}</td></tr>`;
     }).join("");
 
-    // 個人成績列
-    const personCells = subjects.map((s, idx)=>{
-      const colIndex = headerMap[s.key];
-      return `<td>${formatNumber(student.raw[colIndex])}</td>`;
-    }).join("");
+    const theadCols=['學生'].concat(subjects.map(s=>s.label)).concat(['總分','平均']);
+    const theadHtml=theadCols.map(t=>`<th>${t}</th>`).join("");
+    const personCells=subjects.map((s,idx)=>`<td>${formatNumber(student.scores[idx])}</td>`).join("");
+    const avgCells=avgVals.map(v=>`<td>${formatNumber(v)}</td>`).join("");
+    const rankHead=['名次','姓名'].concat(subjects.map(s=>s.label)).concat(['總分','平均']).map(t=>`<th>${t}</th>`).join("");
 
-    // 班平均列
-    const avgCells = avgVals.map(v => `<td>${formatNumber(v.toFixed ? v.toFixed(2) : v)}</td>`).join("");
-
-    // 動態表頭
-    const theadCols = ['學生'].concat(subjects.map(s=>s.label)).concat(['總分','平均']);
-    const theadHtml = theadCols.map(t=>`<th>${t}</th>`).join("");
-
-    // 前 N 名表頭
-    const rankHead = ['名次','姓名'].concat(subjects.map(s=>s.label)).concat(['總分','平均']);
-    const rankHeadHtml = rankHead.map(t=>`<th>${t}</th>`).join("");
-
-    const page = `
+    const page=`
     <div class="b5">
-      <h2 style="text-align:center; margin-bottom: 4px; line-height: 1.2;">正華資優教育學苑 ${branch}分校</h2>
-      <p style="text-align:center; margin-top: 0; line-height: 1.2;">${schoolYear}學年${semester}學期 期${examType}考 ${grade}年級學生個人成績單</p>
+      <h2 style="text-align:center; margin-bottom:4px; line-height:1.2;">正華資優教育學苑 ${branch}分校</h2>
+      <p style="text-align:center; margin-top:0; line-height:1.2;">${schoolYear}學年${semester}學期 期${examType}考 ${grade}年級學生個人成績單</p>
 
       <table>
         <tr>${theadHtml}</tr>
@@ -339,66 +353,57 @@ function generateReports() {
 
       <div class="red-title">正華班排前${topN}名</div>
       <table>
-        <tr>${rankHeadHtml}</tr>
+        <tr>${rankHead}</tr>
         ${topRows}
       </table>
 
       <p><strong>老師的話：</strong></p>
-      <div style="border: 1px solid black; padding: 8px; white-space: pre-line;">${comment}</div>
+      <div class="teacher-box">${comment}</div>
 
-      <table style="width:100%; margin-top:12px; font-size:10pt; border-collapse: collapse;">
+      <table class="signature-table" style="width:100%; font-size:10pt; border-collapse:collapse;">
         <tr>
-          <td style="width:33%; text-align:left; border: 1px solid white;">班主任：</td>
-          <td style="width:33%; text-align:left; border: 1px solid white;">導師：</td>
-          <td style="width:33%; text-align:left; border: 1px solid white;">家長簽名：</td>
+          <td style="width:33%; text-align:left;">班主任：</td>
+          <td style="width:33%; text-align:left;">導師：</td>
+          <td style="width:33%; text-align:left;">家長簽名：</td>
         </tr>
       </table>
-    </div>
-    `;
+    </div>`;
     output.innerHTML += page;
   });
 }
 
-function initSemesterMeta(){
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-
-  const semesterYear = (month >= 8 || month === 1)
-    ? year - 1911
-    : year - 1912;
-  const semester = (month >= 8 || month === 1) ? "上" : "下";
-
-  let examType = "中";
-  if ((month >= 1 && month <= 2) || (month >= 5 && month <= 6)) {
-    examType = "末";
-  } else if ((month >= 11 && month <= 12) || (month >= 4 && month <= 5)) {
-    examType = "中";
-  }
-
-  document.getElementById("schoolYear").value = semesterYear;
-  document.getElementById("semester").value = semester;
-  document.getElementById("examType").value = examType;
+/* 清空鍵：還原輸入與輸出 */
+function clearAll(){
+  document.getElementById("rawInput").value="";
+  document.getElementById("avgPaste").value="";
+  document.getElementById("teacherComment").value="";
+  document.getElementById("wordCount").innerText="目前字數：0 / 建議上限 600";
+  document.getElementById("targetIndex").value=5;
+  document.getElementById("output").innerHTML="";
 }
 
-window.addEventListener("DOMContentLoaded", () => {
-  initSemesterMeta();
-  updatePlaceholders();
+/* 預設學年/學期/考別 */
+window.addEventListener("DOMContentLoaded",()=>{
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth()+1;
+  const semesterYear=(m>=8||m===1)?(y-1911):(y-1912);
+  const semester=(m>=8||m===1)?"上":"下";
+  let examType="中";
+  if((m>=1&&m<=2)||(m>=5&&m<=6)) examType="末";
+  else if((m>=11&&m<=12)||(m>=4&&m<=5)) examType="中";
+  document.getElementById("schoolYear").value=semesterYear;
+  document.getElementById("semester").value=semester;
+  document.getElementById("examType").value=examType;
 
-  // 字數計算功能啟動
-  const teacherComment = document.getElementById("teacherComment");
-  teacherComment.addEventListener("input", () => {
-    const count = teacherComment.value.length;
-    const wordCountDisplay = document.getElementById("wordCount");
-    wordCountDisplay.innerText = `目前字數：${count} / 建議上限 600`;
-    wordCountDisplay.style.color = count > 600 ? 'red' : '#666';
+  // 字數計算
+  const tc=document.getElementById("teacherComment");
+  tc.addEventListener("input",()=>{
+    const c=tc.value.length;
+    const w=document.getElementById("wordCount");
+    w.innerText=`目前字數：${c} / 建議上限 600`;
+    w.style.color=c>600?'red':'#6b7280';
   });
-
-  // 年級切換 → 動態切換科目數與提示
-  document.getElementById("grade").addEventListener("change", updatePlaceholders);
 });
 </script>
 
 </body>
 </html>
-
