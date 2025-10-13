@@ -1,8 +1,9 @@
+
 <!DOCTYPE html> 
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>聯絡簿名條產生器（63.5×50mm｜28pt/18pt｜行距35pt｜固定3欄）</title>
+  <title>聯絡簿名條產生器</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
 /* =========================
@@ -169,15 +170,17 @@ select:focus{
     <h1>聯絡本封面名條產生器</h1>
 
     <div class="input-area">
-      <label>貼上學生姓名與班級資料（清水、江翠可從點名表貼上資料）</label>
+      <label>從EXCEL貼上學生姓名與班級資料（含標題列）（清水、江翠可從點名表貼上資料）</label>
       <textarea id="rawData" rows="12" placeholder='例：
 姓名　班級
 張小飛 江101
+
 或 
 姓名　班級/美語班
 張小飛Fly　清水101 美TE
+
 系統會抓出中文姓名與國小班級，
-可直接從 Excel/試算表整塊複製貼上'></textarea>
+請直接從 Excel/試算表（含標題列）整塊複製貼上'></textarea>
 
       <div class="row">
         <div style="flex:1 1 180px">
