@@ -1,48 +1,37 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <title>個人成績單產生器</title>
   <style>
-/* =========================
-   Design System (Tokens)
-   ========================= */
+/* ========== Design Tokens ========== */
 :root{
   --brand-500:#A1C6EA; --brand-600:#8FB9E2;
   --secondary-500:#BBD1EA; --secondary-600:#A8C5E6;
   --clear-500:#DAE3E5; --clear-600:#CFD9DC;
 
   --text-strong:#1f2937; --text-normal:#374151; --text-mute:#6b7280;
-  --border:#d1d5db;
-  --bg-page:#f0f2f5; --bg-card:#ffffff; --bg-info:#f8fbff; --bg-info-border:#e1eefc;
+  --border:#d1d5db; --bg-page:#f0f2f5; --bg-card:#ffffff;
 
   --font-sans:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC","Heiti TC",sans-serif;
   --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
 
   --radius-lg:12px; --shadow-lg:0 4px 20px rgba(0,0,0,.12);
-
   --input-height:2.75rem; --btn-height:2.9rem;
 
-  /* 可調字級（預設） */
+  /* 三區字級（可由下拉即時改） */
   --fs-personal:14px;
   --fs-rank:14px;
   --fs-teacher:14px;
 
-  /* 預覽紙張寬度（會被 JS 依 A4/B5 覆寫） */
+  /* 預覽紙寬（給螢幕視覺用；列印時不使用它） */
   --sheet-width-mm:160mm;
 }
 
-/* =========================
-   Base
-   ========================= */
+/* ========== Base ========== */
 *{box-sizing:border-box}
 html,body{height:100%}
-body{
-  font-family:var(--font-sans);
-  background:var(--bg-page);
-  margin:0; padding:0;
-  color:var(--text-normal);
-}
+body{font-family:var(--font-sans); background:var(--bg-page); margin:0; padding:0; color:var(--text-normal);}
 #controls{
   background:var(--bg-card);
   padding:2rem; margin:2rem auto 1rem; border-radius:var(--radius-lg);
@@ -77,62 +66,60 @@ button:hover{ background:var(--brand-600); transform:translateY(-2px) }
 .small-text{ font-size:10pt; color:var(--text-mute); }
 .red-title{ color:#b91c1c; font-weight:bold; margin-top:10px; }
 
-/* ========== 預覽區：一張「有邊框的紙」而不是全寬 ========== */
-#output{
-  display:flex; flex-direction:column; align-items:center; gap:24px;
-  padding:16px 0 48px;
-}
+/* ========== 預覽：讓畫面像一張紙（僅螢幕用） ========== */
+#output{ display:flex; flex-direction:column; align-items:center; gap:24px; padding:16px 0 48px; }
 .b5{
   background:#fff; color:#000;
   width:var(--sheet-width-mm); max-width:calc(100% - 32px);
   margin:0 auto; padding:12mm;
-  border:1px solid #000;
-  box-shadow:0 2px 18px rgba(0,0,0,.08);
+  border:1px solid #000; box-shadow:0 2px 18px rgba(0,0,0,.08);
   page-break-inside: avoid;
 }
 
-/* 表格：全黑框（螢幕＋列印一致） */
+/* ========== 表格：全黑框；th/td 字級繼承，才吃得到可調字級 ========== */
 table{ width:100%; border-collapse:collapse; margin-top:10px; background:#fff; border:1px solid #000; }
-th, td{ border:1px solid #000; text-align:center; padding:6px; font-size:14px; color:#000; background:#fff; }
+th, td{ border:1px solid #000; text-align:center; padding:6px; font-size:inherit; color:#000; background:#fff; }
 
-/* 區塊：套可調字級 */
+/* ========== 三區字級掛載點 ========== */
 .personal-table{ font-size:var(--fs-personal); }
 .rank-table{ font-size:var(--fs-rank); }
 .teacher-box{
-  border:1px solid #000; padding:8px; white-space:pre-line; line-height:1.6;
-  font-size:var(--fs-teacher);
+  border:1px solid #000; padding:8px; white-space:pre-line; line-height:1.6; font-size:var(--fs-teacher);
 }
 .teacher-box::after{ content:"\A"; white-space:pre; }
 
-/* 簽名區 */
+/* 簽名區（拿掉格線） */
 .signature-table{ border:none!important; box-shadow:none!important; background:transparent!important; margin-top:12px; }
 .signature-table td, .signature-table th{ border:none!important; background:transparent!important; color:#000; }
 
-/* select 恢復白底黑字 */
+/* select 白底黑字 */
 h2 select, p select, #controls select{
   appearance:auto !important; background:#fff !important; color:#000 !important; border:1px solid var(--border) !important;
   height:2rem !important; font-size:14px !important; border-radius:6px !important; padding:0 .5rem !important; width:auto !important;
 }
 
-/* =========================
-   列印：預設 A4（JS 會覆寫），用紙張邊界當外框
-   ========================= */
-@page { size:A4 portrait; margin:10mm; }
+/* ========== 列印：只靠 @page 控紙張/邊界；內容不固定寬，置中放大 ========== */
+@page { size: A4 portrait; margin: 10mm; } /* 預設 A4；JS 會覆蓋為 A4/B5 */
 @media print{
-  html, body{ width:210mm; height:auto; margin:0; padding:0; background:#fff; color:#000; }
+  html, body{
+    width:auto; height:auto; margin:0; padding:0; background:#fff; color:#000;
+  }
   #controls{ display:none!important; }
   #output{ display:block; }
+
   .b5{
-    width:var(--sheet-width-mm) !important;
-    max-width:none !important;
-    margin:0 auto !important;
-    padding:12mm !important;
-    /* 列印時外框與陰影移除，改用紙張邊界當框 */
-    border:none !important;
-    box-shadow:none !important;
+    /* 取消固定 mm 寬與內距 → 不再「8 分滿」，並改由 @page 邊界控白 */
+    width:auto !important; max-width:none !important;
+    margin:0 auto !important; padding:0 !important;
+
+    /* 改用紙張邊界當框；去陰影 */
+    border:none !important; box-shadow:none !important;
+
+    /* 一頁一張 */
     page-break-after:always; break-after:page;
     background:#fff !important; color:#000 !important;
   }
+
   *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
   </style>
@@ -168,7 +155,7 @@ h2 select, p select, #controls select{
   <textarea id="teacherComment" placeholder="請輸入老師的話，會出現在成績單上"></textarea>
   <div id="wordCount" class="small-text" style="margin-top:4px;">目前字數：0 / 建議上限 600</div>
 
-  <!-- 三區字級 -->
+  <!-- 三區字級 + 紙張尺寸 -->
   <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px;">
     <label>個人成績字級
       <select id="fsPersonal">
@@ -197,8 +184,6 @@ h2 select, p select, #controls select{
         <option value="18px">特大</option>
       </select>
     </label>
-
-    <!-- 紙張尺寸（A4/B5 切換） -->
     <label>紙張尺寸
       <select id="paper">
         <option value="A4" selected>A4 直式</option>
@@ -215,8 +200,6 @@ h2 select, p select, #controls select{
 </div>
 
 <div id="output"></div>
-
-<!-- 動態 @page 樣式（JS 會寫入） -->
 <style id="pageStyle"></style>
 
 <script>
@@ -230,40 +213,23 @@ function getSubjectConfig(grade){
     : [{key:'c',label:'國語'},{key:'m',label:'數學'},{key:'s',label:'自然'},{key:'so',label:'社會'},{key:'e',label:'英文'}];
 }
 
-/* 支援「姓名／學生／name／student」；若沒有，就從第一筆資料找第一個「不是純數字」的欄位當姓名 */
+/* 支援「姓名／學生／name／student」；若沒有，就從第一筆資料找第一個非純數字欄 */
 function buildHeaderMap(headers, grade, dataFirstRow){
   const map = { name: 0 };
-
-  // 1) 先用標題找姓名欄
   headers.forEach((t,idx)=>{
-    const title = (t || '').trim();
-    const low = title.toLowerCase();
-    if (title.includes('姓名') || title.includes('學生') || low === 'name' || low === 'student') {
-      map.name = idx;
-    }
+    const title=(t||'').trim(); const low=title.toLowerCase();
+    if (title.includes('姓名') || title.includes('學生') || low==='name' || low==='student') map.name=idx;
   });
-
-  // 2) 科目欄位
   getSubjectConfig(grade).forEach(sub=>{
-    headers.forEach((t,idx)=>{
-      const title = (t || '').trim();
-      if (title.includes(sub.label)) map[sub.key] = idx;
-    });
+    headers.forEach((t,idx)=>{ const title=(t||'').trim(); if(title.includes(sub.label)) map[sub.key]=idx; });
   });
-
-  // 3) 若沒有明確姓名欄，從第一筆資料猜：找第一個非純數字欄
-  const isNumeric = (s)=>/^\s*\d+(\.\d+)?\s*$/.test(s || '');
-  const hasNameHeader = headers.some(h=>{
-    const s = String(h || '');
-    const low = s.toLowerCase();
-    return s.includes('姓名') || s.includes('學生') || low === 'name' || low === 'student';
-  });
+  const isNumeric = s => /^\s*\d+(\.\d+)?\s*$/.test(s||'');
+  const hasNameHeader = headers.some(h=>{ const s=String(h||''); const low=s.toLowerCase(); return s.includes('姓名')||s.includes('學生')||low==='name'||low==='student'; });
   if (!hasNameHeader && Array.isArray(dataFirstRow) && dataFirstRow.length){
-    let guess = dataFirstRow.findIndex(v => !isNumeric(v));
-    if (guess === -1 && dataFirstRow.length > 1) guess = 1; // 都像數字就選第2欄
+    let guess = dataFirstRow.findIndex(v=>!isNumeric(v));
+    if (guess === -1 && dataFirstRow.length>1) guess = 1;
     if (guess >= 0) map.name = guess;
   }
-
   return map;
 }
 
@@ -277,22 +243,20 @@ function generateReports(){
   const comment=document.getElementById("teacherComment").value;
   const topN=parseInt(document.getElementById("targetIndex").value)||5;
 
-  // 班平均
   const subjects=getSubjectConfig(grade);
   const avgRaw=document.getElementById("avgPaste").value.trim().split("\t");
   const avgVals=subjects.map((_,i)=>num(avgRaw[i]||0));
   const avgTotal=avgVals.reduce((a,b)=>a+b,0);
   const avgAverage=subjects.length?avgTotal/subjects.length:0;
 
-  // 原始資料
   const raw=document.getElementById("rawInput").value.trim();
   if(!raw){ alert("請先貼上全班成績資料（含標題列）。"); return; }
   const lines=raw.split("\n").filter(l=>l.trim().length>0);
   if(lines.length<2){ alert("資料筆數不足，請確認至少包含標題列與一位學生資料。"); return; }
 
   const headers=lines[0].split("\t");
-  const firstData = (lines[1] || "").split("\t");
-  const headerMap = buildHeaderMap(headers, grade, firstData);
+  const firstData=(lines[1]||"").split("\t");
+  const headerMap=buildHeaderMap(headers,grade,firstData);
 
   const missing=subjects.filter(s=> typeof headerMap[s.key]!=='number').map(s=>s.label);
   if(missing.length){ alert(`找不到必要欄位：${missing.join('、')}。\n請確認標題列是否包含這些欄位。`); return; }
@@ -311,7 +275,6 @@ function generateReports(){
   output.innerHTML="";
 
   scoreList.forEach(student=>{
-    // 前N名（含並列）
     let currentRank=1,lastScore=null,displayRank=1;
     const topRows=topStudents.map(stu=>{
       if(lastScore!==null && stu.total<lastScore){ displayRank=currentRank; }
@@ -367,8 +330,7 @@ function generateReports(){
     output.innerHTML += page;
   });
 
-  // 產生後同步字級
-  applyFontSizes();
+  applyFontSizes(); // 產生後同步字級
 }
 
 /* 清空 */
@@ -388,34 +350,34 @@ function applyFontSizes(){
   document.documentElement.style.setProperty('--fs-teacher', document.getElementById('fsTeacher').value);
 }
 
-/* 紙張尺寸（A4/B5）— 同步預覽寬度與 @page */
+/* 紙張尺寸（A4/B5）：只影響 @page 與「預覽紙寬」，印刷真正寬度交給 @page 控制 */
 function applyPaper(){
   const paper = document.getElementById('paper')?.value || 'A4';
   const styleEl = document.getElementById('pageStyle');
-  const margin = '10mm'; // 穩定邊界，避免印表機裁切
+  const margin = '10mm';
 
   if (paper === 'B5'){
-    document.documentElement.style.setProperty('--sheet-width-mm', '156mm'); // B5 內容寬
+    document.documentElement.style.setProperty('--sheet-width-mm', '156mm'); // 預覽外觀
     styleEl.textContent = `@page{ size:B5 portrait; margin:${margin}; }`;
   }else{
-    document.documentElement.style.setProperty('--sheet-width-mm', '190mm'); // A4 內容寬
+    document.documentElement.style.setProperty('--sheet-width-mm', '190mm'); // 預覽外觀
     styleEl.textContent = `@page{ size:A4 portrait; margin:${margin}; }`;
   }
 }
 
-/* 列印提醒（全域） */
+/* 列印提醒 */
 function printAll(){
   alert(
     "列印小提醒：\n\n" +
-    "1) 『更多設定』的紙張尺寸要與選單相同（A4 或 B5）。\n" +
-    "2) 縮放比例請設為 100%（不要自動或 150%）。\n" +
-    "3) 邊界建議預設/標準或約 10mm。\n\n" +
-    "確認預覽是一頁一張成績單，再按列印。"
+    "1) 『更多設定』紙張尺寸要與選單相同（A4 或 B5）。\n" +
+    "2) 縮放比例建議 100%（想大就 110%、120%…），會以頁面中心置中放大。\n" +
+    "3) 邊界用 10mm（我們用 @page 控制），頁首頁尾關閉。\n\n" +
+    "請確認預覽是一頁一張成績單再列印。"
   );
   window.print();
 }
 
-/* 預設值與監聽 */
+/* 預設與監聽 */
 window.addEventListener("DOMContentLoaded",()=>{
   const now=new Date(), y=now.getFullYear(), m=now.getMonth()+1;
   const semesterYear=(m>=8||m===1)?(y-1911):(y-1912);
@@ -436,13 +398,13 @@ window.addEventListener("DOMContentLoaded",()=>{
     w.style.color=c>600?'red':'#6b7280';
   });
 
-  // 三區字級即時預覽
+  // 字級即時
   ['fsPersonal','fsRank','fsTeacher'].forEach(id=>{
     document.getElementById(id).addEventListener('change', applyFontSizes);
   });
   applyFontSizes();
 
-  // 紙張尺寸：載入與切換都套用
+  // 紙張尺寸
   document.getElementById('paper').addEventListener('change', applyPaper);
   applyPaper();
 });
@@ -450,3 +412,4 @@ window.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
+
