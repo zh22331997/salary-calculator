@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<title>HANDBOOK P6-P9名條產生器</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+<style>
+  :root{
+    --page-w: 297mm;
+    --page-h: 210mm;
+    --cell-border: 0.3mm solid #000;
+  }
+  *{ box-sizing: border-box; }
+  body{ margin:0; padding:16px; background:#f6f7f8; font-family:"Microsoft JhengHei", Arial, sans-serif; color:#222; }
+  h2{ margin:8px 0 12px; }
+  .panel{ background:#fff; border:1px solid #e6e6e6; border-radius:10px; padding:12px; margin-bottom:12px; }
+  textarea{ width:100%; height:220px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:14px; line-height:1.5; }
+  .btns{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  button{ cursor:pointer; padding:8px 14px; border-radius:10px; border:1px solid #d0d0d0; background:#0ea5e9; color:#fff; font-weight:700; }
+  button.secondary{ background:#fff; color:#222; }
+  .hint{ font-size:12px; color:#666; margin-top:6px; }
+
+  .sheet{
+    width: var(--page-w);
+    height: var(--page-h);
+    margin: 0 auto;
+    background:#fff;
+    border:1px solid #ddd;
+    padding: 10mm;
+  }
+  .grid{
+    display:flex; flex-wrap:wrap;
+    gap: 10mm 12mm;
+    align-content:flex-start;
+  }
+
+  .strip{ border-collapse: collapse; table-layout: fixed; }
+  .strip td{
+    border: var(--cell-border);
+    padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: center;
+    line-height: 1;
+  }
+
+  /* ✅ 調整欄位比例：中文更寬、英文略縮，數字更窄 */
+  .strip col.no{ width: 13%; }   /* 原 16% → 13% */
+  .strip col.zh{ width: 40%; }   /* 原 37% → 40% */
+  .strip col.en{ width: 47%; }   /* 保留英文欄寬 */
+  .strip td:nth-child(1){ font-size: 0.75em; } /* 數字再小一點 */
+  .strip td:nth-child(1){ text-align: right; padding-right: 0.5mm; }
+
+  .title{ margin:0 0 4px; font-weight:700; font-size:13px; color:#333; }
+  .fs-badge{ font-size:11px; color:#666; margin-left:6px; }
+
+  @media print{
+    @page{ size: A4 landscape; margin: 0; }
+    body{ background:#fff; padding:0; }
+    .panel, .title{ display:none !important; }
+    .sheet{ width: var(--page-w); height: var(--page-h); border:0; padding: 10mm; margin:0; }
+  }
+</style>
+</head>
+<body>
+  <div class="panel">
+    <h2>HANDBOOK P6-P9名條產生器</h2>
+    <div class="hint">貼上江翠英文點名表姓名條，系統會依英文 A→Z 排序並編號。</div>
+    <textarea id="input" placeholder="戴小桐
+Doris
+
+李小霖
+Charlie
+
+張小賢
+Tom
+
+洪小鈞
+Ken
+
+許小嘉
+James
+
+陳小翰
+Brian"></textarea>
+    <div class="btns">
+      <button id="btnGen">產生名條</button>
+      <button class="secondary" onclick="window.print()">列印（A4 橫式）</button>
+      <button class="secondary" id="btnDocx" disabled>下載 DOCX（精準尺寸）</button>
+      <button class="secondary" id="btnSample">載入示例</button>
+      <button class="secondary" id="btnClear">清空</button>
+    </div>
+  </div>
+
+  <div class="sheet"><div id="grid" class="grid"></div></div>
+
+<script>
+const cmToTwip = cm => Math.round(cm / 2.54 * 72 * 20);
+const mmToTwip = mm => cmToTwip(mm / 10);
+
+function parseInput(text){
+  text = (text || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .trim();
+  const lines = text.split("\n").map(s => s.trim()).filter(Boolean);
+  const pairs = [];
+  for(let i=0; i<lines.length; i+=2){
+    const zh = lines[i] || "";
+    const en = lines[i+1] || "";
+    if(zh || en) pairs.push({ zh, en });
+  }
+  pairs.sort((a,b)=>{
+    const A=(a.en||"").toLowerCase(), B=(b.en||"").toLowerCase();
+    if(A<B) return -1; if(A>B) return 1;
+    return (a.zh||"").localeCompare(b.zh||"", "zh-Hant");
+  });
+  pairs.forEach((p,i)=> p.no = i + 1);
+  return pairs;
+}
+
+function buildStrip(data, totalWidthCm, rowHeightMm){
+  const table = document.createElement("table");
+  table.className = "strip";
+  table.style.width = totalWidthCm + "cm";
+  const cg = document.createElement("colgroup");
+  ["no","zh","en"].forEach(cls => {
+    const col = document.createElement("col");
+    col.className = cls;
+    cg.appendChild(col);
+  });
+  table.appendChild(cg);
+
+  const tbody = document.createElement("tbody");
+  data.forEach(p=>{
+    const tr = document.createElement("tr");
+    ["no","zh","en"].forEach(k=>{
+      const td = document.createElement("td");
+      td.textContent = (k==="no") ? p.no : (k==="zh" ? p.zh : p.en);
+      const h = rowHeightMm + "mm";
+      td.style.height = h;
+      td.style.lineHeight = h;
+      if (k === "no") td.style.fontSize = "0.75em"; // 再小一點
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  return table;
+}
+
+function adjustFontSize(table, rowHeightMm, badgeEl){
+  const mmToPx = 3.78;
+  const targetPx = rowHeightMm * mmToPx;
+  const step = 0.2;
+  const maxPt = 11, minPt = 6;
+  const heightTolerance = 3.0, widthTolerance = 1.5;
+  let best = minPt;
+  for (let fs = maxPt; fs >= minPt; fs -= step) {
+    table.style.fontSize = fs + "pt";
+    table.getBoundingClientRect();
+    let tooTall=false, tooWide=false;
+    outer: for (const row of table.rows){
+      for (const cell of row.cells){
+        if (cell.clientHeight > targetPx + heightTolerance){ tooTall=true; break outer; }
+        if (cell.scrollWidth > cell.clientWidth + widthTolerance){ tooWide=true; break outer; }
+      }
+    }
+    if(!tooTall && !tooWide){ best = fs; break; }
+  }
+  const tryBigger = +(best + step).toFixed(1);
+  if (tryBigger <= maxPt){
+    table.style.fontSize = tryBigger + "pt";
+    table.getBoundingClientRect();
+    let ok=true;
+    outer2: for (const row of table.rows){
+      for (const cell of row.cells){
+        if (cell.clientHeight > targetPx + heightTolerance || cell.scrollWidth > cell.clientWidth + widthTolerance){ ok=false; break outer2; }
+      }
+    }
+    table.style.fontSize = (ok ? tryBigger : best) + "pt";
+  } else table.style.fontSize = best + "pt";
+  if (badgeEl) badgeEl.textContent = `（字體 ${table.style.fontSize}）`;
+  return parseFloat(table.style.fontSize);
+}
+
+const SPECS = [
+  { label:"① 3.7cm × 9.55mm", w:3.7, h:9.5 },
+  { label:"② 3.2cm × 8.05mm", w:3.2, h:8.0 },
+  { label:"③ 3.7cm × 6.4mm",  w:3.7, h:6.35  },
+  { label:"④ 5.3cm × 9.55mm", w:5.3, h:9.5 },
+];
+
+function renderAll(data){
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  SPECS.forEach(spec=>{
+    const box = document.createElement("div");
+    const title = document.createElement("div");
+    title.className = "title";
+    const badge = document.createElement("span"); badge.className = "fs-badge";
+    title.textContent = spec.label + " "; title.appendChild(badge);
+    const table = buildStrip(data, spec.w, spec.h);
+    box.appendChild(title);
+    box.appendChild(table);
+    grid.appendChild(box);
+    spec.fontPt = adjustFontSize(table, spec.h, badge);
+  });
+  document.getElementById('btnDocx').disabled = false;
+}
+
+async function downloadDocx(data){
+  const { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, BorderStyle, TableLayoutType, HeightRule, TextRun } = docx;
+  const makeTable = (spec)=>{
+    const totalTwip = cmToTwip(spec.w);
+    const colW = [0.13, 0.40, 0.47].map(r => Math.round(totalTwip * r)); // ✅ 同 CSS
+    const baseHalf = Math.round((spec.fontPt || 8) * 2);
+    const noHalf   = Math.max(1, Math.round(baseHalf * 0.75)); // ✅ 數字再小一點
+    const rows = data.map(p=> new TableRow({
+      height:{ value:mmToTwip(spec.h), rule:HeightRule.EXACT },
+      children:[
+        new TableCell({ width:{ size:colW[0], type:WidthType.DXA }, children:[
+          new Paragraph({ children:[ new TextRun({ text:String(p.no), size:noHalf }) ] })
+        ]}),
+        new TableCell({ width:{ size:colW[1], type:WidthType.DXA }, children:[
+          new Paragraph({ children:[ new TextRun({ text:p.zh||'', size:baseHalf, font:"Microsoft JhengHei" }) ] })
+        ]}),
+        new TableCell({ width:{ size:colW[2], type:WidthType.DXA }, children:[
+          new Paragraph({ children:[ new TextRun({ text:p.en||'', size:baseHalf, font:"Arial" }) ] })
+        ]})
+      ]
+    }));
+    return new Table({
+      width:{ size:totalTwip, type:WidthType.DXA },
+      rows,
+      layout:TableLayoutType.FIXED,
+      borders:{
+        top:{ style:BorderStyle.SINGLE, size:6, color:"000000" },
+        bottom:{ style:BorderStyle.SINGLE, size:6, color:"000000" },
+        left:{ style:BorderStyle.SINGLE, size:6, color:"000000" },
+        right:{ style:BorderStyle.SINGLE, size:6, color:"000000" },
+        insideH:{ style:BorderStyle.SINGLE, size:6, color:"000000" },
+        insideV:{ style:BorderStyle.SINGLE, size:6, color:"000000" }
+      }
+    });
+  };
+
+  const doc = new Document({
+    sections:[{
+      properties:{ page:{ size:{ width:cmToTwip(29.7), height:cmToTwip(21) }, margin:{ top:mmToTwip(10), bottom:mmToTwip(10), left:mmToTwip(10), right:mmToTwip(10) } } },
+      children:[
+        makeTable(SPECS[0]), new Paragraph(""),
+        makeTable(SPECS[1]), new Paragraph(""),
+        makeTable(SPECS[2]), new Paragraph(""),
+        makeTable(SPECS[3])
+      ]
+    }]
+  });
+  const blob = await Packer.toBlob(doc);
+  saveAs(blob, "四條名條_精準尺寸.docx");
+}
+
+document.getElementById("btnGen").onclick = ()=>{
+  const data = parseInput(document.getElementById("input").value);
+  renderAll(data);
+};
+document.getElementById("btnDocx").onclick = async ()=>{
+  const data = parseInput(document.getElementById("input").value);
+  await downloadDocx(data);
+};
+document.getElementById("btnSample").onclick = ()=>{
+  document.getElementById("input").value = [
+    "戴小桐","Doris","",
+    "李小霖","Charlie","",
+    "張小賢","Tom","",
+    "洪小鈞","Ken","",
+    "許小嘉","James","",
+    "陳小翰","Brian"
+  ].join("\n");
+};
+document.getElementById("btnClear").onclick = ()=>{
+  document.getElementById("input").value = "";
+  document.getElementById("grid").innerHTML = "";
+  document.getElementById("btnDocx").disabled = true;
+};
+</script>
+</body>
+</html>
