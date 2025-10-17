@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html>  
 <html lang="zh-Hant-TW">
 <head>
 <meta charset="UTF-8" />
@@ -95,10 +95,20 @@ select:hover{background:#f1f5f9; border-color:#a1c6ea}
 .label{width:52.5mm; height:var(--cell-h-mm); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 6mm; border:0.25pt dotted #d0d0d0; background:#fff;}
 .class-code{font-size:24px; font-weight:900; letter-spacing:2px; margin-bottom:2px; text-decoration:underline;}
 .student-name{font-size:24px; font-weight:700; white-space:nowrap;}
-.toast{position:sticky; top:8px; float:right; margin-left:auto; background:#0f2740; color:#fff; padding:.5rem .75rem; border-radius:999px; font-size:14px; font-weight:800; box-shadow:var(--shadow-sm); opacity:0; transform:translateY(-6px); transition:opacity .18s, transform .18s; z-index:10; width:max-content;}
+
+/* ✅ Toast 改成 fixed，確保一定看得到 */
+.toast{
+  position:fixed; right:16px; top:16px;
+  background:#0f2740; color:#fff; padding:.6rem .9rem;
+  border-radius:999px; font-size:14px; font-weight:800;
+  box-shadow:var(--shadow-sm); opacity:0; transform:translateY(-6px);
+  transition:opacity .18s, transform .18s; z-index:9999; width:max-content;
+}
 .toast.show{opacity:1; transform:translateY(0)}
+
 @keyframes flashPulse{0%{box-shadow:0 0 0 0 rgba(161,198,234,0); background:#fff; border-color:#e5e7eb;} 30%{box-shadow:0 0 0 6px rgba(161,198,234,.35); background:#f4f9ff; border-color:#8FB9E2;} 100%{box-shadow:0 0 0 0 rgba(161,198,234,0); background:#fff; border-color:#e5e7eb;}}
 .preview-flash{animation:flashPulse .6s ease-out 1;}
+
 @media print{ @page{size:A4;margin:0} .container > *:not(#previewWrap){display:none!important;} #previewWrap{border:none; padding:0; box-shadow:none;} }
 </style>
 </head>
@@ -112,10 +122,10 @@ select:hover{background:#f1f5f9; border-color:#a1c6ea}
         <div class="card flex-1">
           <div class="card-head">
             <div class="section-title">Step 1．從點名表貼上資料（不含標題列）</div>
-            <button id="toggleHelp" class="btn-secondary btn-sm">貼上資料的說明</button>
+            <button id="toggleHelp" class="btn-secondary btn-sm" type="button">貼上資料的說明</button>
           </div>
 
-          <!-- 說明區塊搬到上方（展開時把輸入框往下推） -->
+          <!-- 說明區塊 -->
           <div class="instructions-content" id="helpBox" style="display:none; margin-bottom:.8rem; background:#f8fbff; border:1px solid #e1eefc; border-left:5px solid var(--secondary-500); border-radius:10px; padding:1em 1.2em; color:#1b3a57; line-height:1.6;">
             <ul>
               <li><b>永平、清水</b>：貼上「<b>中文姓名</b>」「<b>英文姓名</b>」兩欄。<br>
@@ -186,11 +196,11 @@ FLY&quot;"></textarea>
                  </div>
           </div>
 
-          <!-- Step 4：底部按鈕列（保持原 JS 功能） -->
+          <!-- Step 4：底部按鈕列 -->
           <div class="actions-bar" style="margin-top:20px">
-              <button id="gen">產生標籤</button>
-              <button class="btn-secondary" id="copyHtml">複製到 Word</button>
-              <button class="btn-clear" id="clear">清空</button>
+              <button id="gen" type="button">產生標籤</button>
+              <button class="btn-secondary" id="copyHtml" type="button">複製到 Word</button>
+              <button class="btn-clear" id="clear" type="button">清空</button>
           </div>
        </div>
 
@@ -199,7 +209,7 @@ FLY&quot;"></textarea>
 
     <div id="previewWrap">
       <div id="pages"></div>
-      <div id="toast" class="toast" aria-live="polite"></div>
+      <div id="toast" class="toast" aria-live="polite" role="status"></div>
     </div>
   </div>
 
@@ -229,7 +239,7 @@ function showToast(msg){
   toastEl.textContent=msg;
   toastEl.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>toastEl.classList.remove('show'),1500);
+  toastTimer=setTimeout(()=>toastEl.classList.remove('show'),1800);
 }
 
 /* 版型設定（高度：4×10=2.94cm；4×9=3.27cm） */
@@ -329,7 +339,7 @@ function buildPreview(){
       const it = items[i];
       const cell=document.createElement('div'); cell.className='label';
       if(it){
-        cell.innerHTML=`<div class='class-code'>${it.cls||''}</div><div class='student-name'>${it.zh} ${it.en}</div>`;
+        cell.innerHTML = `<div class='class-code'>${it.cls||''}</div><div class='student-name'>${it.zh} ${it.en}</div>`;
       }
       grid.appendChild(cell);
     }
@@ -362,17 +372,16 @@ function buildWordHTML(){
   const totalCells = recs.length * (rowsPerStudent * 4);
   const totalPages = Math.max(1, Math.ceil(totalCells / PER_PAGE));
 
-  const cellStyle =
-    `width:${CELL_W};height:${cellH};vertical-align:middle;text-align:center;`+
-    `padding:0 6mm;box-sizing:border-box;border:0.25pt dotted #d0d0d0;`+
-    `background:transparent;mso-line-height-rule:exactly;mso-padding-alt:0cm 6mm 0cm 6mm;`;
+  const cellStyle = `width:${CELL_W};height:${cellH};vertical-align:middle;text-align:center;`+
+                    `padding:0 6mm;box-sizing:border-box;border:0.25pt dotted #d0d0d0;`+
+                    `background:transparent;mso-line-height-rule:exactly;mso-padding-alt:0cm 6mm 0cm 6mm;`;
   const codeStyle = `font-size:${codePt}pt;font-weight:900;line-height:1.2;text-decoration:underline;`;
   const nameStyle = `font-size:${namePt}pt;font-weight:bold;line-height:1.22;`;
 
   let body = '';
   for(let p=0; p<totalPages; p++){
     const items = buildPageItemsByVerticalRows(recs, rowsPerStudent, p, rowsPerPage);
-    body += `<table style="border-collapse:collapse;table-layout:fixed;width:calc(4*${CELL_W});mso-table-lspace:0pt;mso-table-rspace:0pt;mso-table-layout-alt:fixed;mso-table-overlap:never;mso-cellspacing:0;">`;
+    body += `<table style="border-collapse:collapse;table-layout:fixed;width:calc(4*${CELL_W});mso-table-lspace:0pt;mso-table-rspace:0pt;mso-table-layout-alt:fixed;mso-overflow-xy:visible;">`;
     for(let r=0; r<rowsPerPage; r++){
       body += '<tr>';
       for(let c=0; c<4; c++){
@@ -411,27 +420,62 @@ codeSizeEl.addEventListener('input', ()=>{ applyStyles(); showToast('🏷 班級
 
 document.getElementById('gen').addEventListener('click', buildPreview);
 
-document.getElementById('copyHtml').addEventListener('click', async ()=>{
+/* ✅ 複製到 Word：三段後備 + 一定出 Toast */
+document.getElementById('copyHtml').addEventListener('click', async (e)=>{
+  e.preventDefault();
   const html = buildWordHTML();
-  if(navigator.clipboard && window.ClipboardItem){
-    try{
+
+  // 1) 最佳：text/html（支援 Chrome/Edge/新 Firefox）
+  try{
+    if(navigator.clipboard && 'ClipboardItem' in window){
       const blob = new Blob([html], { type:'text/html' });
-      await navigator.clipboard.write([new ClipboardItem({ 'text/html': blob })]);
+      const item = new ClipboardItem({ 'text/html': blob });
+      await navigator.clipboard.write([item]);
       showToast('✅ 已複製（含格式）。到 Word 選取 4×N 區塊後貼上即可。');
       return;
-    }catch(e){}
+    }
+    throw new Error('ClipboardItem or navigator.clipboard 不支援');
+  }catch(err){
+    console.error('[copyHtml step1] text/html 失敗：', err);
   }
-  const box=document.createElement('div');
-  box.contentEditable='true'; box.style.position='fixed'; box.style.left='-9999px'; box.innerHTML=html;
-  document.body.appendChild(box);
-  const range=document.createRange(); range.selectNodeContents(box);
-  const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-  const ok=document.execCommand('copy'); sel.removeAllRanges(); document.body.removeChild(box);
-  showToast(ok ? '✅ 已複製（含格式）。到 Word 全選貼上即可。' : '⚠️ 複製失敗，請再試一次或改用新版瀏覽器。');
+
+  // 2) 次佳：純文字（格式不保留，但至少能貼）
+  try{
+    if(navigator.clipboard && typeof navigator.clipboard.writeText==='function'){
+      await navigator.clipboard.writeText(html);
+      showToast('⚠️ 已以純文字複製。若要保留版面，建議改用支援 text/html 的瀏覽器。');
+      return;
+    }
+    throw new Error('navigator.clipboard.writeText 不支援');
+  }catch(err){
+    console.error('[copyHtml step2] writeText 失敗：', err);
+  }
+
+  // 3) 最後：execCommand 後備（相容舊環境）
+  try{
+    const box=document.createElement('div');
+    box.contentEditable='true';
+    box.style.position='fixed'; box.style.left='-9999px'; box.style.top='0';
+    box.innerHTML=html;
+    document.body.appendChild(box);
+
+    const range=document.createRange(); range.selectNodeContents(box);
+    const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+
+    const ok=document.execCommand('copy');
+
+    sel.removeAllRanges(); document.body.removeChild(box);
+
+    showToast(ok ? '✅ 已複製（含格式）。到 Word 全選貼上即可。' : '⚠️ 複製失敗，請再試一次或改用新版瀏覽器。');
+  }catch(err){
+    console.error('[copyHtml step3] execCommand 失敗：', err);
+    showToast('⚠️ 複製流程發生錯誤，請查看 Console 或改用新版瀏覽器。');
+  }
 });
 
 document.getElementById('clear').addEventListener('click', ()=>{
-  rawEl.value=''; commonClassEl.value=''; pages.innerHTML=''; showToast('已清空');
+  rawEl.value=''; commonClassEl.value=''; pages.innerHTML='';
+  showToast('已清空');
 });
 
 /* 初始 */
