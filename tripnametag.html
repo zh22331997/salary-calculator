@@ -1,5 +1,4 @@
-
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8" />
@@ -27,7 +26,6 @@ code{background-color:#f0f0f0;padding:2px 5px;border-radius:4px;font-family:mono
 .card-name{font-size:24pt;font-weight:900;color:#333;line-height:1.1;}
 .card-group{font-size:14pt;font-weight:700;color:#555;}
 .card-footer{font-size:11pt;color:#444;line-height:1.3;text-align:center;}
-/* ✅ LOGO 絕對置中，不會歪 */
 .name-card::before{
   content:"";
   position:absolute;
@@ -46,11 +44,17 @@ code{background-color:#f0f0f0;padding:2px 5px;border-radius:4px;font-family:mono
 }
 .error-line{background-color:#fff8e6;border-left:4px solid #f0ad4e;padding:4px 8px;margin-bottom:4px;color:#8a6d3b;}
 .success-summary{color:#007700;font-weight:bold;margin-top:8px;}
+.controls-inline{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.controls-inline label{display:inline-flex;align-items:center;gap:0.4rem;white-space:nowrap}
+@media (max-width:600px){.controls-inline label{white-space:normal;line-height:1.6}}
+details summary{cursor:pointer;font-weight:bold;background:#eef2ff;padding:0.5rem 0.8rem;border-radius:6px;}
+details p{margin-top:0.5rem;}
 </style>
 </head>
 <body>
 <div class="container">
   <h1>正華戶外活動名牌產生器</h1>
+
   <h2>📋 活動設定</h2>
   <div class="row">
     <div class="col">
@@ -64,26 +68,38 @@ code{background-color:#f0f0f0;padding:2px 5px;border-radius:4px;font-family:mono
   </div>
 
   <label>帶隊主任（可多位，請換行輸入）</label>
-  <textarea id="director" rows="2" placeholder="OO主任0900-123-456；XX主任0900-987-654">OO主任0900-123-456</textarea>
+  <textarea id="director" rows="2">OO主任0900-123-456</textarea>
 
   <h3>📚 學生資料</h3>
-  <p>
+
+  <details id="infoBox">
+    <summary>📖 點我展開／收合說明</summary>
+    <p>
       ✅ 貼資料有兩種方式：<br>
-      ① 從 Excel（含標題列）複製貼上，系統會自動辨識以下資訊<code>參加?、姓名、車次、桌次、帶隊老師</code>。<br>
-      ② 只貼需要的欄位（含標題列）：<code>姓名  車次  桌次  老師與電話</code><br><br>
+      ① 從 Excel（含標題列）複製貼上，系統會自動辨識以下資訊 <code>參加?、姓名、車次、桌次、帶隊老師</code>。<br>
+      ② 只貼需要的欄位（含標題列）：<code>姓名 車次 桌次 老師與電話</code><br><br>
       🧭 規則：<br>
       • <code>一定</code>要從 Excel 複製貼上。<br>
-      • 若偵測到「參加?」的勾選欄：系統只會輸出勾要參加的名單。<br>
-      • 有時並無分桌用餐，因此資料 <code>可以沒有「桌次」</code>。<br>
-      • 手機會自動整理為 <code>09xx-xxx-xxx</code>格式。<br>
-      • 列印時請記得<code>勾"背景圖形"</code>，才會有正華LOGO在名牌上喔!
-  </p>
+      • 若偵測到「參加?」欄：系統只會輸出勾選的名單。<br>
+      • 若無分桌可不輸入「桌次」。<br>
+      • 手機自動轉為 <code>09xx-xxx-xxx</code> 格式。<br>
+      • 列印時請勾「背景圖形」，才會有 LOGO！<br>
+      • 主任＋老師電話共可四行；主任是共用欄，老師是個別欄。
+    </p>
+  </details>
 
-  <textarea id="inputArea" rows="8" placeholder="姓名   車次   桌次   帶隊老師與電話
+  <textarea id="inputArea" rows="8" placeholder="姓名 車次 桌次 老師與電話
 王小明 第1車 第1桌 Tina老師 0900-111-222"></textarea>
+
   <button onclick="generateCards()">生成名牌</button>
   <button onclick="window.print()">列印名牌</button>
   <button style="background-color:#999" onclick="clearAll()">🧹 清空內容</button>
+
+  <div class="controls-inline" style="margin-top:1rem;">
+    <label>
+      <input type="checkbox" id="hideTitles"> 隱藏「帶隊老師」與「帶隊主任」字樣
+    </label>
+  </div>
 
   <div id="errorMsg" style="margin-top:1rem;"></div>
   <div class="card-container" id="cardContainer"></div>
@@ -94,6 +110,34 @@ code{background-color:#f0f0f0;padding:2px 5px;border-radius:4px;font-family:mono
 function normalizeSpaces(s){return(s||'').toString().replace(/[\u3000\u00A0]/g,' ').trim();}
 function extractPhone(t){const m=(t||'').match(/09\d{2}-?\d{3}-?\d{3}/);return m?m[0]:'';}
 function stripPhone(t){return normalizeSpaces((t||'').replace(/09\d{2}-?\d{3}-?\d{3}/g,''));}
+// 手機號碼統一為 09xx-xxx-xxx
+function formatPhone(p){
+  if(!p) return '';
+  const d = p.replace(/[^\d]/g,'');
+  if(/^09\d{8}$/.test(d)) return d.replace(/(\d{4})(\d{3})(\d{3})/,'$1-$2-$3');
+  return p;
+}
+
+// 解析「多位老師」欄位：例如「玥0912-234-456 如0978-877-878」
+function parseTeacherField(raw){
+  const s = normalizeSpaces(raw || '');
+  // 抓多組：可含空白、頓號、逗號等，僅匹配09開頭
+  const re = /([^\d\s、，]*)\s*(09\d{2}[- ]?\d{3}[- ]?\d{3})/g;
+  let m, items = [];
+  while((m = re.exec(s)) !== null){
+    const name  = (m[1] || '').trim();
+    const phone = formatPhone(m[2]);
+    items.push([name, phone].filter(Boolean).join(' '));
+  }
+  // 若有多位老師，用頓號串接顯示（若想一行一位可改成 <br>）
+  if(items.length) return items.join('、');
+
+  // 若整欄只包含一位或沒偵測成功，退回舊處理
+  const phone = extractPhone(s);
+  const name  = stripPhone(s);
+  return [name, phone].filter(Boolean).join(' ');
+}
+
 function normalizeCar(r){if(!r)return'';let s=r.replace(/\s+/g,'');let m=s.match(/(\d{1,3})/);return m?`第${m[1]}車`:s;}
 function normalizeTable(r){if(!r)return'';let s=r.replace(/\s+/g,'');let m=s.match(/(\d{1,3})/);return m&&!/桌/.test(s)?`第${m[1]}桌`:s;}
 function parseDirectors(raw){return(raw||'').split(/[\n,，、；;\/]+/g).map(s=>s.trim()).filter(Boolean).map(p=>{
@@ -102,7 +146,7 @@ function parseDirectors(raw){return(raw||'').split(/[\n,，、；;\/]+/g).map(s=
 });}
 function isTeacherRow(cells){return cells.some(c=>/老師|主任/.test(c||''));}
 
-// === 標題別名對應 ===
+// === 標題別名 ===
 const ALIAS={name:['姓名'],car:['車次','車'],table:['桌次','桌'],teacher:['帶隊老師','老師'],participate:['參加?','出席']};
 function buildHeaderIndex(header){
   const h=header.split(/\t+/).map(x=>normalizeSpaces(x));
@@ -125,7 +169,7 @@ function generateCards(){
   let success=0;let onlyTrue=false;
   const idx=buildHeaderIndex(lines[0]);
 
-  if(idx.name!==-1){ // 有標題列
+  if(idx.name!==-1){
     if(idx.participate!==-1){
       onlyTrue=true;
       msg.innerHTML='<div class="success-summary">已偵測「參加?」：只輸出 TRUE。</div>';
@@ -141,22 +185,18 @@ function generateCards(){
       const name=c[idx.name]||'';if(!name)continue;
       const car=normalizeCar(c[idx.car]||'');
       const table=normalizeTable(c[idx.table]||'');
-      const teacher=stripPhone(c[idx.teacher]||'');
-      const phone=extractPhone(c[idx.teacher]||'');
-      const leader=[teacher,phone].filter(Boolean).join(' ');
+      const leader = parseTeacherField(c[idx.teacher]||'');
       box.innerHTML+=cardHTML(school,event,name,`${car} ${table}`.trim(),leader,directorHTML);
       success++;
     }
-  }else{ // 相容貼法
+  }else{
     for(const l of lines){
       const m=l.split(/\t+/);
       if(isTeacherRow(m))continue;
       const name=m[0]||'';if(!name)continue;
       const car=normalizeCar(m[1]||'');
       const table=normalizeTable(m[2]||'');
-      const teacher=stripPhone(m[3]||'');
-      const phone=extractPhone(m[3]||'');
-      const leader=[teacher,phone].filter(Boolean).join(' ');
+      const leader = parseTeacherField(m[3]||'');
       box.innerHTML+=cardHTML(school,event,name,`${car} ${table}`.trim(),leader,directorHTML);
       success++;
     }
@@ -166,25 +206,47 @@ function generateCards(){
   msg.innerHTML+=`<div class="success-summary">✅ 共產生 ${success} 張名牌。</div>`;
 }
 
-// === 卡片樣板 ===
+// === 卡片模板 ===
 function cardHTML(school,event,name,group,leader,directorHTML){
-return`<div class="name-card">
-  <div class="card-header-top"><span>正華學苑</span><span>${school}</span></div>
-  <div class="card-event">${event}</div>
-  <div class="card-name">${name}</div>
-  <div class="card-group">${group||''}</div>
-  <div class="card-footer">
-    <div>帶隊老師：${leader||'—'}</div>
-    <div>帶隊主任：${directorHTML||'—'}</div>
-  </div>
-</div>`;}
+  const hideTitles=document.getElementById('hideTitles')?.checked;
+  const leaderText=leader?(hideTitles?`${leader}`:`帶隊老師：${leader}`):'';
+  const directorText=directorHTML?(hideTitles?`${directorHTML}`:`帶隊主任：${directorHTML}`):'';
+  const footerHTML=[leaderText,directorText].filter(Boolean).map(t=>`<div>${t}</div>`).join('')||'<div>—</div>';
+  return `<div class="name-card">
+    <div class="card-header-top"><span>正華學苑</span><span>${school}</span></div>
+    <div class="card-event">${event}</div>
+    <div class="card-name">${name}</div>
+    <div class="card-group">${group||''}</div>
+    <div class="card-footer">${footerHTML}</div>
+  </div>`;
+}
 
-// === 清空功能 ===
 function clearAll(){
   document.getElementById('inputArea').value='';
   document.getElementById('cardContainer').innerHTML='';
   document.getElementById('errorMsg').innerHTML='';
 }
+
+// === 勾選與說明記憶 ===
+document.addEventListener('DOMContentLoaded',()=>{
+  const hide=document.getElementById('hideTitles');
+  const info=document.getElementById('infoBox');
+  if(hide){
+    const saved=localStorage.getItem('hideTitles');
+    if(saved!==null)hide.checked=saved==='1';
+    hide.addEventListener('change',()=>{
+      localStorage.setItem('hideTitles',hide.checked?'1':'0');
+      const box=document.getElementById('cardContainer');
+      if(!box||box.children.length===0)return;
+      const y=window.scrollY;generateCards();window.scrollTo(0,y);
+    });
+  }
+  if(info){
+    const openSaved=localStorage.getItem('infoBoxOpen');
+    if(openSaved==='1')info.setAttribute('open','');
+    info.addEventListener('toggle',()=>{localStorage.setItem('infoBoxOpen',info.open?'1':'0');});
+  }
+});
 </script>
 </body>
 </html>
