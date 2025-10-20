@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
@@ -425,10 +426,10 @@ function preflightCheck(){
   const totalPages = Math.max(1, Math.ceil(totalLabels / perPage));
   const leftover = totalLabels % perPage;
 
-  const layoutText = rowsPerPage === 10 ? '4×10（每格高 2.94cm）' : '4×9（每格高 3.27cm）';
-  const rowsText = rowsPerStudent === 3 ? '每人 12 張（4×3）' : '每人 8 張（4×2）';
+  const layoutText = rowsPerPage === 10 ? '4×10' : '4×9';
+  const rowsText = rowsPerStudent === 3 ? '每人 12 張' : '每人 8 張';
 
-  let msg = `【複製前確認】\n\n` +
+  let msg = `【複製前請確認】\n\n` +
             `• 目前版型：${layoutText}\n` +
             `• 每人張數：${rowsText}\n` +
             `• 學生筆數：${count} 位\n` +
@@ -444,8 +445,6 @@ function preflightCheck(){
   if(sizeWarns.length){
     msg += `\n！字級提醒：\n - ` + sizeWarns.join('\n - ');
   }
-
-  msg += `\n\n📌 到 Word 前請先用滑鼠框選「4 × ${rowsPerPage} 列」的表格區塊，再貼上。\n\n要繼續複製嗎？`;
 
   const ok = confirm(msg);
   return { ok };
@@ -520,10 +519,10 @@ document.getElementById('copyHtml').addEventListener('click', async (e)=>{
 
     sel.removeAllRanges(); document.body.removeChild(box);
 
-    showToast(ok ? '✅ 已複製（含格式）。到 Word 全選貼上即可。' : '⚠️ 複製失敗，請再試一次或改用新版瀏覽器。');
+    showToast(ok ? '✅ 已複製（含格式），到 Word 全選貼上即可。' : '⚠️ 複製失敗，請再試一次或改用新版瀏覽器。');
   }catch(err){
     console.error('[copyHtml step3] execCommand 失敗：', err);
-    showToast('⚠️ 複製流程發生錯誤，請查看 Console 或改用新版瀏覽器。');
+    showToast('⚠️ 複製流程發生錯誤，請查看F12或改用新版瀏覽器。');
   }
 });
 
