@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -9,112 +8,181 @@
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
 <style>
-  :root{
-    --page-w: 297mm;
-    --page-h: 210mm;
-    --cell-border: 0.3mm solid #000;
-  }
-  *{ box-sizing: border-box; }
-  body{ margin:0; padding:16px; background:#f6f7f8; font-family:"Microsoft JhengHei", Arial, sans-serif; color:#222; }
-  h2{ margin:8px 0 12px; }
-  .panel{ background:#fff; border:1px solid #e6e6e6; border-radius:10px; padding:12px; margin-bottom:12px; }
-  textarea{ width:100%; height:220px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:14px; line-height:1.5; }
-  .btns{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
-  button{ cursor:pointer; padding:8px 14px; border-radius:10px; border:1px solid #d0d0d0; background:#0ea5e9; color:#fff; font-weight:700; }
-  button.secondary{ background:#fff; color:#222; }
-  .hint{ font-size:12px; color:#666; margin-top:6px; }
+/* ====== Design Tokens（沿用前作風格） ====== */
+:root{
+  /* Brand */
+  --brand-500:#A1C6EA; --brand-600:#8FB9E2;
+  --secondary-500:#BBD1EA; --secondary-600:#A8C5E6;
+  --clear-500:#E6EDF0; --clear-600:#D8E3E8;
 
-  .sheet{
-    width: var(--page-w);
-    height: var(--page-h);
-    margin: 0 auto;
-    background:#fff;
-    border:1px solid #ddd;
-    padding: 10mm;
-  }
-  .grid{
-    display:flex; flex-wrap:wrap;
-    gap: 10mm 12mm;
-    align-content:flex-start;
-  }
+  /* Text & Surfaces */
+  --text-strong:#0f172a; --text-normal:#334155; --text-mute:#64748b;
+  --border:#d1d5db; --bg-page:#f6f8fb; --bg-card:#ffffff;
+  --shadow-sm:0 1px 3px rgba(2,6,23,.08); --shadow-md:0 8px 24px rgba(2,6,23,.1);
 
-  .strip{ border-collapse: collapse; table-layout: fixed; }
-  .strip td{
-    border: var(--cell-border);
-    padding: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-align: center;
-    line-height: 1;
-  }
+  /* Controls */
+  --btn-height:3.0rem; --input-height:3.0rem; --focus-ring:0 0 0 3px rgba(106,154,255,.25);
 
-  /* ✅ 調整欄位比例：中文更寬、英文略縮，數字更窄 */
-  .strip col.no{ width: 13%; }   /* 原 16% → 13% */
-  .strip col.zh{ width: 40%; }   /* 原 37% → 40% */
-  .strip col.en{ width: 47%; }   /* 保留英文欄寬 */
-  .strip td:nth-child(1){ font-size: 0.75em; } /* 數字再小一點 */
-  .strip td:nth-child(1){ text-align: right; padding-right: 0.5mm; }
+  /* 本頁面既有變數（勿動尺寸邏輯） */
+  --page-w: 297mm;
+  --page-h: 210mm;
+  --cell-border: 0.3mm solid #000;
+}
 
-  .title{ margin:0 0 4px; font-weight:700; font-size:13px; color:#333; }
-  .fs-badge{ font-size:11px; color:#666; margin-left:6px; }
+/* ====== Base ====== */
+*{ box-sizing:border-box }
+html,body{height:100%}
+body{
+  margin:0; padding:0; background:var(--bg-page); color:var(--text-normal);
+  font-family:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC","Heiti TC",sans-serif;
+  display:flex; justify-content:center; align-items:flex-start; min-height:100vh;
+}
+.container{ background:#fff; padding:2.2rem 2rem; margin:2rem 1rem; border-radius:16px; box-shadow:var(--shadow-md); max-width:1240px; width:100%;}
+h2{ margin:0 0 1rem; color:#0A57C6; font-weight:900; letter-spacing:.02em; }
 
-  @media print{
-    @page{ size: A4 landscape; margin: 0; }
-    body{ background:#fff; padding:0; }
-    .panel, .title{ display:none !important; }
-    .sheet{ width: var(--page-w); height: var(--page-h); border:0; padding: 10mm; margin:0; }
-  }
+/* ====== Panels / Cards ====== */
+.panel{
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:12px; padding:16px; box-shadow:var(--shadow-sm); margin-bottom:14px;
+}
+.hint{ font-size:13px; color:var(--text-mute); margin:.25rem 0 0.75rem; }
+
+/* ====== Inputs ====== */
+textarea{
+  width:100%; height:220px; font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:14px; line-height:1.6; border:1px solid var(--border); border-radius:12px;
+  background:#fff; padding:12px; transition:border-color .18s, box-shadow .18s, background-color .18s;
+}
+textarea:focus{ outline:none; border-color:#6a9aff!important; box-shadow:var(--focus-ring); background:#eef6ff; }
+
+/* ====== Buttons ====== */
+.btns{ display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+button{
+  display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+  min-height:var(--btn-height); padding:0 1.1rem; border-radius:12px;
+  border:1px solid transparent; font-weight:900; font-size:16px;
+  background:var(--brand-500); color:#0f2740; box-shadow:var(--shadow-sm);
+  transition:background .12s, transform .08s, box-shadow .18s;
+}
+button:hover{ background:var(--brand-600); transform:translateY(-1px); }
+button.secondary{
+  background:var(--clear-500); color:var(--text-strong); border:1px solid var(--border);
+}
+button.secondary:hover{ background:var(--clear-600); }
+
+/* ====== Sheet / Grid（勿動實際內容尺寸） ====== */
+.sheet{
+  width: var(--page-w); height: var(--page-h);
+  margin: 0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px;
+  padding: 10mm; box-shadow:var(--shadow-sm);
+}
+.grid{
+  display:flex; flex-wrap:wrap; gap: 10mm 12mm; align-content:flex-start;
+}
+
+/* ====== 名條表格（尺寸與欄寬保持原設定） ====== */
+.strip{ border-collapse: collapse; table-layout: fixed; }
+.strip td{
+  border: var(--cell-border);
+  padding: 0; white-space: nowrap; overflow: hidden; text-align: center; line-height: 1;
+}
+
+/* 欄位比例：中文更寬、英文略縮，數字更窄（原規格保留） */
+.strip col.no{ width: 13%; }
+.strip col.zh{ width: 40%; }
+.strip col.en{ width: 47%; }
+.strip td:nth-child(1){ font-size: 0.75em; text-align: right; padding-right: 0.5mm; }
+
+/* 小標題與字級徽章（視覺同步） */
+.title{ margin:0 0 4px; font-weight:900; font-size:13px; color:var(--text-strong); letter-spacing:.01em; }
+.fs-badge{ font-size:11px; color:var(--text-mute); margin-left:6px; }
+
+/* 列印模式（維持 A4 橫式與邊界，隱藏外框） */
+@media print{
+  @page{ size: A4 landscape; margin: 0; }
+  body{ background:#fff; padding:0; }
+  .container{ box-shadow:none; margin:0; padding:0; }
+  .panel, .title{ display:none !important; }
+  .sheet{ width: var(--page-w); height: var(--page-h); border:0; padding: 10mm; margin:0; box-shadow:none; }
+}
 </style>
 </head>
 <body>
-  <div class="panel">
-    <h2>HANDBOOK P6-P9名條產生器</h2>
-    <div class="hint">貼上江翠英文點名表姓名條，系統會依英文 A→Z 排序並編號。</div>
-    <textarea id="input" placeholder="戴小桐
+  <div class="container">
+    <div class="panel">
+      <h2>HANDBOOK P6-P9名條產生器</h2>
+      <div class="hint">貼上江翠英文點名表姓名條，系統會依英文 A→Z 排序並編號。支援「兩行一組」與「一行兩欄（Tab／逗號／多空白）」。</div>
+      <textarea id="input" placeholder="戴小桐
 Doris
 
-李小霖
-Charlie
-
-張小賢
-Tom
-
-洪小鈞
-Ken
-
-許小嘉
-James
-
-陳小翰
-Brian"></textarea>
-    <div class="btns">
-      <button id="btnGen">產生名條</button>
-      <button class="secondary" onclick="window.print()">列印（A4 橫式）</button>
-      <button class="secondary" id="btnDocx" disabled>下載 DOCX（精準尺寸）</button>
-      <button class="secondary" id="btnSample">載入示例</button>
-      <button class="secondary" id="btnClear">清空</button>
+賴小妘  Nancy
+王小勳, Matt
+陳小潔    Emma
+潘小諺	Jayden
+鄭小涵   Tina
+蔡小甯   Kate"></textarea>
+      <div class="btns">
+        <button id="btnGen">產生名條</button>
+        <button class="secondary" onclick="window.print()">列印（A4 橫式）</button>
+        <button class="secondary" id="btnDocx" disabled>下載 DOCX（精準尺寸）</button>
+        <button class="secondary" id="btnSample">載入示例</button>
+        <button class="secondary" id="btnClear">清空</button>
+      </div>
     </div>
+
+    <div class="sheet"><div id="grid" class="grid"></div></div>
   </div>
 
-  <div class="sheet"><div id="grid" class="grid"></div></div>
-
 <script>
+/* ====== 尺寸工具（原樣保留） ====== */
 const cmToTwip = cm => Math.round(cm / 2.54 * 72 * 20);
 const mmToTwip = mm => cmToTwip(mm / 10);
 
+/* ====== 新增：一行兩欄的健壯切割（Tab／逗號／2+空白；清理全形空白、NBSP、外層引號） ====== */
+function splitCells(line){
+  if(!line) return [];
+  const sanitized = String(line)
+    .replace(/[\u3000\u00A0]/g, ' ')   // 全形空白、NBSP → 半形空白
+    .trim();
+  return sanitized
+    .split(/\t|,| {2,}/)               // Tab、逗號、或 2+ 連續空白
+    .map(s => s.replace(/^"+|"+$/g,'').trim())
+    .filter(Boolean);
+}
+
+/* ====== 解析輸入（改良版）：先吃「一行兩欄」，剩下的再以「兩行一組」補齊 ====== */
 function parseInput(text){
   text = (text || "")
     .replace(/\r\n/g, "\n")
     .replace(/[“”]/g, '"')   // 彎雙引號 → 直雙引號
-    .replace(/[‘’]/g, "'")   // 彎單引號 → 直單引號（不會移除單引號）
+    .replace(/[‘’]/g, "'")   // 彎單引號 → 直單引號（不移除單引號）
     .trim();
-  const lines = text.split("\n").map(s => s.trim()).filter(Boolean);
+
+  const rawLines = text.split("\n").map(s => s.trim()).filter(Boolean);
+
   const pairs = [];
-  for(let i=0; i<lines.length; i+=2){
-    const zh = (lines[i]   || "").replace(/"/g, "");      // ← 改這行
-    const en = (lines[i+1] || "").replace(/"/g, "");      // ← 改這行
+  const leftovers = [];
+
+  // 先嘗試一行兩欄
+  for(const line of rawLines){
+    const cells = splitCells(line);
+    if(cells.length >= 2){
+      const zh = (cells[0] || "").replace(/"/g,"").trim();
+      const en = (cells[1] || "").replace(/"/g,"").trim();
+      if(zh || en) pairs.push({ zh, en });
+    }else{
+      leftovers.push(line);
+    }
+  }
+
+  // 剩餘行用兩行一組補齊
+  for(let i=0; i<leftovers.length; i+=2){
+    const zh = (leftovers[i]   || "").replace(/"/g, "").trim();
+    const en = (leftovers[i+1] || "").replace(/"/g, "").trim();
     if(zh || en) pairs.push({ zh, en });
   }
+
+  // 英文 A→Z，再以中文次序；最後編號
   pairs.sort((a,b)=>{
     const A=(a.en||"").toLowerCase(), B=(b.en||"").toLowerCase();
     if(A<B) return -1; if(A>B) return 1;
@@ -124,8 +192,7 @@ function parseInput(text){
   return pairs;
 }
 
-
-
+/* ====== 名條表格（原樣保留） ====== */
 function buildStrip(data, totalWidthCm, rowHeightMm){
   const table = document.createElement("table");
   table.className = "strip";
@@ -147,7 +214,7 @@ function buildStrip(data, totalWidthCm, rowHeightMm){
       const h = rowHeightMm + "mm";
       td.style.height = h;
       td.style.lineHeight = h;
-      if (k === "no") td.style.fontSize = "0.75em"; // 再小一點
+      if (k === "no") td.style.fontSize = "0.75em"; // 數字稍小
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
@@ -156,6 +223,7 @@ function buildStrip(data, totalWidthCm, rowHeightMm){
   return table;
 }
 
+/* ====== 字級自動適配（原樣保留） ====== */
 function adjustFontSize(table, rowHeightMm, badgeEl){
   const mmToPx = 3.78;
   const targetPx = rowHeightMm * mmToPx;
@@ -191,6 +259,7 @@ function adjustFontSize(table, rowHeightMm, badgeEl){
   return parseFloat(table.style.fontSize);
 }
 
+/* ====== 四種規格（原樣保留） ====== */
 const SPECS = [
   { label:"① 3.7cm × 9.5mm", w:3.7, h:9.5 },
   { label:"② 3.2cm × 8.0mm", w:3.2, h:8.0 },
@@ -216,13 +285,14 @@ function renderAll(data){
   document.getElementById('btnDocx').disabled = false;
 }
 
+/* ====== DOCX 下載（原樣保留，僅註解同步） ====== */
 async function downloadDocx(data){
   const { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, BorderStyle, TableLayoutType, HeightRule, TextRun } = docx;
   const makeTable = (spec)=>{
     const totalTwip = cmToTwip(spec.w);
-    const colW = [0.13, 0.40, 0.47].map(r => Math.round(totalTwip * r)); // ✅ 同 CSS
+    const colW = [0.13, 0.40, 0.47].map(r => Math.round(totalTwip * r)); // 同 CSS 欄寬比例
     const baseHalf = Math.round((spec.fontPt || 8) * 2);
-    const noHalf   = Math.max(1, Math.round(baseHalf * 0.75)); // ✅ 數字再小一點
+    const noHalf   = Math.max(1, Math.round(baseHalf * 0.75)); // 數字稍小
     const rows = data.map(p=> new TableRow({
       height:{ value:mmToTwip(spec.h), rule:HeightRule.EXACT },
       children:[
@@ -267,6 +337,7 @@ async function downloadDocx(data){
   saveAs(blob, "四條名條_精準尺寸.docx");
 }
 
+/* ====== 事件綁定（原樣保留） ====== */
 document.getElementById("btnGen").onclick = ()=>{
   const data = parseInput(document.getElementById("input").value);
   renderAll(data);
