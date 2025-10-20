@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -104,14 +105,14 @@ const mmToTwip = mm => cmToTwip(mm / 10);
 function parseInput(text){
   text = (text || "")
     .replace(/\r\n/g, "\n")
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')   // 彎雙引號 → 直雙引號
+    .replace(/[‘’]/g, "'")   // 彎單引號 → 直單引號（不會移除單引號）
     .trim();
   const lines = text.split("\n").map(s => s.trim()).filter(Boolean);
   const pairs = [];
   for(let i=0; i<lines.length; i+=2){
-    const zh = lines[i] || "";
-    const en = lines[i+1] || "";
+    const zh = (lines[i]   || "").replace(/"/g, "");      // ← 改這行
+    const en = (lines[i+1] || "").replace(/"/g, "");      // ← 改這行
     if(zh || en) pairs.push({ zh, en });
   }
   pairs.sort((a,b)=>{
@@ -122,6 +123,8 @@ function parseInput(text){
   pairs.forEach((p,i)=> p.no = i + 1);
   return pairs;
 }
+
+
 
 function buildStrip(data, totalWidthCm, rowHeightMm){
   const table = document.createElement("table");
