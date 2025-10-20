@@ -1,4 +1,4 @@
-<!DOCTYPE html>  
+<!DOCTYPE html>
 <html lang="zh-Hant-TW">
 <head>
 <meta charset="UTF-8" />
@@ -401,6 +401,56 @@ function buildWordHTML(){
 </head><body>${body}</body></html>`;
 }
 
+/* ✅ 複製前防呆檢查與確認 */
+function preflightCheck(){
+  const recs = parseInput(rawEl.value);
+  const count = recs.length;
+  if(count === 0){
+    showToast('⚠️ 沒有可用資料，請先貼上名單。');
+    rawEl.focus();
+    return { ok:false };
+  }
+
+  const namePx = +nameSizeEl.value || 19;
+  const codePx = +codeSizeEl.value || 21;
+  const sizeWarns = [];
+  if(namePx < 10 || namePx > 60) sizeWarns.push(`姓名字級目前為 ${namePx}px（建議 12–48px）`);
+  if(codePx < 10 || codePx > 60) sizeWarns.push(`班級字級目前為 ${codePx}px（建議 12–48px）`);
+
+  const rowsPerStudent = +rowsSel.value || 2;
+  const labelsPerStudent = rowsPerStudent * 4;
+  const { rowsPerPage, cellH } = getLayoutConfig();
+  const perPage = rowsPerPage * 4;
+  const totalLabels = count * labelsPerStudent;
+  const totalPages = Math.max(1, Math.ceil(totalLabels / perPage));
+  const leftover = totalLabels % perPage;
+
+  const layoutText = rowsPerPage === 10 ? '4×10（每格高 2.94cm）' : '4×9（每格高 3.27cm）';
+  const rowsText = rowsPerStudent === 3 ? '每人 12 張（4×3）' : '每人 8 張（4×2）';
+
+  let msg = `【複製前確認】\n\n` +
+            `• 目前版型：${layoutText}\n` +
+            `• 每人張數：${rowsText}\n` +
+            `• 學生筆數：${count} 位\n` +
+            `• 總張數：${totalLabels} 張（每頁 ${perPage} 張）\n` +
+            `• 預估頁數：${totalPages} 頁\n`;
+
+  if(leftover !== 0){
+    msg += `\n！提醒：最後一頁非滿版（剩餘 ${leftover} 張）。\n`;
+  }
+  if(!commonClassEl.value.trim()){
+    msg += `\n！班級代碼目前空白，仍可繼續。`;
+  }
+  if(sizeWarns.length){
+    msg += `\n！字級提醒：\n - ` + sizeWarns.join('\n - ');
+  }
+
+  msg += `\n\n📌 到 Word 前請先用滑鼠框選「4 × ${rowsPerPage} 列」的表格區塊，再貼上。\n\n要繼續複製嗎？`;
+
+  const ok = confirm(msg);
+  return { ok };
+}
+
 /* 事件（只有「每人幾排」會自動捲動） */
 layoutSel.addEventListener('change', ()=>{ buildPreview(); showToast('版型已切換'); });
 
@@ -420,9 +470,13 @@ codeSizeEl.addEventListener('input', ()=>{ applyStyles(); showToast('🏷 班級
 
 document.getElementById('gen').addEventListener('click', buildPreview);
 
-/* ✅ 複製到 Word：三段後備 + 一定出 Toast */
+/* ✅ 複製到 Word：三段後備 + 複製前防呆 */
 document.getElementById('copyHtml').addEventListener('click', async (e)=>{
   e.preventDefault();
+
+  const pre = preflightCheck();
+  if(!pre.ok) return; // 不通過就中止
+
   const html = buildWordHTML();
 
   // 1) 最佳：text/html（支援 Chrome/Edge/新 Firefox）
