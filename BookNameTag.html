@@ -437,13 +437,13 @@ function preflightCheck(){
             `• 預估頁數：${totalPages} 頁\n`;
 
   if(leftover !== 0){
-    msg += `\n！提醒：最後一頁非滿版（剩餘 ${leftover} 張）。\n`;
+    msg += `！提醒：最後一頁非滿版（剩餘 ${leftover} 張）。\n`;
   }
   if(!commonClassEl.value.trim()){
-    msg += `\n！班級代碼目前空白，仍可繼續。`;
+    msg += `！班級代碼目前空白，仍可繼續。`;
   }
   if(sizeWarns.length){
-    msg += `\n！字級提醒：\n - ` + sizeWarns.join('\n - ');
+    msg += `！字級提醒：\n - ` + sizeWarns.join('\n - ');
   }
 
   const ok = confirm(msg);
