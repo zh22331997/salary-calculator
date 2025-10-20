@@ -26,7 +26,7 @@
   /* 收據 layout 變數（可由面板即時調整） */
   --cut:#555;          /* 可撕線顏色 */
   --line:#6f757a;      /* 卡片邊框顏色 */
-  --gap-between:9mm;   /* 垂直方向：人與人之間距 */
+  --gap-between:6mm;   /* 垂直方向：人與人之間距 */
   --gap-col:5mm;       /* 水平方向：欄與欄之間距（決定垂直切線位置） */
   --cut-inset:3mm;     /* 水平切線左右內縮，避免碰到框線 */
 }
@@ -468,7 +468,7 @@ function initTuner(){
   });
   $('#btnReset').addEventListener('click', ()=>{
     // 重置為目前這版的「定錨值」
-    gapBetween.value = 9; gapBetween.dispatchEvent(new Event('input'));
+    gapBetween.value = 6; gapBetween.dispatchEvent(new Event('input'));
     gapCol.value     = 5; gapCol.dispatchEvent(new Event('input'));
     cutInset.value   = 3; cutInset.dispatchEvent(new Event('input'));
   });
