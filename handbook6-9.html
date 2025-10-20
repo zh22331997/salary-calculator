@@ -4,8 +4,6 @@
 <meta charset="utf-8" />
 <title>HANDBOOK P6-P9名條產生器</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
 <style>
 /* ====== Design Tokens（沿用前作風格） ====== */
@@ -111,7 +109,7 @@ button.secondary:hover{ background:var(--clear-600); }
   <div class="container">
     <div class="panel">
       <h2>HANDBOOK P6-P9名條產生器</h2>
-      <div class="hint">貼上英文點名表姓名條(不含標題列)，系統會依英文 A→Z 排序並編號。</div>
+      <div class="hint">貼上英文點名表姓名條（不含標題列）。支援「兩行一組」與「一行兩欄（Tab／逗號／多空白）」，系統會依英文 A→Z 排序並編號。</div>
       <textarea id="input" placeholder="戴小桐
 Doris
 
@@ -124,7 +122,6 @@ Doris
       <div class="btns">
         <button id="btnGen">產生名條</button>
         <button class="secondary" onclick="window.print()">列印（A4 橫式）</button>
-        <button class="secondary" id="btnDocx" disabled>下載 DOCX（精準尺寸）</button>
         <button class="secondary" id="btnSample">載入示例</button>
         <button class="secondary" id="btnClear">清空</button>
       </div>
@@ -138,7 +135,7 @@ Doris
 const cmToTwip = cm => Math.round(cm / 2.54 * 72 * 20);
 const mmToTwip = mm => cmToTwip(mm / 10);
 
-/* ====== 新增：一行兩欄的健壯切割（Tab／逗號／2+空白；清理全形空白、NBSP、外層引號） ====== */
+/* ====== 一行兩欄的健壯切割（Tab／逗號／2+空白；清理全形空白、NBSP、外層引號） ====== */
 function splitCells(line){
   if(!line) return [];
   const sanitized = String(line)
@@ -150,7 +147,7 @@ function splitCells(line){
     .filter(Boolean);
 }
 
-/* ====== 解析輸入（改良版）：先吃「一行兩欄」，剩下的再以「兩行一組」補齊 ====== */
+/* ====== 解析輸入：先吃「一行兩欄」，剩下的再以「兩行一組」補齊 ====== */
 function parseInput(text){
   text = (text || "")
     .replace(/\r\n/g, "\n")
@@ -282,69 +279,12 @@ function renderAll(data){
     grid.appendChild(box);
     spec.fontPt = adjustFontSize(table, spec.h, badge);
   });
-  document.getElementById('btnDocx').disabled = false;
 }
 
-/* ====== DOCX 下載（原樣保留，僅註解同步） ====== */
-async function downloadDocx(data){
-  const { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, BorderStyle, TableLayoutType, HeightRule, TextRun } = docx;
-  const makeTable = (spec)=>{
-    const totalTwip = cmToTwip(spec.w);
-    const colW = [0.13, 0.40, 0.47].map(r => Math.round(totalTwip * r)); // 同 CSS 欄寬比例
-    const baseHalf = Math.round((spec.fontPt || 8) * 2);
-    const noHalf   = Math.max(1, Math.round(baseHalf * 0.75)); // 數字稍小
-    const rows = data.map(p=> new TableRow({
-      height:{ value:mmToTwip(spec.h), rule:HeightRule.EXACT },
-      children:[
-        new TableCell({ width:{ size:colW[0], type:WidthType.DXA }, children:[
-          new Paragraph({ children:[ new TextRun({ text:String(p.no), size:noHalf }) ] })
-        ]}),
-        new TableCell({ width:{ size:colW[1], type:WidthType.DXA }, children:[
-          new Paragraph({ children:[ new TextRun({ text:p.zh||'', size:baseHalf, font:"Microsoft JhengHei" }) ] })
-        ]}),
-        new TableCell({ width:{ size:colW[2], type:WidthType.DXA }, children:[
-          new Paragraph({ children:[ new TextRun({ text:p.en||'', size:baseHalf, font:"Arial" }) ] })
-        ]})
-      ]
-    }));
-    return new Table({
-      width:{ size:totalTwip, type:WidthType.DXA },
-      rows,
-      layout:TableLayoutType.FIXED,
-      borders:{
-        top:{ style:BorderStyle.SINGLE, size:6, color:"000000" },
-        bottom:{ style:BorderStyle.SINGLE, size:6, color:"000000" },
-        left:{ style:BorderStyle.SINGLE, size:6, color:"000000" },
-        right:{ style:BorderStyle.SINGLE, size:6, color:"000000" },
-        insideH:{ style:BorderStyle.SINGLE, size:6, color:"000000" },
-        insideV:{ style:BorderStyle.SINGLE, size:6, color:"000000" }
-      }
-    });
-  };
-
-  const doc = new Document({
-    sections:[{
-      properties:{ page:{ size:{ width:cmToTwip(29.7), height:cmToTwip(21) }, margin:{ top:mmToTwip(10), bottom:mmToTwip(10), left:mmToTwip(10), right:mmToTwip(10) } } },
-      children:[
-        makeTable(SPECS[0]), new Paragraph(""),
-        makeTable(SPECS[1]), new Paragraph(""),
-        makeTable(SPECS[2]), new Paragraph(""),
-        makeTable(SPECS[3])
-      ]
-    }]
-  });
-  const blob = await Packer.toBlob(doc);
-  saveAs(blob, "四條名條_精準尺寸.docx");
-}
-
-/* ====== 事件綁定（原樣保留） ====== */
+/* ====== 事件綁定 ====== */
 document.getElementById("btnGen").onclick = ()=>{
   const data = parseInput(document.getElementById("input").value);
   renderAll(data);
-};
-document.getElementById("btnDocx").onclick = async ()=>{
-  const data = parseInput(document.getElementById("input").value);
-  await downloadDocx(data);
 };
 document.getElementById("btnSample").onclick = ()=>{
   document.getElementById("input").value = [
@@ -359,7 +299,6 @@ document.getElementById("btnSample").onclick = ()=>{
 document.getElementById("btnClear").onclick = ()=>{
   document.getElementById("input").value = "";
   document.getElementById("grid").innerHTML = "";
-  document.getElementById("btnDocx").disabled = true;
 };
 </script>
 </body>
