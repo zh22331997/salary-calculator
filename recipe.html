@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>  
 <html lang="zh-Hant-TW">
 <head>
 <meta charset="utf-8" />
@@ -219,13 +219,12 @@ button:focus{outline:none; box-shadow:var(--focus-ring)}
         </div>
 
         <div class="col-12">
-          <label>貼上名單（可含標題列：班級／姓名／金額／備註）</label>
+          <label>貼上名單（可含標題列：班級／姓名／金額／羊奶袋／備註(例如口味)）</label>
           <textarea id="pasteArea"
-placeholder="班級	姓名	金額	備註
-1A	愛莉娜	700	—
-1A	黃穎穎	700	—
-2A	Kitty	700	—
-2B	張琪琪	700	—"></textarea>
+placeholder="班級	姓名	金額	羊奶袋	口味
+1A	馬晨皓	700	否	鮮乳
+1A	許紘碩	700	否	草莓
+1A	許耀文	700	是	草莓"></textarea>
           <div style="font-size:13px;color:#6b7280;margin-top:6px;">
             ● 建議列印：邊界選「<b>最小值</b>」、關閉頁首/頁尾。本頁以 <code>@page</code> 固定 12mm；若仍吃邊，縮放 95–97%。
           </div>
@@ -336,18 +335,47 @@ function detectDelimiter(sample){
   return tab>=comma?'\t':',';
 }
 
-/* 支援標題列：班級／姓名／金額／備註 */
+/* 正規化：只保留「是」；Y/YES 也視為是 */
+function normalizeBag(v){
+  const s=String(v||'').trim();
+  if(/^(\u662f|Y|YES)$/i.test(s)) return true; // 是 / Y / YES
+  return false;
+}
+
+/* 解析貼上名單：
+   支援 5 欄（班級/姓名/金額/羊奶袋/口味），
+   也相容舊 4 欄（班級/姓名/金額/備註）。*/
 function parseRows(text){
   const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
   if(!lines.length) return [];
   const d=detectDelimiter(lines[0]);
+
   const first=lines[0].split(d).map(v=>v.trim());
-  const hasHeader=first.some(v=>/班級|姓名|金額|備註/i.test(v));
-  const rows=(hasHeader?lines.slice(1):lines).map(line=>{
+  const hasHeader=first.some(v=>/班級|姓名|金額|備註|羊奶袋|口味/i.test(v));
+  const body=(hasHeader?lines.slice(1):lines);
+
+  return body.map(line=>{
     const p=line.split(d).map(s=>s.trim());
-    return { klass:p[0]||'', name:p[1]||'', amount:p[2]||'', note:p[3]||'' };
+    // 嘗試以 5 欄解析
+    if(p.length>=5){
+      return {
+        klass:  p[0]||'',
+        name:   p[1]||'',
+        amount: p[2]||'',
+        bagYes: normalizeBag(p[3]),
+        flavor: p[4]||'',
+        // 舊版相容：若第5欄其實是備註，也照樣塞進 flavor 顯示
+      };
+    }
+    // 相容舊的 4 欄（班級/姓名/金額/備註）
+    return {
+      klass:  p[0]||'',
+      name:   p[1]||'',
+      amount: p[2]||'',
+      bagYes: false,
+      flavor: p[3]||''
+    };
   });
-  return rows;
 }
 
 function sortByClassName(rows){
@@ -371,8 +399,13 @@ function fillTriplet(node,data,globals){
   $$('.klass',node).forEach(e=>e.textContent = data.klass || '—');
   $$('.item',node).forEach(e=>e.textContent  = globals.feeItem || '（未填）');
   $$('.amount',node).forEach(e=>e.textContent= formatMoney(data.amount));
-  const mergedNote=[data.note,globals.globalNote].filter(Boolean).join('；');
-  $$('.note',node).forEach(e=>e.textContent  = mergedNote || '—');
+
+  // 備註：口味 + (袋) + 全域備註
+  let noteStr = (data.flavor || '').trim();
+  if (data.bagYes) noteStr = noteStr ? (noteStr + ' +袋') : '+袋';
+  if (globals.globalNote) noteStr = noteStr ? (noteStr + '；' + globals.globalNote) : globals.globalNote;
+
+  $$('.note',node).forEach(e=>e.textContent  = noteStr || '—');
   $$('.deadline',node).forEach(e=>e.textContent = globals.deadline || '—');
 }
 
@@ -415,7 +448,6 @@ function generate(){
 /* ===== 面板：即時調整 CSS 變數 ===== */
 function getMMVar(name){
   const cs=getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  // 解析 '6mm' -> 6
   const m = cs.match(/([\d.]+)\s*mm/i);
   return m? parseFloat(m[1]) : 0;
 }
@@ -431,17 +463,14 @@ function initTuner(){
   const gapColVal     = $('#gapColVal');
   const cutInsetVal   = $('#cutInsetVal');
 
-  // 初始化滑桿值（讀取目前 CSS 變數）
   gapBetween.value = getMMVar('--gap-between') || 6;
   gapCol.value     = getMMVar('--gap-col') || 5;
   cutInset.value   = getMMVar('--cut-inset') || 3;
 
-  // 顯示數值
   gapBetweenVal.textContent = gapBetween.value;
   gapColVal.textContent     = gapCol.value;
   cutInsetVal.textContent   = cutInset.value;
 
-  // 綁定即時更新
   gapBetween.addEventListener('input', e => {
     gapBetweenVal.textContent = e.target.value;
     setMMVar('--gap-between', +e.target.value);
@@ -455,7 +484,6 @@ function initTuner(){
     setMMVar('--cut-inset', +e.target.value);
   });
 
-  // 快速預設
   $('#btnPresetLoose').addEventListener('click', ()=>{
     gapBetween.value = 8; gapBetween.dispatchEvent(new Event('input'));
     gapCol.value     = 6; gapCol.dispatchEvent(new Event('input'));
@@ -467,7 +495,6 @@ function initTuner(){
     cutInset.value   = 3; cutInset.dispatchEvent(new Event('input'));
   });
   $('#btnReset').addEventListener('click', ()=>{
-    // 重置為目前這版的「定錨值」
     gapBetween.value = 6; gapBetween.dispatchEvent(new Event('input'));
     gapCol.value     = 5; gapCol.dispatchEvent(new Event('input'));
     cutInset.value   = 3; cutInset.dispatchEvent(new Event('input'));
