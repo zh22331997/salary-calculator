@@ -6,29 +6,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
 :root{
-  --brand-500:#A1C6EA; --brand-600:#8FB9E2;
-  --secondary-500:#BBD1EA; --secondary-600:#A8C5E6;
-  --clear-500:#DAE3E5; --clear-600:#CFD9DC;
-
-  --text-strong:#1f2937; --text-normal:#374151; --text-mute:#6b7280;
-  --border:#d1d5db; --bg-page:#f0f2f5; --bg-card:#ffffff;
-
+  --brand:#17324A; --muted:#6b7280; --line:#9aa3ab; --border:#d1d5db;
+  --bg:#ffffff; --bg-page:#f0f2f5;
   --font-sans:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC","Heiti TC",sans-serif;
   --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
-
-  /* 預覽用（列印時會覆蓋） */
-  --gap-between:6mm; --gap-col:6mm;
+  --gap-between:6mm; --gap-col:6mm; /* 預覽用；列印時會覆蓋 */
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{
-  font-family:var(--font-sans); background:var(--bg-page);
-  margin:0; padding:0; display:flex; justify-content:center; align-items:flex-start; min-height:100vh;
-  color:var(--text-normal);
-}
-.container{ background:var(--bg-card); padding:2rem; margin:2rem 1rem; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.12); max-width:980px; width:100%;}
+body{font-family:var(--font-sans); background:var(--bg-page); margin:0; color:#374151; display:flex; justify-content:center}
+.container{ background:#fff; padding:2rem; margin:2rem 1rem; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.12); max-width:980px; width:100%;}
 h1{margin:0 0 1rem 0; color:#0056b3; text-align:center; font-weight:800;}
-label{font-weight:700; display:block; color:#555; margin:.25rem 0 .5rem;}
+label{font-weight:700; color:#555; display:block; margin:.25rem 0 .5rem;}
 .input-area{ max-width:980px; margin:0 auto 24px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,.08);}
 .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:12px; }
 .col-3{ grid-column:span 3; } .col-4{ grid-column:span 4; } .col-6{ grid-column:span 6; } .col-12{ grid-column:span 12; }
@@ -47,14 +36,13 @@ button{
 }
 button:hover{background:#8FB9E2; transform:translateY(-2px)}
 button:active{transform:translateY(-1px)}
-.btn-secondary{ background:#BBD1EA; } .btn-secondary:hover{ background:#A8C5E6; }
-.btn-clear{ background:#DAE3E5; } .btn-clear:hover{ background:#CFD9DC; }
+.btn-secondary{ background:#BBD1EA; } .btn-clear{ background:#DAE3E5; }
 .btn-row{ display:flex; gap:12px; justify-content:center; align-items:center; flex-wrap:wrap; margin-top:.5rem; }
 .btn-row > button{ width:200px; }
 
-.print-area{ margin-top:18px; } /* 預覽美觀；列印會設為0 */
+.print-area{ margin-top:18px; } /* 預覽好看；列印會歸零 */
 
-/* 頁面：A4 一頁 2×4 共 8 張 */
+/* ===== A4 一頁 2×4 共 8 張 ===== */
 .page{
   position:relative; background:#fff; border:1px solid var(--border); border-radius:10px;
   padding:6mm; margin:0 auto 12px auto;
@@ -64,60 +52,55 @@ button:active{transform:translateY(-1px)}
 }
 .page:last-child{ page-break-after:auto; }
 
-/* 單張卡片 */
-.receipt{
-  border:1px solid #6f757a; border-radius:8px; padding:6px;
-  display:flex; flex-direction:column; gap:3px; background:#fff; page-break-inside:avoid;
+/* 卡片樣式：標題／資訊／項目列／總計／匯款 */
+.card{
+  border:1.5px solid #b7c1c9; border-radius:10px; padding:8px 10px; background:#fff; display:flex; flex-direction:column; gap:6px;
 }
-.receipt-header{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding-bottom:3px; border-bottom:1px solid #6f757a;}
-.title{ font-weight:800; font-size:15px; color:#17324A; }
-.meta{ font-size:12px; color:#555; display:flex; flex-wrap:wrap; gap:8px; }
-.row{ display:flex; align-items:flex-start; gap:6px; margin:2px 0; line-height:1.22; }
-.row label{ width:66px; font-size:12.5px; color:#555; margin:0; }
-.row .val{ flex:1; font-size:15.5px; }
-.amount{ font-weight:800; color:#c80000; }
-.payinfo{ margin-top:4px; padding-top:6px; border-top:1px dashed #9aa3ab; font-size:11.5px; color:#374151; line-height:1.35; }
-.payinfo .mono{ font-family:var(--font-mono); letter-spacing:.2px; }
-.tiny{ font-size:11px; color:#666; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card header{display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:4px}
+.card .title{font-weight:900; color:#17324A; font-size:16px; letter-spacing:.3px;}
+.card .hint{font-size:11px; color:#748089}
+
+.info{display:grid; grid-template-columns:1fr 1fr; column-gap:8px; row-gap:2px; font-size:12.5px; color:#333}
+.info .label{color:#666; width:72px; display:inline-block}
+
+.items{border-top:1px dashed var(--line); border-bottom:1px dashed var(--line); padding:6px 0; display:flex; flex-direction:column; gap:2px}
+.item-row{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; font-size:13px}
+.item-left{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.item-right{min-width:max-content; text-align:right}
+.money{font-weight:800; color:#c80000}
+
+.total{font-weight:900; font-size:15px; color:#111; display:flex; justify-content:flex-end; gap:10px; margin-top:2px}
+.payinfo{margin-top:2px; font-size:11.5px; color:#384350; line-height:1.35}
+.payinfo .mono{font-family:var(--font-mono); letter-spacing:.2px}
 
 /* ===== 列印緊湊版（確保放得下 8 張） ===== */
 @media print{
-  html{ font-size:11.5pt; } /* 稍降整體字級 */
+  html{ font-size:11.5pt; }
   body{ background:#fff; }
   h1,.input-area,.btn-row{ display:none !important; }
   .container{ box-shadow:none; margin:0 !important; padding:0 !important; max-width:none; }
-  .print-area{ margin-top:0 !important; }   /* 修第一頁上留白 */
+  .print-area{ margin-top:0 !important; }
   .page:first-child{ margin-top:0 !important; }
-
-  /* 1) 砍小頁邊；2) 用整數 mm 做列距；3) 卡片更緊湊 */
   @page{ size:A4 portrait; margin:10mm; }
 
   :root{
-    --gap-between:6mm;   /* 四列間 3 個縫距 → ((297-20)-3*6)/4 ≈ 63.25mm，每列更好放 */
-    --gap-col:6mm;
-
-    --page-w:210mm; --page-h:297mm; --page-m:10mm;
-    --cols:2; --rows:4;
+    --gap-between:6mm; --gap-col:6mm;
+    --page-w:210mm; --page-h:297mm; --page-m:10mm; --cols:2; --rows:4;
     --card-w: calc((var(--page-w) - 2*var(--page-m) - (var(--cols) - 1)*var(--gap-col)) / var(--cols));
     --card-h: calc((var(--page-h) - 2*var(--page-m) - (var(--rows) - 1)*var(--gap-between)) / var(--rows));
   }
-
   .page{
     border:0; border-radius:0; padding:0; margin:0;
     grid-template-columns:repeat(2, var(--card-w));
     grid-template-rows:repeat(4, var(--card-h));
-    column-gap:var(--gap-col); row-gap:var(--gap-between);
   }
-  .receipt{
-    width:var(--card-w); height:var(--card-h);
-    padding:4px; border-color:#666; overflow:hidden; /* 避免內容撐高 */
-  }
-  .title{ font-size:11.5pt; }
-  .row label{ width:58px; font-size:9.8pt; }
-  .row .val{ font-size:10.8pt; }
-  .meta{ font-size:9.6pt; }
-  .payinfo{ font-size:9.6pt; line-height:1.28; }
-  .tiny{ font-size:9.2pt; }
+  .card{ width:var(--card-w); height:var(--card-h); padding:6px 8px; }
+  .card .title{font-size:12.2pt}
+  .hint{font-size:9.6pt}
+  .info{font-size:10.2pt}
+  .item-row{font-size:10.6pt}
+  .total{font-size:11.6pt}
+  .payinfo{font-size:9.6pt}
 }
 </style>
 </head>
@@ -128,13 +111,18 @@ button:active{transform:translateY(-1px)}
     <div class="input-area">
       <div class="grid">
         <div class="col-12">
-          <label>貼上名單（班級	姓名	金額	是否袋	 口味	備註）缺少欄位自動留白</label>
-          <textarea id="pasteArea" placeholder="班級	姓名	金額	是否袋	  口味	備註
-1A	馬晨皓	700	否	鮮乳	
-1A	許耀文	700	是	草莓	
-2B	巫采珊	700	是	原味羊奶  溫熱的</textarea>
+          <label>貼上名單（從EXCEL貼上 或逗號分隔）</label>
+          <textarea id="pasteArea" placeholder="【範例(羊奶)】
+班級	姓名	項目一	金額一	羊奶袋	口味	備註
+1A	馬小皓	12月羊奶	700	否	鮮乳	
+
+【範例(餐費)】
+班級	姓名	項目一	        金額一	備註一	項目二	金額二	備註二
+1A	馬小皓	10/26-11/25餐費	700		預收餐費	1250	"></textarea>
           <div style="font-size:13px;color:#6b7280;margin-top:6px;">
-            ● 列印用 100%（實際大小），關閉頁首/頁尾。此版已為「緊湊列印」以確保 A4 固定 8 張。
+            ● 羊奶格式：<b>班級／姓名／項目一／金額一／羊奶袋／口味／備註</b><br>
+            ● 餐費格式：<b>班級／姓名／項目一／金額一／備註一／項目二／金額二／備註二</b><br>
+            ● 金額可為負數；第二項與備註二可留空。列印請選 100%（實際大小），關閉頁首/頁尾。
           </div>
         </div>
 
@@ -147,11 +135,11 @@ button:active{transform:translateY(-1px)}
           <input type="date" id="deadline" />
         </div>
         <div class="col-6">
-          <label>代收項目</label>
-          <input type="text" id="feeItem" placeholder="例：12月羊奶費" />
+          <label>共用備註（附加在最末，可留空）</label>
+          <input type="text" id="globalNote" placeholder="例：請於期限前完成繳款，逾期依規定加收手續費" />
         </div>
 
-        <!-- 匯款 / 轉帳資訊 -->
+        <!-- 匯款 / 轉帳資訊（可改） -->
         <div class="col-4">
           <label>匯款戶名</label>
           <input type="text" id="payName" value="凱勝文理技藝短期補習班" />
@@ -168,17 +156,12 @@ button:active{transform:translateY(-1px)}
           <label>匯款提醒文字</label>
           <input type="text" id="payNote" value="匯款後請提供末五碼、匯款金額、繳費項目" />
         </div>
-
-        <div class="col-12">
-          <label>共用備註（可留空）</label>
-          <input type="text" id="globalNote" placeholder="例：請準時繳費，逾期依規定加收手續費" />
-        </div>
       </div>
 
       <div class="btn-row">
         <button id="btnGenerate">生成通知</button>
         <button class="btn-secondary" id="btnPrint">列印 / PDF</button>
-        <button class="btn-clear" id="btnClear">清空資料</button>
+        <button class="btn-clear">清空資料</button>
         <span id="previewCount" style="margin-left:8px;"></span>
       </div>
 
@@ -188,151 +171,178 @@ button:active{transform:translateY(-1px)}
     <div class="print-area" id="printArea" aria-live="polite"></div>
   </div>
 
-  <!-- 單張卡片模板 -->
+  <!-- 卡片模板（單列多項目） -->
   <template id="cardTemplate">
-    <div class="receipt">
-      <div class="receipt-header"><div class="title">繳費通知</div></div>
-      <div class="meta"><span class="period"></span></div>
-      <div class="row"><label>學生姓名</label><div class="val name"></div></div>
-      <div class="row"><label>班級</label><div class="val klass"></div></div>
-      <div class="row"><label>代收項目</label><div class="val item"></div></div>
-      <div class="row"><label>金額</label><div class="val amount"></div></div>
-      <div class="row"><label>備註</label><div class="val note"></div></div>
-      <div class="row"><label>繳費期限</label><div class="val deadline"></div></div>
+    <div class="card">
+      <header>
+        <div class="title">繳費通知</div>
+        <div class="hint">※ 如對金額或項目有疑問，請於三日內與我們聯繫。</div>
+      </header>
 
-      <div class="payinfo">
-        <div>【匯款/轉帳】戶名：<span class="mono pay-name"></span></div>
-        <div>銀行：<span class="mono pay-bank"></span>　帳號：<span class="mono pay-account"></span></div>
-        <div class="pay-note"></div>
+      <div class="info">
+        <div><span class="label">收費區間</span><span class="val period"></span></div>
+        <div><span class="label">繳費期限</span><span class="val deadline"></span></div>
+        <div><span class="label">學生姓名</span><span class="val name"></span></div>
+        <div><span class="label">班級</span><span class="val klass"></span></div>
       </div>
 
-      <div class="tiny">※ 如對金額或項目有疑問，請於三日內與我們聯繫。</div>
+      <div class="items"></div>
+
+      <div class="total"><span>共計</span><span class="money total-amount"></span></div>
+
+      <div class="payinfo">
+        【匯款/轉帳】戶名：<span class="mono pay-name"></span><br/>
+        銀行：<span class="mono pay-bank"></span>　帳號：<span class="mono pay-account"></span><br/>
+        <span class="pay-note"></span>
+      </div>
     </div>
   </template>
 
 <script>
-/* 小工具 */
+/* ===== 小工具 ===== */
 const $  = (s,c=document)=>c.querySelector(s);
 const $$ = (s,c=document)=>Array.from(c.querySelectorAll(s));
 function pad(n){ return String(n).padStart(2,'0'); }
+function detectDelimiter(s){ const t=(s.match(/\t/g)||[]).length, c=(s.match(/,/g)||[]).length; return t>=c?'\t':','; }
 
-/* 下一個月份的 10 日（遇週末順延到週一） */
+/* 下月10日（週末順延）＋下月標籤 */
 function nextMonth10thBusinessDay(base=new Date()){
   const y=base.getFullYear(), m=base.getMonth();
-  const target=new Date(y, m+1, 10);
-  const day=target.getDay();
-  if(day===6) target.setDate(target.getDate()+2);
-  if(day===0) target.setDate(target.getDate()+1);
-  return `${target.getFullYear()}-${pad(target.getMonth()+1)}-${pad(target.getDate())}`;
+  const d=new Date(y, m+1, 10);
+  if(d.getDay()===6) d.setDate(d.getDate()+2);
+  if(d.getDay()===0) d.setDate(d.getDate()+1);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
-/* 下一個月份標籤（例：2025年12月） */
 function nextMonthLabel(base=new Date()){
   const y=base.getFullYear(), m=base.getMonth();
   const d=new Date(y, m+1, 1);
   return `${d.getFullYear()}年${d.getMonth()+1}月`;
 }
-/* 分隔偵測 */
-function detectDelimiter(sample){
-  const tab=(sample.match(/\t/g)||[]).length, comma=(sample.match(/,/g)||[]).length;
-  return tab>=comma?'\t':',';
+
+/* 金額處理（允許負數、千分位、$、元） */
+function isAmountLike(raw){
+  const s=String(raw||'').trim(); if(!s) return false;
+  return /^(?:-?\s*)?(?:NT\$?\s*)?\$?\s*\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:\s*元)?$/i.test(s) || /^-?\d+(?:\.\d+)?$/.test(s);
 }
-/* 只把「是 / Y / YES」視為要袋 */
-function normalizeBag(v){
-  const s=String(v||'').trim();
-  return /^(\u662f|Y|YES)$/i.test(s);
-}
-/* 解析 4～6 欄：班級／姓名／金額／袋／口味／備註（缺少自動留白） */
+function toNumber(raw){ const s=String(raw||'').replace(/[^\d\-.]/g,''); return Number(s||0); }
+function fmtMoney(n){ return '$ ' + Math.round(n).toLocaleString('zh-Hant-TW',{maximumFractionDigits:0}); }
+
+/* 解析（彈性吃兩種格式）：
+   羊奶：班級/姓名/項目一/金額一/羊奶袋/口味/備註
+   餐費：班級/姓名/項目一/金額一/備註一/項目二/金額二/備註二
+   也可混合貼，上述欄位之外的剩餘欄會自動忽略。 */
 function parseRows(text){
   const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
   if(!lines.length) return [];
   const d=detectDelimiter(lines[0]);
-  const first=lines[0].split(d).map(v=>v.trim());
-  const hasHeader=first.some(v=>/班級|姓名|金額|袋|口味|備註/i.test(v));
-  const body=(hasHeader?lines.slice(1):lines);
+  const head=lines[0].split(d).map(v=>v.trim());
+  const hasHeader=/班級|姓名|項目一|金額一|羊奶袋|口味|備註|備註一|備註二|項目二|金額二/.test(head.join(''));
+  const body=hasHeader?lines.slice(1):lines;
 
   return body.map(line=>{
     const p=line.split(d).map(s=>s.trim());
-    return {
-      klass:   p[0]||'',
-      name:    p[1]||'',
-      amount:  p[2]||'',
-      bagYes:  normalizeBag(p[3]),
-      flavor:  p[4]||'',
-      special: p[5]||''
+    // 嘗試判斷是羊奶型或餐費型
+    const looksMilk = (p[4]||'').match(/^(\u662f|否|Y|N|YES|NO)$/i) || (head.join('').includes('羊奶袋'));
+    const row={
+      klass:p[0]||'', name:p[1]||'',
+      item1:p[2]||'', amt1:p[3]||'',
+      // 羊奶型
+      bagYes:false, flavor:'', note1:'',
+      // 第二項（可空）
+      item2:'', amt2:'', note2:''
     };
+    if(looksMilk){
+      row.bagYes=/^(\u662f|Y|YES)$/i.test(p[4]||'');
+      row.flavor=p[5]||'';
+      row.note1=p[6]||'';
+      row.item2=p[7]||''; row.amt2=p[8]||''; row.note2=p[9]||'';
+    }else{
+      row.note1=p[4]||'';
+      row.item2=p[5]||''; row.amt2=p[6]||''; row.note2=p[7]||'';
+    }
+    return row;
   });
 }
-/* 金額格式判斷與顯示 */
-function isAmountLike(raw){
-  const s = String(raw||'').trim();
-  if(!s) return false;
-  return /^(?:NT\$?\s*)?\$?\s*\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:\s*元)?$/i.test(s)
-      || /^\d+(?:\.\d+)?$/.test(s);
-}
-function formatAmount(v){
-  const raw = String(v||'').trim();
-  if(!raw) return '—';
-  if (isAmountLike(raw)) {
-    const n = Number(raw.replace(/[^\d.]/g,'')) || 0;
-    return 'NT$ ' + Math.round(n).toLocaleString('zh-Hant-TW',{maximumFractionDigits:0});
-  }
-  return raw;
-}
-/* 排序：班級 → 姓名 */
-function sortByClassName(rows){
-  const collator=new Intl.Collator('zh-Hant-u-co-stroke',{numeric:true,sensitivity:'base'});
-  return rows.sort((a,b)=>{
-    const c1=collator.compare(a.klass||'～～～',b.klass||'～～～');
-    return c1!==0?c1:collator.compare(a.name||'',b.name||'');
+
+/* 轉成卡片資料：最多兩項；備註與口味/+袋合併，但以空白分隔（不再用頓號） */
+function toCards(rows){
+  return rows.map(r=>{
+    // 組 item1 備註：口味、+袋、note1（以空白分隔）
+    const parts1=[];
+    if(r.flavor) parts1.push(r.flavor);
+    if(r.bagYes) parts1.push('+袋');
+    if(r.note1)  parts1.push(r.note1);
+    const note1 = parts1.join(' ').trim();
+
+    const items=[];
+    let sum=0;
+
+    const push=(label, amt, note)=>{
+      if(!label && !amt) return;
+      const isNum=isAmountLike(amt);
+      const amountNum=isNum?toNumber(amt):0;
+      const left = note ? `${label}（${note}）` : label;
+      items.push({ left, isNum, amountDisplay: isNum? fmtMoney(amountNum) : (amt||'—') });
+      if(isNum) sum+=amountNum;
+    };
+    push(r.item1, r.amt1, note1);
+    push(r.item2, r.amt2, r.note2);
+
+    return { klass:r.klass, name:r.name, items, sum };
   });
 }
-/* 固定每頁 8 張；最後一頁不足補空卡 */
+
+/* 排序／分頁 */
+function sortByClassName(arr){
+  const coll=new Intl.Collator('zh-Hant-u-co-stroke',{numeric:true,sensitivity:'base'});
+  return arr.sort((a,b)=>{const c=coll.compare(a.klass||'～～～',b.klass||'～～～'); return c!==0?c:coll.compare(a.name||'',b.name||'');});
+}
 function toPagesOf8(arr){
   const out=[]; for(let i=0;i<arr.length;i+=8) out.push(arr.slice(i,i+8));
-  return out.map(pg=>{
-    const filled=[...pg];
-    while(filled.length<8) filled.push({klass:'',name:'',amount:'',bagYes:false,flavor:'',special:'',__blank:true});
-    return filled;
-  });
+  return out.map(pg=>{while(pg.length<8) pg.push({klass:'',name:'',items:[],sum:0,__blank:true}); return pg;});
 }
-/* 填入卡片內容 */
-function fillCard(node,data,globals,pay){
-  $('.period',node).textContent = globals.feePeriod?`收費區間 ${globals.feePeriod}`:'';
-  $('.name',node).textContent   = data.name || (data.__blank?'':'（未填）');
-  $('.klass',node).textContent  = data.klass || (data.__blank?'':'—');
-  $('.item',node).textContent   = globals.feeItem || (data.__blank?'':'—');
-  $('.amount',node).textContent = data.__blank ? '' : formatAmount(data.amount);
 
-  const parts=[];
-  const flavor = String(data.flavor||'').trim();
-  if(flavor) parts.push(flavor);
-  if(data.bagYes) parts.push('+袋');
-  const special = String(data.special||'').trim();
-  if(special) parts.push(special);
-  let noteStr = parts.join(' ');
-  if(globals.globalNote) noteStr = noteStr ? noteStr + '；' + globals.globalNote : globals.globalNote;
-  $('.note',node).textContent   = data.__blank ? '' : (noteStr || '—');
+/* DOM 填入 */
+function addItemRow(container, left, rightHTML){
+  const row=document.createElement('div'); row.className='item-row';
+  const l=document.createElement('div'); l.className='item-left'; l.textContent=left||'';
+  const r=document.createElement('div'); r.className='item-right'; r.innerHTML=rightHTML||'';
+  row.appendChild(l); row.appendChild(r); container.appendChild(row);
+}
+function fillCard(node,stu,globals,pay){
+  $('.period',node).textContent   = globals.feePeriod || '';
+  $('.deadline',node).textContent = globals.deadline || '';
+  $('.name',node).textContent     = stu.name || (stu.__blank?'':'（未填）');
+  $('.klass',node).textContent    = stu.klass || (stu.__blank?'':'—');
 
-  $('.deadline',node).textContent = globals.deadline || (data.__blank?'':'—');
+  const itemsBox=$('.items',node); itemsBox.innerHTML='';
+  if(!stu.__blank){
+    stu.items.forEach(it=>{
+      const right = it.isNum ? `<span class="money">${it.amountDisplay}</span>` : it.amountDisplay;
+      addItemRow(itemsBox, it.left, right);
+    });
+    $('.total-amount',node).textContent = fmtMoney(stu.sum);
+  }else{
+    $('.total-amount',node).textContent='';
+  }
 
-  // 匯款/轉帳
+  // 匯款
   $('.pay-name',node).textContent    = pay.name || '';
   $('.pay-bank',node).textContent    = pay.bank || '';
   $('.pay-account',node).textContent = pay.account || '';
   $('.pay-note',node).textContent    = pay.note || '';
 }
 
-/* 主流程 */
+/* ===== 主流程 ===== */
 const printArea = document.getElementById('printArea');
 const template  = document.getElementById('cardTemplate');
 
 function generate(){
-  const rows0=parseRows(document.getElementById('pasteArea').value);
+  const rows = parseRows(document.getElementById('pasteArea').value);
   printArea.innerHTML='';
   const globals={
     feePeriod: document.getElementById('feePeriod').value.trim(),
     deadline:  document.getElementById('deadline').value,
-    feeItem:   document.getElementById('feeItem').value.trim(),
     globalNote:document.getElementById('globalNote').value.trim()
   };
   const pay={
@@ -341,64 +351,52 @@ function generate(){
     account: document.getElementById('payAccount').value.trim(),
     note:    document.getElementById('payNote').value.trim()
   };
+  if(rows.length===0){ document.getElementById('previewCount').textContent='尚未產生任何通知，請先貼上名單。'; return; }
 
-  if(rows0.length===0){
-    document.getElementById('previewCount').textContent='尚未產生任何通知，請先貼上名單。';
-    return;
-  }
-  const rows = sortByClassName(rows0);
-  const pages= toPagesOf8(rows);
+  const cards   = toCards(rows);
+  const sorted  = sortByClassName(cards);
+  const pages   = toPagesOf8(sorted);
 
   pages.forEach(group=>{
     const page=document.createElement('div'); page.className='page';
-    group.forEach(r=>{
+    group.forEach(stu=>{
       const node=template.content.cloneNode(true);
-      fillCard(node,r,globals,pay);
+      fillCard(node,stu,globals,pay);
       page.appendChild(node);
     });
     printArea.appendChild(page);
   });
-  document.getElementById('previewCount').textContent=`共 ${rows.length} 位；每頁固定 8 位，共 ${pages.length} 頁。`;
+  document.getElementById('previewCount').textContent=`共 ${sorted.length} 位；每頁固定 8 位，共 ${pages.length} 頁。`;
 
-  /* 金額為文字提醒（僅針對非空卡） */
-  const textAmt = rows.filter(r => {
-    const raw = String(r.amount||'').trim();
-    return raw && !isAmountLike(raw);
-  });
+  // 提醒：有非數字金額
+  const nonNum = cards.flatMap(s=>s.items.filter(i=>!i.isNum).map(i=>`${s.klass||'—'} ${s.name||'—'}／${i.left}：${i.amountDisplay}`));
   const warnBox = document.getElementById('warnBox');
-  if (textAmt.length){
-    alert(`⚠️ 發現 ${textAmt.length} 筆「金額為文字」資料。\n這些會直接以原文顯示在金額欄。\n若需結帳金額，請把第 3 欄改成數字（例如 700）。`);
+  if(nonNum.length){
+    alert(`⚠️ 有 ${nonNum.length} 筆「金額非數字」項目，已排版但未納入總計。`);
     warnBox.style.display='block';
-    warnBox.textContent = `提醒：共有 ${textAmt.length} 筆金額為文字（非金額格式）。`;
+    warnBox.textContent = '未納入總計：\n' + nonNum.join('\n');
   }else{
     warnBox.style.display='none';
     warnBox.textContent='';
   }
 }
 
-/* 預設：帶入下一月標籤與 10 日（遇週末順延） */
+/* 預設帶入下月區間與 10 日（遇週末順延） */
 document.addEventListener('DOMContentLoaded', ()=>{
   const today=new Date();
-  const periodInput = document.getElementById('feePeriod');
-  const deadlineInput= document.getElementById('deadline');
-  if(!periodInput.value)  periodInput.value  = nextMonthLabel(today);
-  if(!deadlineInput.value)deadlineInput.value= nextMonth10thBusinessDay(today);
+  if(!document.getElementById('feePeriod').value)  document.getElementById('feePeriod').value  = nextMonthLabel(today);
+  if(!document.getElementById('deadline').value)   document.getElementById('deadline').value   = nextMonth10thBusinessDay(today);
 });
 
 /* 事件 */
 document.getElementById('btnGenerate').addEventListener('click', generate);
-document.getElementById('btnPrint').addEventListener('click', ()=>{
-  if(!printArea.children.length) generate();
-  requestAnimationFrame(()=>window.print());
-});
-document.getElementById('btnClear').addEventListener('click', ()=>{
+document.querySelector('.btn-secondary').addEventListener('click', ()=>{ if(!printArea.children.length) generate(); requestAnimationFrame(()=>window.print()); });
+document.querySelector('.btn-clear').addEventListener('click', ()=>{
   document.getElementById('pasteArea').value='';
   document.getElementById('previewCount').textContent='';
-  document.getElementById('warnBox').style.display='none';
-  document.getElementById('warnBox').textContent='';
+  const warnBox=document.getElementById('warnBox'); warnBox.style.display='none'; warnBox.textContent='';
   document.getElementById('pasteArea').focus();
 });
 </script>
 </body>
 </html>
-
