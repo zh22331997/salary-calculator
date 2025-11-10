@@ -1,0 +1,454 @@
+<!DOCTYPE html> 
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>個人成績單產生器</title>
+  <style>
+/* ========== Design Tokens ========== */
+:root{
+  --brand-500:#A1C6EA; --brand-600:#8FB9E2;
+  --secondary-500:#BBD1EA; --secondary-600:#A8C5E6;
+  --clear-500:#DAE3E5; --clear-600:#CFD9DC;
+
+  --text-strong:#1f2937; --text-normal:#374151; --text-mute:#6b7280;
+  --border:#d1d5db; --bg-page:#f0f2f5; --bg-card:#ffffff;
+
+  --font-sans:"Microsoft JhengHei","微軟正黑體","Noto Sans TC","PingFang TC","Heiti TC",sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+
+  --radius-lg:12px; --shadow-lg:0 4px 20px rgba(0,0,0,.12);
+  --input-height:2.75rem; --btn-height:2.9rem;
+
+  /* 三區字級（可由下拉即時改） */
+  --fs-personal:14px;
+  --fs-rank:14px;
+  --fs-teacher:14px;
+
+  /* 預覽紙寬（給螢幕視覺用；列印時不使用它） */
+  --sheet-width-mm:160mm;
+}
+
+/* ========== Base ========== */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{font-family:var(--font-sans); background:var(--bg-page); margin:0; padding:0; color:var(--text-normal);}
+#controls{
+  background:var(--bg-card);
+  padding:2rem; margin:2rem auto 1rem; border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg); max-width:1100px; width:calc(100% - 2rem);
+}
+h2{margin:0 0 1rem; color:#0056b3; text-align:center; font-weight:800;}
+h3{color:var(--text-strong); border-bottom:2px solid #e0e0e0; padding-bottom:.5rem; margin-top:1.25rem; margin-bottom:.75rem;}
+label{font-weight:700; color:#555;}
+p{color:#444; font-size:.95rem; line-height:1.6}
+
+textarea, input, select{ font-family:inherit; font-size:16px; }
+textarea, input[type="text"], input[type="number"], select{
+  width:100%; height:var(--input-height); padding:0 .9rem;
+  border-radius:8px; border:1px solid var(--border); background:#fff;
+}
+textarea{ min-height:160px; height:auto; padding:.75rem; line-height:1.5; font-family:var(--font-mono); }
+textarea:focus, input:focus, select:focus{ outline:none; box-shadow:0 0 0 3px rgba(106,154,255,.25); border-color:#6a9aff; }
+
+button{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:var(--btn-height); padding:0 1.1rem; font-size:17px; font-weight:700;
+  border:none; border-radius:8px; cursor:pointer; color:#17324A;
+  background:var(--brand-500); transition:background .15s ease, transform .12s ease, box-shadow .2s;
+}
+button:hover{ background:var(--brand-600); transform:translateY(-2px) }
+.btn-secondary{ background:var(--secondary-500); }
+.btn-secondary:hover{ background:var(--secondary-600); }
+.btn-clear{ background:var(--clear-500); }
+.btn-clear:hover{ background:var(--clear-600); }
+.btn-row{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:.75rem; }
+
+.small-text{ font-size:10pt; color:var(--text-mute); }
+.red-title{ color:#b91c1c; font-weight:bold; margin-top:10px; }
+
+/* ========== 預覽：讓畫面像一張紙（僅螢幕用） ========== */
+#output{ display:flex; flex-direction:column; align-items:center; gap:24px; padding:16px 0 48px; }
+.b5{
+  background:#fff; color:#000;
+  width:var(--sheet-width-mm); max-width:calc(100% - 32px);
+  margin:0 auto; padding:12mm;
+  border:1px solid #000; box-shadow:0 2px 18px rgba(0,0,0,.08);
+  page-break-inside: avoid;
+}
+
+/* ========== 表格：全黑框；th/td 字級繼承，才吃得到可調字級 ========== */
+table{ width:100%; border-collapse:collapse; margin-top:10px; background:#fff; border:1px solid #000; }
+th, td{ border:1px solid #000; text-align:center; padding:6px; font-size:inherit; color:#000; background:#fff; }
+
+/* ========== 三區字級掛載點 ========== */
+.personal-table{ font-size:var(--fs-personal); }
+.rank-table{ font-size:var(--fs-rank); }
+.teacher-box{
+  border:1px solid #000; padding:8px; white-space:pre-line; line-height:1.6; font-size:var(--fs-teacher);
+}
+.teacher-box::after{ content:"\A"; white-space:pre; }
+
+/* 簽名區（拿掉格線） */
+.signature-table{ border:none!important; box-shadow:none!important; background:transparent!important; margin-top:12px; }
+.signature-table td, .signature-table th{ border:none!important; background:transparent!important; color:#000; }
+
+/* select 白底黑字 */
+h2 select, p select, #controls select{
+  appearance:auto !important; background:#fff !important; color:#000 !important; border:1px solid var(--border) !important;
+  height:2rem !important; font-size:14px !important; border-radius:6px !important; padding:0 .5rem !important; width:auto !important;
+}
+
+/* ========== 列印：只靠 @page 控紙張/邊界；內容不固定寬，置中放大 ========== */
+@page { size: A4 portrait; margin: 10mm; } /* 預設 A4；JS 會覆蓋為 A4/B5 */
+@media print{
+  html, body{
+    width:auto; height:auto; margin:0; padding:0; background:#fff; color:#000;
+  }
+  #controls{ display:none!important; }
+  #output{ display:block; }
+
+  .b5{
+    width:auto !important; max-width:none !important;
+    margin:0 auto !important; padding:0 !important;
+    border:none !important; box-shadow:none !important;
+    page-break-after:always; break-after:page;
+    background:#fff !important; color:#000 !important;
+  }
+
+  *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+  </style>
+</head>
+
+<body>
+
+<div id="controls">
+  <h2>正華資優教育學苑
+    <select id="branch">
+      <option>永平</option><option>秀朗</option><option>清水</option><option>永和</option><option>江翠</option>
+    </select>分校
+  </h2>
+
+  <p style="text-align:center">
+    <input id="schoolYear" size="4" readonly>學年
+    <select id="grade"><option>一</option><option>二</option><option>三</option><option>四</option><option>五</option><option selected>六</option></select>年級
+    <select id="semester"><option>上</option><option>下</option></select>學期
+    <select id="examType"><option>中</option><option>末</option></select>考 學生成績單
+  </p>
+
+  <h3>請從 EXCEL 貼上全班成績資料（含標題列）</h3>
+  <textarea id="rawInput" placeholder="姓名[TAB]國語[TAB]數學[TAB]自然[TAB]社會[TAB]英文"></textarea>
+
+  <h3>請從 EXCEL 貼上班平均（依年級自動）</h3>
+  <textarea id="avgPaste" placeholder="一二年級：國語[TAB]數學；三～六年級：國語[TAB]數學[TAB]自然[TAB]社會[TAB]英文"></textarea>
+
+  <div class="small-text" style="margin-top:6px">
+    正華班排前 <input id="targetIndex" type="number" value="5" style="width:60px; height:2rem"> 名（若有並列，會自動包含）
+  </div>
+
+  <h3>老師的話</h3>
+  <textarea id="teacherComment" placeholder="請輸入老師的話，會出現在成績單上"></textarea>
+  <div id="wordCount" class="small-text" style="margin-top:4px;">目前字數：0 / 建議上限 600</div>
+
+  <!-- 三區字級 + 紙張尺寸 -->
+  <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px;">
+    <label>個人成績字級
+      <select id="fsPersonal">
+        <option value="13px">小</option>
+        <option value="14px" selected>中</option>
+        <option value="15px">中偏大</option>
+        <option value="16px">大</option>
+        <option value="18px">特大</option>
+      </select>
+    </label>
+    <label>班排行字級
+      <select id="fsRank">
+        <option value="13px">小</option>
+        <option value="14px" selected>中</option>
+        <option value="15px">中偏大</option>
+        <option value="16px">大</option>
+        <option value="18px">特大</option>
+      </select>
+    </label>
+    <label>老師的話字級
+      <select id="fsTeacher">
+        <option value="13px">小</option>
+        <option value="14px" selected>中</option>
+        <option value="15px">中偏大</option>
+        <option value="16px">大</option>
+        <option value="18px">特大</option>
+      </select>
+    </label>
+    <label>紙張尺寸
+      <select id="paper">
+        <option value="A4" selected>A4 直式</option>
+        <option value="B5">B5 直式</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="btn-row">
+    <button onclick="generateReports()">產生成績單</button>
+    <button class="btn-secondary" onclick="printAll()">🖨️ 列印所有成績單</button>
+    <button class="btn-clear" onclick="clearAll()">清空</button>
+  </div>
+</div>
+
+<div id="output"></div>
+<style id="pageStyle"></style>
+
+<script>
+/* ====== 工具 & 年級科目規則 ====== */
+function formatNumber(n){ const f=parseFloat(n); return Number.isNaN(f)?'':(f%1===0?parseInt(f):f.toFixed(2)); }
+function num(v){ const x=parseFloat(v); return Number.isNaN(x)?NaN:x; }
+function isLowerGrade(g){ return g==='一'||g==='二'; }
+function getSubjectConfig(grade){
+  return isLowerGrade(grade)
+    ? [{key:'c',label:'國語'},{key:'m',label:'數學'}]
+    : [{key:'c',label:'國語'},{key:'m',label:'數學'},{key:'s',label:'自然'},{key:'so',label:'社會'},{key:'e',label:'英文'}];
+}
+
+/* 解析一格分數：'未考' 或空白 → absent；數字 → value */
+function parseCell(raw){
+  const t = (raw??'').toString().trim();
+  if (!t || t==='未考') return { absent:true, value:NaN };
+  const v = parseFloat(t);
+  if (Number.isNaN(v)) return { absent:true, value:NaN }; // 防呆：非數字也視為未考
+  return { absent:false, value:v };
+}
+function displayScoreCell(raw){
+  const {absent, value} = parseCell(raw);
+  return absent ? '本次未考' : formatNumber(value);
+}
+
+/* 支援「姓名／學生／name／student」；若沒有，就從第一筆資料找第一個非純數字欄 */
+function buildHeaderMap(headers, grade, dataFirstRow){
+  const map = { name: 0 };
+  headers.forEach((t,idx)=>{
+    const title=(t||'').trim(); const low=title.toLowerCase();
+    if (title.includes('姓名') || title.includes('學生') || low==='name' || low==='student') map.name=idx;
+  });
+  getSubjectConfig(grade).forEach(sub=>{
+    headers.forEach((t,idx)=>{ const title=(t||'').trim(); if(title.includes(sub.label)) map[sub.key]=idx; });
+  });
+  const isNumeric = s => /^\s*\d+(\.\d+)?\s*$/.test(s||'');
+  const hasNameHeader = headers.some(h=>{ const s=String(h||''); const low=s.toLowerCase(); return s.includes('姓名')||s.includes('學生')||low==='name'||low==='student'; });
+  if (!hasNameHeader && Array.isArray(dataFirstRow) && dataFirstRow.length){
+    let guess = dataFirstRow.findIndex(v=>!isNumeric(v));
+    if (guess === -1 && dataFirstRow.length>1) guess = 1;
+    if (guess >= 0) map.name = guess;
+  }
+  return map;
+}
+
+/* 檢查某科是否「整欄未考」 */
+function subjectColumnAllAbsent(students, colIdx){
+  if (typeof colIdx!=='number') return false;
+  return students.every(row => parseCell(row[colIdx]).absent);
+}
+
+/* ====== 產生成績單 ====== */
+function generateReports(){
+  const branch=document.getElementById("branch").value;
+  const schoolYear=document.getElementById("schoolYear").value;
+  const grade=document.getElementById("grade").value;
+  const semester=document.getElementById("semester").value;
+  const examType=document.getElementById("examType").value;
+  const comment=document.getElementById("teacherComment").value;
+  const topN=parseInt(document.getElementById("targetIndex").value)||5;
+
+  const subjectsBase=getSubjectConfig(grade);
+
+  /* 讀原始資料 */
+  const raw=document.getElementById("rawInput").value.trim();
+  if(!raw){ alert("請先貼上全班成績資料（含標題列）。"); return; }
+  const lines=raw.split("\n").filter(l=>l.trim().length>0);
+  if(lines.length<2){ alert("資料筆數不足，請確認至少包含標題列與一位學生資料。"); return; }
+
+  const headers=lines[0].split("\t");
+  const students=lines.slice(1).map(l=>l.split("\t"));
+  const firstData=students[0]||[];
+  const headerMap=buildHeaderMap(headers,grade,firstData);
+
+  /* 允許有些科目整欄未考 → 該科從版面移除 */
+  const withIndex = subjectsBase.map(s => ({...s, idx: headerMap[s.key]}));
+  const missingHeaders = withIndex.filter(s => typeof s.idx!=='number').map(s=>s.label);
+  if(missingHeaders.length){
+    alert(`找不到必要欄位：${missingHeaders.join('、')}。\n請確認標題列是否包含這些欄位。`);
+    return;
+  }
+  const activeSubjects = withIndex.filter(s => !subjectColumnAllAbsent(students, s.idx));
+
+  if (activeSubjects.length===0){
+    alert("偵測到所有科目整欄皆為『未考』。請至少有一科有成績，或移除不必要的欄位。");
+    return;
+  }
+
+  /* 解析班平均（只對「仍有考」的科目取值；未考或空白不計） */
+  const avgRaw=document.getElementById("avgPaste").value.trim().split("\t");
+  const avgVals = activeSubjects.map((sub, i)=>{
+    const rawVal = avgRaw[sub.idx] ?? avgRaw[i]; // 兼容不同貼法
+    const {absent, value} = parseCell(rawVal);
+    return absent ? NaN : value;
+  });
+  const avgIncluded = avgVals.filter(v=>!Number.isNaN(v));
+  const avgTotal = avgIncluded.reduce((a,b)=>a+b,0);
+  const avgAverage = avgIncluded.length ? avgTotal/avgIncluded.length : 0;
+
+  /* 逐生計算（只對 activeSubjects 計算；個別格若為未考則略過） */
+  const scoreList=students.map(row=>{
+    const subsRaw = activeSubjects.map(sub => row[sub.idx]);
+    const parsed = subsRaw.map(parseCell);
+    const includedValues = parsed.filter(x=>!x.absent).map(x=>x.value);
+    const total = includedValues.reduce((a,b)=>a+b,0);
+    const avg = includedValues.length ? total / includedValues.length : 0;
+    const name = row[headerMap.name] || row[0] || '';
+    return { name, row, subsRaw, parsed, total, avg };
+  }).sort((a,b)=>b.total-a.total);
+
+  /* 前 N 名（含並列） */
+  const cutoff=scoreList.length>=topN?scoreList[topN-1].total:0;
+  const topStudents=scoreList.filter(stu=>stu.total>=cutoff);
+
+  /* ====== 輸出 ====== */
+  const output=document.getElementById("output");
+  output.innerHTML="";
+
+  scoreList.forEach(student=>{
+    let currentRank=1,lastScore=null,displayRank=1;
+    const topRows=topStudents.map(stu=>{
+      if(lastScore!==null && stu.total<lastScore){ displayRank=currentRank; }
+      lastScore=stu.total; currentRank++;
+      const cells=activeSubjects.map((s,idx)=>`<td>${displayScoreCell(stu.subsRaw[idx])}</td>`).join("");
+      return `<tr><td>${displayRank}</td><td>${stu.name}</td>${cells}<td>${formatNumber(stu.total)}</td><td>${formatNumber(stu.avg)}</td></tr>`;
+    }).join("");
+
+    const theadCols=['學生'].concat(activeSubjects.map(s=>s.label)).concat(['總分','平均']);
+    const theadHtml=theadCols.map(t=>`<th>${t}</th>`).join("");
+    const personCells=activeSubjects.map((s,idx)=>`<td>${displayScoreCell(student.subsRaw[idx])}</td>`).join("");
+    const avgCells=activeSubjects.map((s,idx)=> isNaN(avgVals[idx]) ? `<td>本次未考</td>` : `<td>${formatNumber(avgVals[idx])}</td>`).join("");
+    const rankHead=['名次','姓名'].concat(activeSubjects.map(s=>s.label)).concat(['總分','平均']).map(t=>`<th>${t}</th>`).join("");
+
+    const page=`
+    <div class="b5">
+      <h2 style="text-align:center; margin-bottom:4px; line-height:1.2;">正華資優教育學苑 ${branch}分校</h2>
+      <p style="text-align:center; margin-top:0; line-height:1.2;">${schoolYear}學年${semester}學期 期${examType}考 ${grade}年級學生個人成績單</p>
+
+      <table class="personal-table">
+        <tr>${theadHtml}</tr>
+        <tr>
+          <td>${student.name}</td>
+          ${personCells}
+          <td>${formatNumber(student.total)}</td>
+          <td>${formatNumber(student.avg)}</td>
+        </tr>
+        <tr>
+          <td>班平均</td>
+          ${avgCells}
+          <td>${formatNumber(avgTotal)}</td>
+          <td>${formatNumber(avgAverage)}</td>
+        </tr>
+      </table>
+
+      <div class="red-title">正華班排前${topN}名</div>
+      <table class="rank-table">
+        <tr>${rankHead}</tr>
+        ${topRows}
+      </table>
+
+      <p><strong>老師的話：</strong></p>
+      <div class="teacher-box">${comment}</div>
+
+      <table class="signature-table" style="width:100%; font-size:10pt; border-collapse:collapse;">
+        <tr>
+          <td style="width:33%; text-align:left;">班主任：</td>
+          <td style="width:33%; text-align:left;">導師：</td>
+          <td style="width:33%; text-align:left;">家長簽名：</td>
+        </tr>
+      </table>
+    </div>`;
+    output.innerHTML += page;
+  });
+
+  applyFontSizes(); // 產生後同步字級
+}
+
+/* 清空 */
+function clearAll(){
+  document.getElementById("rawInput").value="";
+  document.getElementById("avgPaste").value="";
+  document.getElementById("teacherComment").value="";
+  document.getElementById("wordCount").innerText="目前字數：0 / 建議上限 600";
+  document.getElementById("targetIndex").value=5;
+  document.getElementById("output").innerHTML="";
+}
+
+/* 字級控制（即時） */
+function applyFontSizes(){
+  document.documentElement.style.setProperty('--fs-personal', document.getElementById('fsPersonal').value);
+  document.documentElement.style.setProperty('--fs-rank', document.getElementById('fsRank').value);
+  document.documentElement.style.setProperty('--fs-teacher', document.getElementById('fsTeacher').value);
+}
+
+/* 紙張尺寸（A4/B5）：只影響 @page 與「預覽紙寬」，印刷真正寬度交給 @page 控制 */
+function applyPaper(){
+  const paper = document.getElementById('paper')?.value || 'A4';
+  const styleEl = document.getElementById('pageStyle');
+  const margin = '10mm';
+
+  if (paper === 'B5'){
+    document.documentElement.style.setProperty('--sheet-width-mm', '156mm'); // 預覽外觀
+    styleEl.textContent = `@page{ size:B5 portrait; margin:${margin}; }`;
+  }else{
+    document.documentElement.style.setProperty('--sheet-width-mm', '190mm'); // 預覽外觀
+    styleEl.textContent = `@page{ size:A4 portrait; margin:${margin}; }`;
+  }
+}
+
+/* 列印提醒 */
+function printAll(){
+  alert(
+    "列印小提醒：\n\n" +
+    "1) 『更多設定』紙張尺寸要與選單相同（A4 或 B5）。\n" +
+    "2) 縮放比例建議 100%（想大就 110%、120%…），會以頁面中心置中放大。\n" +
+    "3) 邊界用 10mm（我們用 @page 控制），頁首頁尾關閉。\n\n" +
+    "請確認預覽是一頁一張成績單再列印。"
+  );
+  window.print();
+}
+
+/* 預設與監聽 */
+window.addEventListener("DOMContentLoaded",()=>{
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth()+1;
+  const semesterYear=(m>=8||m===1)?(y-1911):(y-1912);
+  const semester=(m>=8||m===1)?"上":"下";
+  let examType="中";
+  if((m>=1&&m<=2)||(m>=5&&m<=6)) examType="末";
+  else if((m>=11&&m<=12)||(m>=4&&m<=5)) examType="中";
+  document.getElementById("schoolYear").value=semesterYear;
+  document.getElementById("semester").value=semester;
+  document.getElementById("examType").value=examType;
+
+  // 字數計算
+  const tc=document.getElementById("teacherComment");
+  tc.addEventListener("input",()=>{
+    const c=tc.value.length;
+    const w=document.getElementById("wordCount");
+    w.innerText=`目前字數：${c} / 建議上限 600`;
+    w.style.color=c>600?'red':'#6b7280';
+  });
+
+  // 字級即時
+  ['fsPersonal','fsRank','fsTeacher'].forEach(id=>{
+    document.getElementById(id).addEventListener('change', applyFontSizes);
+  });
+  applyFontSizes();
+
+  // 紙張尺寸
+  document.getElementById('paper').addEventListener('change', applyPaper);
+  applyPaper();
+});
+</script>
+
+</body>
+</html>
