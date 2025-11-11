@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>  
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
@@ -131,16 +131,18 @@ h2 select, p select, #controls select{
 
   <p style="text-align:center">
     <input id="schoolYear" size="4" readonly>學年
-    <select id="grade"><option>一</option><option>二</option><option>三</option><option>四</option><option>五</option><option selected>六</option></select>年級
+    <select id="grade"><option>一</option><option selected>二</option><option>三</option><option>四</option><option>五</option><option>六</option></select>年級
     <select id="semester"><option>上</option><option>下</option></select>學期
     <select id="examType"><option>中</option><option>末</option></select>考 學生成績單
   </p>
 
   <h3>請從 EXCEL 貼上全班成績資料（含標題列）</h3>
-  <textarea id="rawInput" placeholder="姓名[TAB]國語[TAB]數學[TAB]自然[TAB]社會[TAB]英文"></textarea>
+  <!-- 低年級：國語、數學為必填；『生活』可有可無。高年級維持五科 -->
+  <textarea id="rawInput" placeholder="姓名[TAB]國語[TAB]數學[（可選）生活][TAB]自然[TAB]社會[TAB]英文"></textarea>
 
   <h3>請從 EXCEL 貼上班平均（依年級自動）</h3>
-  <textarea id="avgPaste" placeholder="一二年級：國語[TAB]數學；三～六年級：國語[TAB]數學[TAB]自然[TAB]社會[TAB]英文"></textarea>
+  <!-- 若有『生活』欄就會讀取；沒有就略過 -->
+  <textarea id="avgPaste" placeholder="一二年級：國語[TAB]數學[（可選）生活]；三～六年級：國語[TAB]數學[TAB]自然[TAB]社會[TAB]英文"></textarea>
 
   <div class="small-text" style="margin-top:6px">
     正華班排前 <input id="targetIndex" type="number" value="5" style="width:60px; height:2rem"> 名（若有並列，會自動包含）
@@ -202,10 +204,22 @@ h2 select, p select, #controls select{
 function formatNumber(n){ const f=parseFloat(n); return Number.isNaN(f)?'':(f%1===0?parseInt(f):f.toFixed(2)); }
 function num(v){ const x=parseFloat(v); return Number.isNaN(x)?NaN:x; }
 function isLowerGrade(g){ return g==='一'||g==='二'; }
+
+/* 低年級：國語、數學為必填；生活為「可選」 */
 function getSubjectConfig(grade){
   return isLowerGrade(grade)
-    ? [{key:'c',label:'國語'},{key:'m',label:'數學'}]
-    : [{key:'c',label:'國語'},{key:'m',label:'數學'},{key:'s',label:'自然'},{key:'so',label:'社會'},{key:'e',label:'英文'}];
+    ? [
+        {key:'c',label:'國語',required:true},
+        {key:'m',label:'數學',required:true},
+        {key:'l',label:'生活',required:false} // 可有可無
+      ]
+    : [
+        {key:'c',label:'國語',required:true},
+        {key:'m',label:'數學',required:true},
+        {key:'s',label:'自然',required:true},
+        {key:'so',label:'社會',required:true},
+        {key:'e',label:'英文',required:true}
+      ];
 }
 
 /* 解析一格分數：'未考' 或空白 → absent；數字 → value */
@@ -213,7 +227,7 @@ function parseCell(raw){
   const t = (raw??'').toString().trim();
   if (!t || t==='未考') return { absent:true, value:NaN };
   const v = parseFloat(t);
-  if (Number.isNaN(v)) return { absent:true, value:NaN }; // 防呆：非數字也視為未考
+  if (Number.isNaN(v)) return { absent:true, value:NaN };
   return { absent:false, value:v };
 }
 function displayScoreCell(raw){
@@ -221,7 +235,7 @@ function displayScoreCell(raw){
   return absent ? '本次未考' : formatNumber(value);
 }
 
-/* 支援「姓名／學生／name／student」；若沒有，就從第一筆資料找第一個非純數字欄 */
+/* 支援「姓名／學生／name／student」；各科標題對應（含『生活』） */
 function buildHeaderMap(headers, grade, dataFirstRow){
   const map = { name: 0 };
   headers.forEach((t,idx)=>{
@@ -270,24 +284,27 @@ function generateReports(){
   const firstData=students[0]||[];
   const headerMap=buildHeaderMap(headers,grade,firstData);
 
-  /* 允許有些科目整欄未考 → 該科從版面移除 */
+  /* 必填欄位檢查（低年級只檢查國語/數學；生活為選填） */
   const withIndex = subjectsBase.map(s => ({...s, idx: headerMap[s.key]}));
-  const missingHeaders = withIndex.filter(s => typeof s.idx!=='number').map(s=>s.label);
-  if(missingHeaders.length){
-    alert(`找不到必要欄位：${missingHeaders.join('、')}。\n請確認標題列是否包含這些欄位。`);
+  const missingRequired = withIndex
+    .filter(s => s.required && typeof s.idx!=='number')
+    .map(s=>s.label);
+  if(missingRequired.length){
+    alert(`找不到必要欄位：${missingRequired.join('、')}。\n請確認標題列是否包含這些欄位。`);
     return;
   }
-  const activeSubjects = withIndex.filter(s => !subjectColumnAllAbsent(students, s.idx));
 
+  /* 動態啟用科目：需「有欄位」且非整欄未考；選填的『生活』若沒貼或整欄未考，就自動略過 */
+  const activeSubjects = withIndex.filter(s => typeof s.idx==='number' && !subjectColumnAllAbsent(students, s.idx));
   if (activeSubjects.length===0){
     alert("偵測到所有科目整欄皆為『未考』。請至少有一科有成績，或移除不必要的欄位。");
     return;
   }
 
-  /* 解析班平均（只對「仍有考」的科目取值；未考或空白不計） */
+  /* 解析班平均（只對 activeSubjects；若未貼或未考則略過） */
   const avgRaw=document.getElementById("avgPaste").value.trim().split("\t");
   const avgVals = activeSubjects.map((sub, i)=>{
-    const rawVal = avgRaw[sub.idx] ?? avgRaw[i]; // 兼容不同貼法
+    const rawVal = avgRaw[sub.idx] ?? avgRaw[i]; // 嘗試以欄位索引；不行就以順序容錯
     const {absent, value} = parseCell(rawVal);
     return absent ? NaN : value;
   });
@@ -295,7 +312,7 @@ function generateReports(){
   const avgTotal = avgIncluded.reduce((a,b)=>a+b,0);
   const avgAverage = avgIncluded.length ? avgTotal/avgIncluded.length : 0;
 
-  /* 逐生計算（只對 activeSubjects 計算；個別格若為未考則略過） */
+  /* 逐生計算（僅對 activeSubjects；個別格若未考則略過） */
   const scoreList=students.map(row=>{
     const subsRaw = activeSubjects.map(sub => row[sub.idx]);
     const parsed = subsRaw.map(parseCell);
