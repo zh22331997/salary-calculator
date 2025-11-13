@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="zh-Hant-TW">
 <head>
 <meta charset="utf-8" />
@@ -42,41 +42,6 @@ button:active{transform:translateY(-1px)}
 
 .print-area{ margin-top:18px; } /* 預覽好看；列印會歸零 */
 
-/* 使用說明框 */
-.guide-box{
-  margin-top:10px;
-  padding:12px 14px;
-  background:#f9fafb;
-  border-radius:8px;
-  border:1px dashed var(--border);
-  font-size:13px;
-  line-height:1.6;
-}
-.guide-box h3{
-  margin:0 0 6px;
-  font-size:14px;
-  color:#111827;
-  font-weight:700;
-}
-.guide-box p{
-  margin:4px 0;
-}
-.guide-box code{
-  font-family:var(--font-mono);
-  background:#eef2f7;
-  border-radius:4px;
-  padding:1px 4px;
-}
-.guide-box pre{
-  background:#f3f4f6;
-  border-radius:6px;
-  padding:8px 10px;
-  overflow:auto;
-  font-size:12px;
-  line-height:1.5;
-  white-space:pre;
-}
-
 /* ===== A4 一頁 2×4 共 8 張 ===== */
 .page{
   position:relative; background:#fff; border:1px solid var(--border); border-radius:10px;
@@ -108,12 +73,12 @@ button:active{transform:translateY(-1px)}
 .payinfo{margin-top:2px; font-size:11.5px; color:#384350; line-height:1.35}
 .payinfo .mono{font-family:var(--font-mono); letter-spacing:.2px}
 
-/* 空白通知單：預留手寫空間 */
+/* 空白通知單：長得一樣，但多一點書寫空間 */
 .card.blank .items{
-  min-height:60px;         /* 中間多一點高度，好寫字 */
+  min-height:60px;          /* 中間多一點高度，方便手寫項目 */
 }
 .card.blank .total{
-  justify-content:flex-start; /* 共計靠左，右側整片留白可寫金額 */
+  padding-right:70px;       /* 共計右邊留一塊空白，可以手寫金額 */
 }
 
 /* ===== 列印緊湊版（確保放得下 8 張） ===== */
@@ -167,24 +132,6 @@ button:active{transform:translateY(-1px)}
             ● 羊奶也可：<b>班級／姓名／代收項目／金額／羊奶袋／口味／備註（特殊輪）</b><br>
             ● 餐費格式：<b>班級／姓名／項目一／金額一／備註一／項目二／金額二／備註二</b><br>
             ● 金額可為負數；第二項與備註二可留空。列印請選 100%（實際大小），關閉頁首/頁尾。
-          </div>
-
-          <!-- 使用說明與範例 -->
-          <div class="guide-box">
-            <h3>使用說明與貼上範例</h3>
-
-            <p>1. 可直接從 Excel 複製貼上（建議包含標題列）。系統會自動辨識是「羊奶」或「餐費」。</p>
-            <p>2. 欄位之間可用 <code>Tab</code> 或 <code>,</code> 逗號分隔，但請同一份名單內不要混用兩種分隔符號。</p>
-            <p>3. 「羊奶袋」欄位以「<code>是</code>」開頭，系統會在第一項備註自動加入 <code>+袋</code>；以「<code>否</code>」開頭則不會加上。</p>
-            <p>4. 金額欄位若填入非數字內容（例如「待確認」），會排版但不會計入總金額，並於下方列出「未納入總計」清單提醒。</p>
-
-            <p style="margin-top:8px;"><b>羊奶範例（含繳費袋）：</b></p>
-            <pre>班級    姓名    項目一     金額一  羊奶袋              口味  備註
-1A      王小明  12月羊奶   700     是，請給我繳費袋    鮮乳</pre>
-
-            <p style="margin-top:8px;"><b>餐費範例（含第二項）：</b></p>
-            <pre>班級    姓名    項目一             金額一  備註一   項目二     金額二  備註二
-1A      王小明  10/26-11/25餐費    700               預收餐費   1250</pre>
           </div>
         </div>
 
@@ -300,7 +247,7 @@ function parseRows(text){
   return body.map(line=>{
     const p=line.split(d).map(s=>s.trim());
     // 嘗試判斷是羊奶型或餐費型
-    const looksMilk = /^\s*(\u662f|\u5426|Y|N|YES|NO)/i.test(p[4] || '') || (head.join('').includes('羊奶袋'));
+    const looksMilk = (p[4]||'').match(/^(\u662f|否|Y|N|YES|NO)$/i) || (head.join('').includes('羊奶袋'));
     const row={
       klass:p[0]||'', name:p[1]||'',
       item1:p[2]||'', amt1:p[3]||'',
@@ -380,7 +327,7 @@ function fillCard(node,stu,globals,pay){
   const itemsBox=$('.items',node); itemsBox.innerHTML='';
 
   if(stu.__blank){
-    // 空白通知單：預留中間空間與左側共計
+    // 空白通知單：套用 blank 樣式，多一些書寫空間
     cardEl.classList.add('blank');
     $('.total-amount',node).textContent='';
   }else{
