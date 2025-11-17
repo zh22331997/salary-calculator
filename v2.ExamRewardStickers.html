@@ -1,5 +1,4 @@
-
-<!DOCTYPE html>
+<!DOCTYPE html>  
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8" />
@@ -149,7 +148,7 @@ select:focus {
     </p>
 
     <div class="grade-settings">
-      <h3>低年級</h3>
+      <h3>低年級（共用規則）</h3>
       <label for="lowGrade300">平均</label>
       <input type="number" id="lowGrade300" value="100" min="0" max="100">分，<span>獎勵禮券300元</span><span class="hint">（例：100）</span><br>
       <label for="lowGrade100">平均</label>
@@ -193,7 +192,7 @@ select:focus {
       <div>
         1) 標題列請至少包含這三欄：<strong>年級（或班級）</strong>、<strong>姓名（或學生）</strong>、<strong>平均</strong>。<br>
         2) 年級可用 <strong>1~6</strong> 或 <strong>一～六</strong>，也支援「六年1班、601、1年2班」等格式。<br>
-        3) 其他欄（國語、數學、自然…）可有可無，不影響。<br>
+        3) 其他欄（國語、數學、自然、社會、英文…）可有可無。<br>
         4) 未達門檻者不會產生貼條；格式不符會出現提示。<br>
       </div>
       <div style="margin-top:0.4em;color:#5b6b7a;">
@@ -209,6 +208,15 @@ select:focus {
 年級 學生   國語 數學 自然 社會 英文  總分 平均
 6    林小昀  98  95  100  95    96  484 96.8
 六   王小樺  95  94   96  98   100  483 96.6"></textarea>
+
+  <!-- 校區選擇 -->
+  <label>選擇校區：</label><br />
+  <select id="campus">
+    <option value="共用規則" selected>共用規則（除永和）</option>
+    <option value="永和分校">永和分校</option>
+  </select>
+
+  <br /><br />
 
   <label>選擇學期與考別：</label><br />
   <select id="semester">
@@ -298,7 +306,29 @@ function resetRewardSettings(){
   applyRewardSettingsToInputs();
   alert('獎勵標準已重置為預設值！');
 }
-window.onload = loadRewardSettings;
+
+/* 新增：載入校區設定 */
+function loadCampusSetting(){
+  const saved = localStorage.getItem('campusSelection');
+  if(saved){
+    const sel = document.getElementById('campus');
+    if(sel){
+      sel.value = saved;
+    }
+  }
+}
+
+/* onload：同時載入獎勵標準與校區，並監聽校區變更 */
+window.onload = function(){
+  loadRewardSettings();
+  loadCampusSetting();
+  const campusSelect = document.getElementById('campus');
+  if (campusSelect) {
+    campusSelect.addEventListener('change', function(){
+      localStorage.setItem('campusSelection', this.value);
+    });
+  }
+};
 
 /* ====== 年級/班級解析與分組 ====== */
 // 將年級或班級字串轉成 1~6
@@ -320,7 +350,7 @@ function classifyGradeByRow(row) {
   return '高年級';
 }
 
-/* ====== 獎勵判定與說明 ====== */
+/* ====== 共用規則的獎勵判定與說明 ====== */
 function getRewardByGroup(group, avg){
   const s=currentRewardSettings;
   if(group==='低年級'){
@@ -374,11 +404,46 @@ ${pad('平均'+d100,w)}獎勵禮券100元`;
   }
 }
 
+/* ====== 永和分校低年級：偵測單科100分 & 說明文字 ====== */
+// 回傳第一個滿分科目的標題（如「國語」、「數學」），找不到則回傳空字串
+function getFullScoreSubject(parts, cleanedHeaders, avgIndex, originalHeaders){
+  for(let i=0;i<parts.length;i++){
+    if(i===avgIndex) continue;
+    const headerClean = cleanedHeaders[i] || '';
+    if(
+      headerClean.includes('年級') || headerClean.includes('班級') ||
+      headerClean.includes('學生') || headerClean.includes('姓名') ||
+      headerClean.includes('平均') || headerClean.includes('總分')
+    ){
+      continue;
+    }
+    const v = parseFloat(parts[i]);
+    if(!isNaN(v) && v === 100){
+      const rawHeader = (originalHeaders && originalHeaders[i]) ? originalHeaders[i].trim() : headerClean;
+      return rawHeader || '某科';
+    }
+  }
+  return '';
+}
+
+// 永和低年級規則說明：不出現「永和分校 低年級」「(含)以上」「未達100分」
+function getYongheLowPolicyText(){
+  const s = currentRewardSettings.lowGrade;
+  const full = s['300']; // 例如 100
+  const base = s['100']; // 例如 98
+  return `期中、期末考 成績優異獎勵辦法
+低年級
+平均${full}分        禮券200元
+平均達${base}分       禮券100元
+任一科成績100分  禮券100元`;
+}
+
 /* ====== 主流程：產生貼條 ====== */
 function generateSlips(){
   const text = document.getElementById('input').value.trim();
   const semester = document.getElementById('semester').value;
   const examType = document.getElementById('examType').value;
+  const campus = document.getElementById('campus').value;
   const resultDiv = document.getElementById('result');
   const printButton = document.getElementById('printButton');
   const totalVoucherSummary = document.getElementById('totalVoucherSummary');
@@ -402,7 +467,7 @@ function generateSlips(){
   }
 
   // 解析表頭
-  const headers = lines[0].trim().split(/\s+/).map(h=>h.trim());
+  const headers = lines[0].trim().split('\n')[0].trim().split(/\s+/).map(h=>h.trim());
   const cleaned = headers.map(h=>h.replace(/\s/g,''));
   const idx = {
     grade: cleaned.findIndex(h=> h.includes('年級') || h.includes('班級') || h.includes('班')),
@@ -410,7 +475,6 @@ function generateSlips(){
     avg:   cleaned.findIndex(h=> h.includes('平均'))
   };
   if(idx.grade===-1 && cleaned.findIndex(h=>h.includes('班級'))===-1){
-    // 允許只有班級或年級其中之一，但兩者都找不到就報錯
     alert('找不到 年級／班級 欄位，請確認標題列包含「年級」或「班級」。');
     noDataMessage.textContent='找不到 年級／班級 欄位，請確認標題列包含「年級」或「班級」。';
     noDataMessage.style.display='block';
@@ -430,18 +494,43 @@ function generateSlips(){
     const line = lines[i].trim();
     if(!line) continue;
     const parts = line.split(/\s+/);
-    // 建一個 row 物件，好讓分流函式同時支援 年級/班級
     const row = {};
     cleaned.forEach((h,ix)=>{ row[h] = parts[ix]; });
 
-    const gradeRaw = (idx.grade!==-1 ? parts[idx.grade] : (row['班級']||'')); // 盡量抓年級，否則班級
+    const gradeRaw = (idx.grade!==-1 ? parts[idx.grade] : (row['班級']||'')); 
     const name = parts[idx.name];
     const avg = parseFloat(parts[idx.avg]);
     if(!name || isNaN(avg)) continue;
 
-    // 以 row 決定學齡組
+    // 單科 100 分科目名稱（若無則為空字串）
+    const fullScoreSubject = getFullScoreSubject(parts, cleaned, idx.avg, headers);
+    const hasFullScore = !!fullScoreSubject;
+
+    // 分組
     const group = classifyGradeByRow({ '年級': gradeRaw, '班級': row['班級'] });
-    const reward = getRewardByGroup(group, avg);
+
+    // 計算獎勵金額與原因
+    let reward = 0;
+    let rewardReason = 'avg';  // 'avg' 或 'subjectFull'
+    if (campus === '永和分校' && group === '低年級') {
+      const s = currentRewardSettings.lowGrade;
+      const full = s['300'];
+      const base = s['100'];
+      if (avg >= full) {
+        reward = 200;
+        rewardReason = 'avg';
+      } else if (avg >= base) {
+        reward = 100;
+        rewardReason = 'avg';
+      } else if (hasFullScore) {
+        reward = 100;
+        rewardReason = 'subjectFull';
+      }
+    } else {
+      reward = getRewardByGroup(group, avg);
+      rewardReason = 'avg';
+    }
+
     if(reward<=0) continue;
 
     totalVoucherCount += reward/100;
@@ -454,13 +543,31 @@ function generateSlips(){
     let formattedExamType = examType.replace('中','<strong>中</strong>').replace('末','<strong>末</strong>');
     const term = `${gradeForShow}${formattedSemester}${formattedExamType}`;
 
-    const policy = getPolicyTextByGroup(group);
+    // 規則說明文字：永和低年級 vs 其他
+    let policy = '';
+    if (campus === '永和分校' && group === '低年級') {
+      policy = getYongheLowPolicyText();
+    } else {
+      policy = getPolicyTextByGroup(group);
+    }
 
-    const slipText = `學生 <span class='student-name'>${name}</span>
+    // 主文：若是永和低年級、靠單科滿分拿禮券，改成「因 OO 科滿分」
+    let slipText = '';
+    if (campus === '永和分校' && group === '低年級' && rewardReason === 'subjectFull' && hasFullScore) {
+      let subjectName = fullScoreSubject;
+      if (!subjectName.endsWith('科')) subjectName += '科';
+      slipText = `學生 <span class='student-name'>${name}</span>
+因${term}
+${subjectName}滿分，
+特頒禮券 ${reward} 元以茲鼓勵。
+--------------------------`;
+    } else {
+      slipText = `學生 <span class='student-name'>${name}</span>
 因${term}
 各科平均達${avg}分，
 特頒禮券 ${reward} 元以茲鼓勵。
 --------------------------`;
+    }
 
     slipsHTML.push(`
       <div class="slip">
@@ -480,6 +587,7 @@ function generateSlips(){
     noDataMessage.style.display='block';
   }
 }
+
 /* ====== 清空資料 ====== */
 function clearAll(){
   if(!confirm('確定要清空所有輸入與結果嗎？')) return;
