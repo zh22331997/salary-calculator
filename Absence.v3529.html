@@ -107,12 +107,12 @@ td.num, th.num{ text-align:right }
   <div class="card" style="margin-top:12px">
     <div class="row">
       <div style="flex:1;min-width:280px">
-        <label for="names">PT 姓名（可留空，已改為依員工編號自動判斷 PT）</label>
+        <label for="names">PT 姓名（可留空，在員工編號加上 PT，就會被判斷為 PT）</label>
         <input id="names" type="text" placeholder="此欄目前可留空" />
       </div>
     </div>
     <div style="margin-top:12px">
-      <label for="raw">打卡紀錄（含或不含表頭；欄位以 Tab 或兩個以上空白分隔）</label>
+      <label for="raw">打卡紀錄（打卡之星匯出報表，第二個分頁全選複製貼過來）</label>
       <textarea id="raw" placeholder="在這裡貼上原始資料"></textarea>
     </div>
     <div class="row" style="margin-top:12px">
@@ -944,3 +944,4 @@ function toast(msg, ms=3000){
 </script>
 </body>
 </html>
+
