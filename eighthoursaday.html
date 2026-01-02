@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>剩餘年假計算機(一天8小時)</title>
+  <style>
+    :root{
+      --border:#d0d7de;
+      --bg:#f6f8fa;
+      --text:#111827;
+      --muted:#6b7280;
+      --danger:#b91c1c;
+      --ok:#065f46;
+      --card:#ffffff;
+    }
+    body{
+      font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      color: var(--text);
+      margin: 0;
+      background: linear-gradient(180deg, #fff, var(--bg));
+    }
+    .wrap{
+      max-width: 920px;
+      margin: 24px auto;
+      padding: 16px;
+    }
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      padding: 16px;
+    }
+    h1{
+      font-size: 20px;
+      margin: 0 0 12px 0;
+    }
+    .hint{
+      margin: 0 0 14px 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    th, td{
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    thead th{
+      background: #f3f4f6;
+      text-align: left;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    tbody tr:last-child td{
+      border-bottom: none;
+    }
+    input[type="number"]{
+      width: 120px;
+      max-width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+    }
+    input[type="number"]:focus{
+      border-color: #6b7280;
+      box-shadow: 0 0 0 3px rgba(107,114,128,0.15);
+    }
+    .row-actions{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    button{
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover{ background:#f9fafb; }
+    .btn-primary{
+      border-color: #111827;
+      background: #111827;
+      color: #fff;
+    }
+    .btn-primary:hover{ background:#0b1220; }
+    .btn-danger{
+      border-color: #ef4444;
+      color: #b91c1c;
+      background: #fff;
+    }
+    .btn-danger:hover{ background: #fff5f5; }
+    .summary{
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      background: #fcfcfd;
+    }
+    .summary .line{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+    .big{
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .tag{
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      border: 1px solid rgba(55,48,163,0.15);
+    }
+    .status-ok{ color: var(--ok); font-weight: 700; }
+    .status-bad{ color: var(--danger); font-weight: 800; }
+    .muted{ color: var(--muted); }
+    .footer{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .nowrap{ white-space: nowrap; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>年假計算器 <span class="tag">一天 = 8 小時</span></h1>
+      <p class="hint">
+        先輸入「年假總量」，再用下面的「扣除」區塊新增多筆扣除紀錄。系統會自動換算與計算剩餘。
+        <span class="muted">（交給它算就好，你的腦袋拿來放假比較重要 😌）</span>
+      </p>
+
+      <table aria-label="年假表格">
+        <thead>
+          <tr>
+            <th>項目</th>
+            <th class="nowrap">年假(天)</th>
+            <th class="nowrap">年假(小時)</th>
+            <th style="text-align:right;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>年假總量</strong></td>
+            <td><input id="totalDays" type="number" min="0" step="1" value="0" /></td>
+            <td><input id="totalHours" type="number" min="0" step="0.5" value="0" /></td>
+            <td style="text-align:right;" class="muted">—</td>
+          </tr>
+
+          <tr>
+            <td colspan="4" style="background:#fafafa;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                <div>
+                  <strong>扣除（可動態增行）</strong>
+                  <span class="muted">每一行代表一次扣除</span>
+                </div>
+                <div class="row-actions">
+                  <button id="addRowBtn" class="btn-primary" type="button">新增一筆扣除</button>
+                  <button id="resetBtn" type="button">清空扣除</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- 動態扣除列會插在這裡 -->
+          <tr id="rowsAnchor">
+            <td class="muted" colspan="4">目前沒有扣除紀錄。點右上角「新增一筆扣除」開始。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="summary" aria-live="polite">
+        <div class="line">
+          <div class="muted">已扣除總計</div>
+          <div><span id="usedDays">0</span> 天 <span id="usedHours">0</span> 小時</div>
+        </div>
+
+        <div class="line">
+          <div class="big">年假剩餘</div>
+          <div class="big"><span id="remainDays">0</span> 天 <span id="remainHours">0</span> 小時</div>
+        </div>
+
+        <!-- ✅ 你要的：剩餘換算成小時 -->
+        <div class="line">
+          <div class="muted">換算成</div>
+          <div><span id="remainTotalHours">0</span> 小時</div>
+        </div>
+
+        <div class="line">
+          <div class="muted">狀態</div>
+          <div id="statusText" class="status-ok">OK：還有年假可以用 ✅</div>
+        </div>
+      </div>
+
+      <div class="footer">
+        小提醒：所有計算以「小時」為底層單位（天會自動換算成 8 小時），最後再換回天/小時顯示。
+        如果扣到負數，代表已經超扣，我也會老實給你警告（不然你會以為自己年假會自動增殖）。
+      </div>
+    </div>
+  </div>
+
+<script>
+  (function(){
+    const HOURS_PER_DAY = 8;
+
+    const totalDaysEl = document.getElementById('totalDays');
+    const totalHoursEl = document.getElementById('totalHours');
+
+    const addRowBtn = document.getElementById('addRowBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const rowsAnchor = document.getElementById('rowsAnchor');
+
+    const usedDaysEl = document.getElementById('usedDays');
+    const usedHoursEl = document.getElementById('usedHours');
+
+    const remainDaysEl = document.getElementById('remainDays');
+    const remainHoursEl = document.getElementById('remainHours');
+    const remainTotalHoursEl = document.getElementById('remainTotalHours'); // ✅ 新增
+
+    const statusTextEl = document.getElementById('statusText');
+
+    let rowIdSeq = 0;
+
+    function safeNumber(v){
+      const n = Number(v);
+      return Number.isFinite(n) && n >= 0 ? n : 0;
+    }
+
+    function formatNumber(n){
+      // 顯示用：去掉 -0、去掉多餘的 .00
+      if (Object.is(n, -0)) n = 0;
+      const s = (Math.round(n * 100) / 100).toString();
+      return s;
+    }
+
+    function hoursToDayHourUnsigned(totalHours){
+      // 將「非負小時」換成 天/小時（小時可到小數）
+      const eps = 1e-9;
+      const h = Math.max(0, totalHours);
+      const days = Math.floor((h + eps) / HOURS_PER_DAY);
+      const hours = +(h - days * HOURS_PER_DAY).toFixed(2);
+
+      // 修正浮點誤差
+      const bump = (Math.abs(hours - HOURS_PER_DAY) < 1e-6);
+      return bump ? { days: days + 1, hours: 0 } : { days, hours };
+    }
+
+    function hoursToDayHourSigned(totalHours){
+      // ✅ 允許負數：-10 小時 => -1 天 -2 小時（一天 8 小時）
+      if (totalHours >= 0){
+        const r = hoursToDayHourUnsigned(totalHours);
+        return { days: r.days, hours: r.hours };
+      }
+      const abs = Math.abs(totalHours);
+      const r = hoursToDayHourUnsigned(abs);
+      const d = -r.days;
+      const h = -r.hours;
+      return { days: Object.is(d, -0) ? 0 : d, hours: Object.is(h, -0) ? 0 : h };
+    }
+
+    function getAllDeductRows(){
+      return Array.from(document.querySelectorAll('tr[data-deduct-row="1"]'));
+    }
+
+    function compute(){
+      const totalDays = safeNumber(totalDaysEl.value);
+      const totalHours = safeNumber(totalHoursEl.value);
+
+      const totalInHours = totalDays * HOURS_PER_DAY + totalHours;
+
+      let usedInHours = 0;
+
+      const rows = getAllDeductRows();
+      for(const tr of rows){
+        const dEl = tr.querySelector('input[data-role="deduct-days"]');
+        const hEl = tr.querySelector('input[data-role="deduct-hours"]');
+
+        const d = safeNumber(dEl.value);
+        const h = safeNumber(hEl.value);
+
+        usedInHours += d * HOURS_PER_DAY + h;
+      }
+
+      const usedDH = hoursToDayHourUnsigned(usedInHours);
+      const remainInHours = totalInHours - usedInHours;
+
+      // ✅ 剩餘允許顯示負數
+      const remainDH = hoursToDayHourSigned(remainInHours);
+
+      usedDaysEl.textContent = formatNumber(usedDH.days);
+      usedHoursEl.textContent = formatNumber(usedDH.hours);
+
+      remainDaysEl.textContent = formatNumber(remainDH.days);
+      remainHoursEl.textContent = formatNumber(remainDH.hours);
+
+      // ✅ 新增：剩餘換算成小時
+      remainTotalHoursEl.textContent = formatNumber(Math.round(remainInHours * 100) / 100);
+
+      if(remainInHours < -1e-9){
+        statusTextEl.textContent = "警告：年假不夠用了（已超扣）⚠️";
+        statusTextEl.classList.remove('status-ok');
+        statusTextEl.classList.add('status-bad');
+      }else{
+        statusTextEl.textContent = "OK：還有年假可以用 ✅";
+        statusTextEl.classList.remove('status-bad');
+        statusTextEl.classList.add('status-ok');
+      }
+
+      if(rows.length === 0){
+        rowsAnchor.style.display = '';
+      }else{
+        rowsAnchor.style.display = 'none';
+      }
+    }
+
+    function createDeductRow(days=0, hours=0){
+      rowIdSeq += 1;
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-deduct-row', '1');
+      tr.dataset.rowId = String(rowIdSeq);
+
+      tr.innerHTML = `
+        <td>減</td>
+        <td><input type="number" min="0" step="1" value="${days}" data-role="deduct-days" /></td>
+        <td><input type="number" min="0" step="0.5" value="${hours}" data-role="deduct-hours" /></td>
+        <td style="text-align:right;">
+          <button type="button" class="btn-danger" data-role="delete-row">刪除</button>
+        </td>
+      `;
+
+      rowsAnchor.parentNode.insertBefore(tr, rowsAnchor);
+
+      const dEl = tr.querySelector('input[data-role="deduct-days"]');
+      const hEl = tr.querySelector('input[data-role="deduct-hours"]');
+      dEl.addEventListener('input', compute);
+      hEl.addEventListener('input', compute);
+
+      tr.querySelector('button[data-role="delete-row"]').addEventListener('click', () => {
+        tr.remove();
+        compute();
+      });
+
+      compute();
+    }
+
+    function resetDeduct(){
+      for(const tr of getAllDeductRows()){
+        tr.remove();
+      }
+      compute();
+    }
+
+    totalDaysEl.addEventListener('input', compute);
+    totalHoursEl.addEventListener('input', compute);
+
+    addRowBtn.addEventListener('click', () => createDeductRow(0, 0));
+    resetBtn.addEventListener('click', resetDeduct);
+
+    compute();
+  })();
+</script>
+</body>
+</html>
