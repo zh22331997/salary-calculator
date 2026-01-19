@@ -272,7 +272,7 @@ function detectStructure(headers, dataRows){
     }
   });
 
-  const excludePattern = /(總分|平均|名次|班排|排名|座號|號碼|學號|年級|班級)/;
+  const excludePattern = /(總分|平均|名次|班排|排名|座號|號碼|no.|No.|編號|序號|年級|班級)/;
   const subjects = [];
 
   headers.forEach((t,idx)=>{
