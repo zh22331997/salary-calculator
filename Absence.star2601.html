@@ -199,6 +199,17 @@ window.addEventListener('unhandledrejection', e => {
       const branch = (r[H_BRANCH]||"").trim();
       const abn = (r[H_ABN]||"").trim();
       const payBaseRaw = (r[H_PAY_BASE] || "").trim();
+      // ===== 改動1：抓出當天遲到/早退分鐘（從出勤異常欄位解析）=====
+      const rowLateMin  = (() => {
+      const ms = String(abn||"").match(/遲到\s*(\d+)\s*分/g) || [];
+      return ms.reduce((sum, s) => sum + (Number((s.match(/(\d+)/)||[])[1]) || 0), 0);
+      })();
+
+      const rowEarlyMin = (() => {
+      const ms = String(abn||"").match(/早退\s*(\d+)\s*分/g) || [];
+      return ms.reduce((sum, s) => sum + (Number((s.match(/(\d+)/)||[])[1]) || 0), 0);
+      })();
+      
 
       if(!ym || !name) return;
 
@@ -236,12 +247,12 @@ window.addEventListener('unhandledrejection', e => {
           if (baseHrs > 0){
             workHrs = baseHrs;
             workDetail = `${md} ${fmtHours(baseHrs)}`;
-            workDetailRich = {md, hours: baseHrs};
+            workDetailRich = { md, hours: baseHrs, lateMin: rowLateMin, earlyMin: rowEarlyMin };
           }
         }else if (durHrs > 0){
           workHrs = durHrs;
           workDetail = `${md} ${fmtHours(durHrs)}`;
-          workDetailRich = {md, hours: durHrs};
+          workDetailRich = { md, hours: durHrs, lateMin: rowLateMin, earlyMin: rowEarlyMin };
         }
 
         if (workHrs > 0){
@@ -500,16 +511,34 @@ window.addEventListener('unhandledrejection', e => {
           if (!rich.length) return escapeHtml(rec.detail.join("、"));
 
           const parts = rich.map(d=>{
-            const txt = `${d.md} ${fmtHoursNum(d.hours)} 小時`;
-            if (Number(d.hours) > 10){
-              return `<span class="pt-over10">${escapeHtml(txt)}</span>`;
-            }
-            return escapeHtml(txt);
-          });
+            const baseTxt = `${d.md} ${fmtHoursNum(d.hours)} 小時`;
 
-          // 同一格內允許 HTML
-          return parts.join("、");
-        };
+            const late = Number(d.lateMin || 0);
+            const early = Number(d.earlyMin || 0);
+
+              let tail = "";
+              if (late > 0 || early > 0){
+              const tags = [];
+              if (late > 0) tags.push(`遲到${late}分鐘`);
+              if (early > 0) tags.push(`早退${early}分鐘`);
+              tail = `（${tags.join("、")}）`;
+              }
+
+              const txt = baseTxt + tail;
+
+              if (Number(d.hours) > 10){
+              return `<span class="pt-over10">${escapeHtml(txt)}</span>`;
+              }
+              return escapeHtml(txt);
+              });
+
+              // 同一格內允許 HTML
+              const extras = (rec.detail || []).filter(s => /^⚠️/.test(String(s)));
+              if (extras.length){
+              return parts.join("、") + "、" + extras.map(escapeHtml).join("、");
+              }
+              return parts.join("、");
+              };
 
         const tbodyPT = `<tbody>${
           ptRows.map(r=>`<tr>
@@ -1104,4 +1133,5 @@ function toast(msg, ms=3000){
 </script>
 </body>
 </html>
+
 
