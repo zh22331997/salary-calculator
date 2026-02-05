@@ -202,7 +202,7 @@ window.addEventListener('unhandledrejection', e => {
 
       if(!ym || !name) return;
 
-      const isPT = /PT/i.test(empCode);
+      const isPT = /PT/i.test(empCode) || wantedNames.includes(name);
       const personKey = `${branch}|${name}`;
       const existing = personTypeMap.get(personKey);
       if (existing) existing.isPT = existing.isPT || isPT;
@@ -307,14 +307,14 @@ window.addEventListener('unhandledrejection', e => {
       }
 
       // ===== 招生(加班)偵測 =====
-      const reasonText = String(r[H_EARLY_REASON]||"") + " " + String(r[H_LATE_REASON]||"");
-      if (/招生/.test(reasonText)){
-        let otRecruit=0;
-        const m = reasonText.match(/招生.*?(\d+(?:\.\d+)?)\s*小時/);
-        if (m) otRecruit = Number(m[1]);
-        if (otRecruit>0) addAgg(aggMap, ym, branch, name, "招生(企超)", otRecruit, `${md} ${fmtHours(otRecruit)}`);
-        else addAgg(aggMap, ym, branch, name, "招生(待確認)", {cnt:1}, `${md} 招生？小時`, true);
-      }
+      //const reasonText = String(r[H_EARLY_REASON]||"") + " " + String(r[H_LATE_REASON]||"");
+      //if (/招生/.test(reasonText)){
+        //let otRecruit=0;
+        //const m = reasonText.match(/招生.*?(\d+(?:\.\d+)?)\s*小時/);
+       // if (m) otRecruit = Number(m[1]);
+       // if (otRecruit>0) addAgg(aggMap, ym, branch, name, "招生(企超)", otRecruit, `${md} ${fmtHours(otRecruit)}`);
+       // else addAgg(aggMap, ym, branch, name, "招生(待確認)", {cnt:1}, `${md} 招生？小時`, true);
+      //}
 
       // ===== 出勤異常 =====
       if (abn && abn!=="--"){
@@ -385,10 +385,10 @@ window.addEventListener('unhandledrejection', e => {
     for (const [key, val] of aggMap.entries()){
       const [ym, branch, name, typ] = key.split("|");
       let subtotal="", remark="";
-      if (typ==="招生(待確認)"){
-        subtotal="？小時"; remark=val.detail.join("、");
-        rowsOut.push([ym,branch,name,typ,subtotal,remark]); continue;
-      }
+      //if (typ==="招生(待確認)"){
+       // subtotal="？小時"; remark=val.detail.join("、");
+        //rowsOut.push([ym,branch,name,typ,subtotal,remark]); continue;
+     // }
       if (COUNT_TYPES.has(typ)){
         if ((val.count||0)===0) continue;
         subtotal=`${val.count} 次`; remark=val.detail.join("、");
@@ -1104,3 +1104,4 @@ function toast(msg, ms=3000){
 </script>
 </body>
 </html>
+
