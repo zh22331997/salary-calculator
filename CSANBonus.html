@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>  
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8" />
@@ -289,6 +289,8 @@ button{
       <input type="number" id="defaultSpecialCoursePrice" value="180" min="0" step="1" oninput="recalcAll()">
     </span>
   </div>
+
+  <span class="note">※「學期天比例」以<strong>第一列</strong>為準，改第一列會同步整表</span>
 </div>
 
 <div class="batch-merge">
@@ -344,18 +346,59 @@ button{
 const roundDisp = n => Math.round(+n);
 const ceilInt   = n => Math.ceil(+n - 1e-12);
 
-/* ========= 算式文字 ========= */
+/* ===== 學期天比例：共用（以第一列為準） ===== */
+function getGlobalSemRate(){
+  const firstRow = document.querySelector('#rows tr');
+  if(!firstRow) return 1;
+  const el = firstRow.querySelector('.rate');
+  const v = parseFloat(el?.value);
+  return (isNaN(v) ? 1 : v);
+}
+function syncSemRateFromFirstRow(){
+  const rows = Array.from(document.querySelectorAll('#rows tr'));
+  if(rows.length === 0) return;
+  const master = rows[0].querySelector('.rate');
+  if(!master) return;
+
+  const v = master.value; // 保留使用者輸入字串（避免輸入中跳動）
+  rows.forEach((r, idx)=>{
+    const rateEl = r.querySelector('.rate');
+    if(!rateEl) return;
+    if(idx === 0){
+      rateEl.disabled = false;
+      rateEl.removeAttribute('title');
+    }else{
+      rateEl.value = v;
+      rateEl.disabled = true; // 鎖住，避免每列各填各的
+      rateEl.title = '學期天比例以第一列為準';
+    }
+  });
+}
+
+/* ========= 算式文字 =========
+   ✅ 修正：學期天比例只乘「全月津貼」，非全月津貼不乘
+*/
 function generateSemesterBonusFormula(grade, persons, partialDays, workdays, semRate){
   const parts=[];
-  if(persons>15) parts.push(`$${grade} * (${persons} - 15)`);
-  if(partialDays>0 && workdays>0) parts.push(`$${grade} * ${partialDays} / ${workdays}`);
-  if(!parts.length) return '';
-  let f = parts.join(' + ');
-  if(semRate!==1){
-    const r = semRate % 1 === 0 ? semRate.toFixed(0) : semRate.toString();
-    f = `[${f}] * ${r}`;
+
+  // 全月津貼（人數>15才有）
+  if(persons>15){
+    const base = `$${grade} * (${persons} - 15)`;
+    if(semRate!==1){
+      const r = semRate % 1 === 0 ? semRate.toFixed(0) : semRate.toString();
+      parts.push(`${base} * ${r}`);
+    }else{
+      parts.push(base);
+    }
   }
-  return f;
+
+  // 非全月津貼（不乘學期天比例）
+  if(partialDays>0 && workdays>0){
+    parts.push(`$${grade} * ${partialDays} / ${workdays}`);
+  }
+
+  if(!parts.length) return '';
+  return parts.join(' + ');
 }
 
 /* ✅ 代課扣除： - (請代課2天2小時2400/22×2 + 2400/22/8×2=$245) */
@@ -428,7 +471,9 @@ function addRow(){
     <td class="thead-group-semester fullBonus">0</td>
     <td class="thead-group-semester"><input type="number" class="partialDays" min="0" value="0" oninput="recalcAll()"/></td>
     <td class="thead-group-semester partialBonus">0</td>
-    <td class="thead-group-semester"><input type="number" class="rate" step="0.001" min="0" max="1" value="1" oninput="recalcAll()"/></td>
+    <td class="thead-group-semester">
+      <input type="number" class="rate" step="0.001" min="0" max="1" value="1" oninput="recalcAll()"/>
+    </td>
     <td class="thead-group-semester semTotal">0</td>
 
     <td class="thead-group-sub"><input type="number" class="subDays" min="0" value="0" oninput="recalcAll()"/></td>
@@ -499,8 +544,9 @@ function calcRow(row){
   const grade  = calcGrade(persons, isCrossSchool);
 
   const partialDays = getNum('partialDays');
-  const semRateRaw  = getNum('rate');
-  const semRate = isNaN(semRateRaw) ? 1 : semRateRaw;
+
+  // ✅ 學期天比例：共用（以第一列為準）
+  const semRate = getGlobalSemRate();
 
   const subDays  = getNum('subDays');
   if(subDays>workdays){
@@ -516,7 +562,9 @@ function calcRow(row){
   /* === 原始小數（用來計算） === */
   const fullBonusRaw    = persons>15 ? (persons-15)*grade : 0;
   const partialBonusRaw = (workdays>0 && partialDays>0)? grade*partialDays/workdays : 0;
-  const semTotalRaw     = (fullBonusRaw + partialBonusRaw) * semRate;
+
+  // ✅ 修正：全月津貼先乘學期天比例，再加上非全月津貼
+  const semTotalRaw     = (fullBonusRaw * semRate) + partialBonusRaw;
 
   const subTotalRaw     = (workdays>0)
     ? (semTotalRaw/workdays)*subDays + (semTotalRaw/workdays/8)*subHours
@@ -526,8 +574,7 @@ function calcRow(row){
   const requiredTotal  = 15*requiredDays;
   const vacBonusRaw    = userTotal>requiredTotal ? (userTotal-requiredTotal)*36 : 0;
 
-  const finalBaseRaw   = semTotalRaw - subTotalRaw + vacBonusRaw;
-  const finalBase      = ceilInt(finalBaseRaw);
+  const baseRaw   = semTotalRaw - subTotalRaw + vacBonusRaw;
 
   /* === 顯示（四捨五入） === */
   row.querySelector('.fullBonus').textContent    = roundDisp(fullBonusRaw);
@@ -544,14 +591,12 @@ function calcRow(row){
     vacCell.textContent = roundDisp(vacBonusRaw);
   }
 
-  row.querySelector('.finalBonusValue').textContent = finalBase.toString();
-
   const semF = generateSemesterBonusFormula(grade, persons, partialDays, workdays, semRate);
   const subF = generateSubstitutionDeductionFormula(subDays, subHours, subTotalRaw, semTotalRaw, workdays);
   const vacF = generateVacationBonusFormula(attendPts, camp1Pts, camp2Pts, requiredDays, vacBonusRaw, userTotal, requiredTotal);
 
-  let base = [semF, subF, vacF].filter(Boolean).join('');
-  if(!base) base='無人數津貼';
+  let baseFormula = [semF, subF, vacF].filter(Boolean).join('');
+  if(!baseFormula) baseFormula='無人數津貼';
 
   // 額外加給
   const scCount = parseInt(row.querySelector('.specialCourse')?.value || '0',10);
@@ -561,25 +606,38 @@ function calcRow(row){
   const scBonus = scCount*scPrice;
 
   const signBonus   = parseFloat(row.querySelector('.signBonus')?.value || '0') || 0;
+
+  // ✅ 高年級加給：自動乘學期天比例
   const seniorBonus = parseFloat(row.querySelector('.seniorBonus')?.value || '0') || 0;
-  const repeatBonus = parseInt(row.querySelector('.repeatBonus')?.value || '0',10);
+  const seniorBonusAdjRaw = seniorBonus * semRate;
 
-  const extras = scBonus + signBonus + seniorBonus + repeatBonus;
-  const finalTotal = finalBase + extras;
+  const repeatBonus = parseInt(row.querySelector('.repeatBonus')?.value || '0',10) || 0;
 
-  /* ✅ 加項統一：不要「名稱=」，但保留算式的「=金額」 */
+  // ✅ 建議：全部加總後再做 ceil，避免「先進位又加小數」造成怪差
+  const finalTotalRaw = baseRaw + scBonus + signBonus + seniorBonusAdjRaw + repeatBonus;
+  const finalTotal = ceilInt(finalTotalRaw);
+
+  row.querySelector('.finalBonusValue').textContent = finalTotal.toString();
+
+  /* ✅ 加項統一：保留算式的「=金額」 */
   const extraParts = [];
-  if(seniorBonus>0) extraParts.push(`（高年級加給$${seniorBonus}）`);
+  if(seniorBonus>0){
+    const r = semRate % 1 === 0 ? semRate.toFixed(0) : semRate.toString();
+    extraParts.push(`（高年級加給$${seniorBonus}×${r}=$${roundDisp(seniorBonusAdjRaw)}）`);
+  }
   if(scCount>0)     extraParts.push(`（特色課${scCount}×$${scPrice}=$${scBonus}）`);
   if(signBonus>0)   extraParts.push(`（簽約金$${signBonus}）`);
   if(repeatBonus>0) extraParts.push(`（留班獎金$${repeatBonus}）`);
 
   row.querySelector('.finalBonusFormula').textContent =
-    `${finalTotal}=${base}`
+    `${finalTotal}=${baseFormula}`
     + (extraParts.length ? ` +${extraParts.join('+')}` : '');
 }
 
-function recalcAll(){ document.querySelectorAll('#rows tr').forEach(calcRow); }
+function recalcAll(){
+  syncSemRateFromFirstRow(); // ✅ 先同步學期天比例（以第一列為準）
+  document.querySelectorAll('#rows tr').forEach(calcRow);
+}
 
 /* ========= 匯出/複製 ========= */
 function copyNameAndFormula(){
@@ -667,6 +725,9 @@ document.addEventListener('input', e=>{
     warn(requiredDays===0,'請先填寫「寒暑責任額天數」再輸入點數');
   }
 });
+
+/* ========= 初始：先放一列讓你直接改比例也方便 ========= */
+addRow();
 </script>
 </body>
 </html>
