@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>打卡紀錄分析（合併 PT 工時計算）</title>
+<title>打卡紀錄分析（合併 PT 工時計算、剩餘 特/補休計算 ）</title>
 <style>
 *,*::before,*::after{box-sizing:border-box}
 :root{
@@ -467,7 +466,12 @@ window.addEventListener('unhandledrejection', e => {
 
     /* ===== 條列文字彙整 ===== */
     const summaryText = buildPeopleSummaryText({
-     allCombos, aggMap, workAgg, personTypeMap, missingPairs
+      allCombos,
+      aggMap,
+      workAgg,
+      personTypeMap,
+      missingPairs,
+      vacationSummaryMap: new Map()
     });
 
     /* ===== 畫面輸出 ===== */
@@ -861,7 +865,12 @@ window.addEventListener('unhandledrejection', e => {
           </thead>
           <tbody>
             ${rowsVacation.map(r=>`
-              <tr data-vac="${r.hVac}" data-comp="${r.hComp}" data-ot="${r.hOT}">
+              <tr
+                data-branch="${escapeHtml(r.branch)}"
+                data-name="${escapeHtml(r.name)}"
+                data-vac="${r.hVac}"
+                data-comp="${r.hComp}"
+                data-ot="${r.hOT}">
                 <td>${escapeHtml(r.branch)}</td>
                 <td>${escapeHtml(r.name)}</td>
                 <td class="vac-start-cell">
@@ -880,6 +889,56 @@ window.addEventListener('unhandledrejection', e => {
       </div>
     `;
   }
+}
+
+function buildVacationSummaryMap(){
+  const map = new Map();
+  const table = document.querySelector("#vacationBalanceTable");
+  if (!table) return map;
+
+  table.querySelectorAll("tbody tr").forEach(tr=>{
+    const branch = tr.dataset.branch || "";
+    const name = tr.dataset.name || "";
+    if (!branch || !name) return;
+
+    const rawStartD = tr.querySelector(".v-start-d")?.value?.trim() || "";
+    const rawStartH = tr.querySelector(".v-start-h")?.value?.trim() || "";
+
+    // 兩格都沒填，就不要寫進條列文字
+    if (rawStartD === "" && rawStartH === "") return;
+
+    const startD = parseFloat(rawStartD || 0) || 0;
+    const startH = parseFloat(rawStartH || 0) || 0;
+
+    const vac = parseFloat(tr.dataset.vac || 0) || 0;
+    const comp = parseFloat(tr.dataset.comp || 0) || 0;
+    const ot = parseFloat(tr.dataset.ot || 0) || 0;
+
+    const startTotal = startD * DAY_HRS + startH;
+    const endTotal = Math.round((startTotal - vac - comp + ot) * 10) / 10;
+
+    const absTotal = Math.abs(endTotal);
+    const endD = Math.floor(absTotal / DAY_HRS);
+    const endH = Math.round((absTotal - endD * DAY_HRS) * 10) / 10;
+
+    let remainText = "";
+    if (endTotal < 0){
+      if (endD > 0 && endH > 0) remainText = `-${endD}天-${endH}小時`;
+      else if (endD > 0) remainText = `-${endD}天`;
+      else remainText = `-${endH}小時`;
+    }else{
+      if (endD > 0 && endH > 0) remainText = `${endD}天 ${endH}小時`;
+      else if (endD > 0) remainText = `${endD}天`;
+      else remainText = `${endH}小時`;
+    }
+
+    const startText = `${startD}天 ${startH}時`;
+    const line = `• 剩餘特休補休：${remainText}`;
+
+    map.set(`${branch}|${name}`, line);
+  });
+
+  return map;
 }
 
     /* ===== 條列文字彙整區塊 ===== */
@@ -1048,6 +1107,19 @@ window.addEventListener('unhandledrejection', e => {
       if (formulaCell){
       formulaCell.textContent = `${fmtHoursNum(startTotal)} - ${fmtHoursNum(vac)} - ${fmtHoursNum(comp)} + ${fmtHoursNum(ot)} = ${fmtHoursNum(endTotal)}`;
       }
+
+      const vacationSummaryMap = buildVacationSummaryMap();
+      const pre = document.getElementById("summaryText");
+      if (pre){
+      pre.textContent = buildPeopleSummaryText({
+          allCombos,
+          aggMap,
+          workAgg,
+          personTypeMap,
+          missingPairs,
+          vacationSummaryMap
+          }) || "無異常紀錄";
+       }
     });
 
     /* ===== 一鍵填入全勤金額 ===== */
@@ -1202,8 +1274,8 @@ window.addEventListener('unhandledrejection', e => {
     }
 
     /* ===== 條列文字彙整：主函式（依你示意順序）===== */
-    function buildPeopleSummaryText({allCombos, aggMap, workAgg, personTypeMap, missingPairs}){
-      const DAY_HRS = 8;
+    function buildPeopleSummaryText({allCombos, aggMap, workAgg, personTypeMap, missingPairs, vacationSummaryMap}){
+          const DAY_HRS = 8;
 
       // 多月份分段（通常只有一個月也 OK）
       const yms = [...new Set([...allCombos].map(k => String(k).split("|")[0]).filter(Boolean))].sort();
@@ -1393,6 +1465,9 @@ window.addEventListener('unhandledrejection', e => {
               block += appendBlock("PT工時", `${fmtHoursNum(pt.hours)}小時`, detailTxt);
             }
           }
+
+        const vacLine = vacationSummaryMap?.get(`${branch}|${name}`) || "";
+        if (vacLine) block += vacLine + "\n";
 
           lines.push(block.trim() ? block.trimEnd() : "無異常紀錄");
           lines.push("");
