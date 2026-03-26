@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -7,122 +8,112 @@
 <style>
 *,*::before,*::after{box-sizing:border-box}
 :root{
-  --bg:#f7f7fb; --card:#fff; --ink:#1f2937; --muted:#6b7280; --border:#e5e7eb;
-  --fs:14px; --lh:1.4;
-  --s1:6px; --s2:8px; --s3:10px; --s4:12px;
-  --r-sm:8px; --r-md:12px;
-
-  /* 主表 / PT工時 共用欄寬 */
-  --w-ym: 90px;
-  --w-branch: 120px;
-  --w-name: 120px;
-  --w-type: 160px;
-  --w-subtotal: 120px;
-
-  /* 不支薪表專用欄寬 */
-  --w-nopay-name:   100px;
-  --w-nopay-salary: 100px;
-  --w-nopay-att:    110px;
-  --w-nopay-info:   360px;
-  --w-nopay-detail: 520px;
-
-  /* 特休折現欄寬 */
-  --w-cash-day:    90px;
-  --w-cash-hour:   90px;
-  --w-cash-detail: 360px;
-
-  /* 特休月底表欄寬 */
-  --w-vac-branch: 90px;
-  --w-vac-name: 90px;
-  --w-vac-start: 190px;
-
+  --bg:#f7f7fb;
+  --card:#fff;
+  --ink:#1f2937;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --blue:#1565c0;
+  --danger:#dc2626;
+  --fs:14px;
+  --lh:1.4;
+  --s1:6px;
+  --s2:8px;
+  --s3:10px;
+  --s4:12px;
+  --r-sm:8px;
+  --r-md:12px;
+  --w-ym:90px;
+  --w-branch:120px;
+  --w-name:120px;
+  --w-type:160px;
+  --w-subtotal:120px;
+  --w-nopay-name:100px;
+  --w-nopay-salary:100px;
+  --w-nopay-att:110px;
+  --w-nopay-info:360px;
+  --w-nopay-detail:520px;
+  --w-cash-day:90px;
+  --w-cash-hour:90px;
+  --w-cash-detail:360px;
+  --w-vac-branch:90px;
+  --w-vac-name:90px;
+  --w-vac-start:190px;
 }
-
 html,body{
-  margin:0;background:var(--bg);color:var(--ink);
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
   font-family:system-ui,-apple-system,"Noto Sans TC","Segoe UI",Roboto,Arial,"PingFang TC","Microsoft JhengHei","Helvetica Neue",sans-serif;
-  font-size:var(--fs);line-height:var(--lh)
+  font-size:var(--fs);
+  line-height:var(--lh);
 }
 .wrap{max-width:min(96vw,1800px);margin:24px auto;padding:0 var(--s3)}
-.title{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);flex-wrap:wrap}
 .title h1{margin:0;font-size:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,.04);padding:var(--s4)}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r-md);
+  box-shadow:0 1px 3px rgba(0,0,0,.04);
+  padding:var(--s4);
+}
 .row{display:flex;gap:var(--s3);align-items:center;flex-wrap:wrap}
-label{font-size:12px;color:#334155;margin-bottom:var(--s1);display:block}
-input[type=text],textarea{width:100%;border:1px solid var(--border);border-radius:var(--r-md);padding:8px 10px;font-size:var(--fs)}
+.field{flex:1;min-width:280px}
+.mt-12{margin-top:12px}
+label{display:block;margin-bottom:var(--s1);font-size:12px;color:#334155}
+input[type=text],textarea{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:var(--r-md);
+  padding:8px 10px;
+  font-size:var(--fs);
+}
 textarea{height:220px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
-button{appearance:none;border:0;border-radius:var(--r-sm);background:#e3f2fd;color:#1565c0;padding:8px 12px;font-weight:600;cursor:pointer;display:inline-flex;gap:8px}
+button{
+  appearance:none;
+  border:0;
+  border-radius:var(--r-sm);
+  background:#e3f2fd;
+  color:var(--blue);
+  padding:8px 12px;
+  font-weight:600;
+  cursor:pointer;
+  display:inline-flex;
+  gap:8px;
+}
 button:hover{background:#cde5fd}
 button.secondary{background:#f1f5f9;color:#334155}
 button.secondary:hover{background:#e2e8f0}
 button.pill{padding:4px 10px;border-radius:999px;font-size:12px}
-.muted{color:var(--muted);font-size:12px;margin-top:6px}
+.muted,.hint{color:var(--muted);font-size:12px}
+.muted{margin-top:6px}
+.danger{color:var(--danger);font-weight:700}
 .breakdown{white-space:pre-wrap}
+.table-wrap{overflow-x:auto;overflow-y:hidden;max-width:100%}
+.table-section{margin:16px 0 8px}
+.title-row{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex-wrap:wrap}
+.title-row strong{color:#1e40af}
+.pay-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.section-note{margin:0 0 8px}
+.summary-box{border:1px solid var(--border);border-radius:var(--r-md);background:#fff;padding:12px}
+.summary-tools{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+#summaryText{margin:0;white-space:pre-wrap;font:16px/1.6 "Segoe UI","微軟正黑體",sans-serif}
 table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:var(--fs);line-height:1.35}
 th,td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
 th{background:#f3f4f6;text-align:left}
-.hint{font-size:12px;color:var(--muted)}
-.danger{color:#dc2626;font-weight:700}
-td.num, th.num{ text-align:right }
+td.num,th.num{text-align:right}
+#out table{table-layout:fixed}
 #out table td:last-child,#out table th:last-child{overflow-wrap:anywhere;word-break:break-word}
-#out table{ table-layout: fixed }
 .editable{background:#fffdf5}
 .editable:focus{outline:2px solid #fde68a}
-
-/* toast */
+.pt-over10{color:var(--danger);font-weight:700}
+.v-input{width:65px !important;display:inline-block !important;padding:4px 6px !important}
+.v-start-cell{white-space:nowrap}
+.v-res{font-weight:700;color:var(--blue)}
+#vacationBalanceTable th,#vacationBalanceTable td{vertical-align:middle}
 .toast-wrap{position:fixed;right:16px;bottom:16px;z-index:9999;display:flex;flex-direction:column;gap:8px}
 .toast{background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-width:520px;font-size:13px}
 .toast b{color:#fca5a5}
-
-/* 不支薪表右上角控制列 */
-.pay-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.pay-tools .label{color:var(--muted);font-size:12px}
-
-/* PT 每日明細：單日工時>10 顯示紅字 */
-.pt-over10{color:#dc2626;font-weight:700}
-
-/* 條列文字彙整樣式（統一字體大小） */
-#summaryText{
-  font-size:16px;
-  font-family:"Segoe UI","微軟正黑體",sans-serif;
-  line-height:1.6;
-  white-space:pre-wrap;
-  margin:0;
-}
-.summary-box{
-  border:1px solid var(--border);
-  border-radius:var(--r-md);
-  background:#fff;
-  padding:12px;
-}
-.summary-tools{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  flex-wrap:wrap;
-}
-.v-input{
-  width:65px !important;
-  display:inline-block !important;
-  padding:4px 6px !important;
-}
-
-.v-title-row{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-.vac-start-cell{
-  white-space:nowrap;
-}
-
-#vacationBalanceTable th,
-#vacationBalanceTable td{
-  vertical-align:middle;
-}
 </style>
 </head>
 <body>
@@ -130,24 +121,24 @@ td.num, th.num{ text-align:right }
   <div class="title"><h1>貼上打卡之星匯出的「打卡紀錄」</h1></div>
   <div class="muted">貼上打卡資料後，會依「員工編號」自動判斷 PT 並完成分析。一天工時固定 <b>8 小時</b>（僅供請假/加班換算用）。</div>
 
-  <div class="card" style="margin-top:12px">
+  <div class="card mt-12">
     <div class="row">
-      <div style="flex:1;min-width:280px">
+      <div class="field">
         <label for="names">PT 姓名（可留空，在員工編號加上 PT，就會被判斷為 PT）</label>
         <input id="names" type="text" placeholder="此欄目前可留空" />
       </div>
     </div>
-    <div style="margin-top:12px">
+    <div class="mt-12">
       <label for="raw">打卡紀錄（打卡之星匯出報表，第二個分頁全選複製貼過來）</label>
       <textarea id="raw" placeholder="在這裡貼上原始資料"></textarea>
     </div>
-    <div class="row" style="margin-top:12px">
+    <div class="row mt-12">
       <button id="run">整理＋計算</button>
       <button id="clear" class="secondary">清空</button>
     </div>
   </div>
 
-  <div id="out" class="card" style="margin-top:12px">
+  <div id="out" class="card mt-12">
     <div class="hint">尚未輸出。</div>
   </div>
 </div>
@@ -166,7 +157,6 @@ window.addEventListener('unhandledrejection', e => {
 (function(){
   const $ = s=>document.querySelector(s);
 
-  /* ===== 參數 ===== */
   const DAY_HRS = 8;
   const PAY_DIV_DAYS = 30;
   const FREE_LATE_COUNT = 3;
@@ -186,7 +176,6 @@ window.addEventListener('unhandledrejection', e => {
     "請假時間","請假時數","假別","加班時間","加班時數"
   ];
 
-  /* ===== 綁定按鈕 ===== */
   const btnRun = $("#run");
   if (btnRun) btnRun.addEventListener("click", () => { try { run(); } catch (err){ console.error(err); toast(`執行失敗：<b>${err.message}</b>`, 8000);} });
   else toast('找不到 id="run" 的按鈕', 6000);
@@ -229,6 +218,17 @@ window.addEventListener('unhandledrejection', e => {
     const personTypeMap = new Map(); // branch|name -> {isPT:boolean}
     const personCodeMap = new Map(); // branch|name -> empCode
     const activeSpanMap = new Map(); // ym|branch|name -> {first:Date,last:Date}
+
+    const getEmpCode = (branch, name) => String(personCodeMap.get(`${branch}|${name}`) || '').trim().toUpperCase();
+    const getEmpCodeByName = (name) => {
+      for (const [key, code] of personCodeMap.entries()) {
+        if (key.endsWith(`|${name}`)) return String(code || '').trim().toUpperCase();
+      }
+      return '';
+    };
+    const compareByEmpCode = (branchA, nameA, branchB, nameB) =>
+      getEmpCode(branchA, nameA).localeCompare(getEmpCode(branchB, nameB), undefined, { numeric:true, sensitivity:'base' })
+      || String(nameA || '').localeCompare(String(nameB || ''), undefined, { numeric:true, sensitivity:'base' });
 
     // 掃描資料
     rows.forEach(r=>{
@@ -458,687 +458,326 @@ window.addEventListener('unhandledrejection', e => {
       remark   = val.detail.join("、");
       rowsOut.push([ym,branch,name,typ,subtotal,remark]);
     }
-    rowsOut.sort(sortMainRows);
+    rowsOut.sort((a, b) =>
+      a[0].localeCompare(b[0], undefined, { numeric:true, sensitivity:'base' })
+      || compareByEmpCode(a[1], a[2], b[1], b[2])
+      || a[3].localeCompare(b[3], undefined, { numeric:true, sensitivity:'base' })
+    );
 
     // 取得本月（最新年月）
     const ymsAll = new Set([...allCombos].map(k=>k.split("|")[0]).filter(Boolean));
     const latestYM = [...ymsAll].sort().pop();
 
-    /* ===== 條列文字彙整 ===== */
     const summaryText = buildPeopleSummaryText({
       allCombos,
       aggMap,
       workAgg,
       personTypeMap,
       missingPairs,
-      vacationSummaryMap: new Map()
+      vacationSummaryMap: new Map(),
+      personCodeMap
     });
 
-    /* ===== 畫面輸出 ===== */
     let html = "";
-
-    // 主表（換人換色）
-    const headerRow = ["年月","分校","姓名","假別/類型","小計","備註"];
-    const thead = `<thead><tr>${
-      headerRow.map((h,i)=>`<th${i===4?' class="num"':''}>${h}</th>`).join("")
-    }</tr></thead>`;
-
-    let lastPerson = '';
-    let alt = false;
-    const tbody = `<tbody>${
-      rowsOut.map(r=>{
-        const name = r[2];
-        if (name !== lastPerson) { alt = !alt; lastPerson = name; }
-        const bg = alt ? '#fafafa' : '#ffffff';
-        const tds = r.map((c,i)=>{
-          const isDanger = (i===3 && /^(早退|曠職)$/.test(String(c)));
-          const isNum = (i===4);
-          const cls = [isDanger?'danger':'', isNum?'num':''].filter(Boolean).join(' ');
-
-          let cellHTML = "";
-          if (i === 5 && r[3] === "漏打卡" && c){
-            const esc = escapeHtml(c);
-            cellHTML = esc.replace(/\(未補單\)/g, '<span style="color:#dc2626;font-weight:700">(未補單)</span>');
-          }else{
-            cellHTML = escapeHtml(c);
-          }
-          return `<td${cls?` class="${cls}"`:''}>${cellHTML}</td>`;
-        }).join('');
-        return `<tr style="background:${bg}">${tds}</tr>`;
-      }).join("")
-    }</tbody>`;
-
-    const colgroupMain = `<colgroup>
-      <col style="width:var(--w-ym)">
-      <col style="width:var(--w-branch)">
-      <col style="width:var(--w-name)">
-      <col style="width:var(--w-type)">
-      <col style="width:var(--w-subtotal)">
-      <col style="width:auto">
-    </colgroup>`;
-
-    html += `<div class="hint" style="margin-bottom:8px">
-      共 ${rowsOut.length} 列，
-      <button id="copyCandyHTML" class="pill">複製給 CANDY 表格</button>
-      可貼回 Google Sheet。
-    </div>
-    <div style="overflow-x:auto;overflow-y:hidden;max-width:100%">
-      <table data-kind="main">${colgroupMain}${thead}${tbody}</table>
-    </div>`;
-
-    // ===== PT 工時（自動判斷誰是 PT）=====
-    if (latestYM){
-      const list = [...workAgg.values()].filter(r=>r.ym===latestYM);
-      const baseList = list.filter(r=>{
-        const info = personTypeMap.get(`${r.branch}|${r.name}`);
-        return info && info.isPT;
-      });
-
-      // 缺成對提醒
-      const missByPerson = new Map();
-      missingPairs.filter(m=>m.ym===latestYM).forEach(m=>{
-        const k = `${m.branch}|${m.name}`;
-        const arr = missByPerson.get(k)||[];
-        arr.push(m.md+" "+m.which);
-        missByPerson.set(k,arr);
-      });
-      baseList.forEach(x=>{
-        const key = `${x.branch}|${x.name}`;
-        const warns = missByPerson.get(key)||[];
-        if (warns.length) x.detail.push(`⚠️ 缺成對 ${warns.length} 筆：${warns.join("、")}`);
-      });
-
-      if (baseList.length > 0){
-        const ptRows = [...baseList].sort((a,b)=> a.branch.localeCompare(b.branch)||a.name.localeCompare(b.name));
-
-        const headerPT = ["年月","分校","姓名","本月工時","每日明細"];
-        const theadPT = `<thead><tr>${
-          headerPT.map((h,i)=>`<th${i===3?' class="num"':''}>${h}</th>`).join("")
-        }</tr></thead>`;
-
-        const formatPtDetailHTML = (rec)=>{
-          const rich = Array.isArray(rec.detailRich) ? rec.detailRich : [];
-          if (!rich.length) return escapeHtml(rec.detail.join("、"));
-
-          const parts = rich.map(d=>{
-            const baseTxt = `${d.md} ${fmtHoursNum(d.hours)} 小時`;
-            const late = Number(d.lateMin || 0);
-            const early = Number(d.earlyMin || 0);
-
-            let tail = "";
-            if (late > 0 || early > 0){
-              const tags = [];
-              if (late > 0) tags.push(`遲到${late}分鐘`);
-              if (early > 0) tags.push(`早退${early}分鐘`);
-              tail = `（${tags.join("、")}）`;
-            }
-
-            const txt = baseTxt + tail;
-            if (Number(d.hours) > 10){
-              return `<span class="pt-over10">${escapeHtml(txt)}</span>`;
-            }
-            return escapeHtml(txt);
-          });
-
-          const extras = (rec.detail || []).filter(s => /^⚠️/.test(String(s)));
-          if (extras.length){
-            return parts.join("、") + "、" + extras.map(escapeHtml).join("、");
-          }
-          return parts.join("、");
-        };
-
-        const tbodyPT = `<tbody>${
-          ptRows.map(r=>`<tr>
-            <td>${escapeHtml(r.ym)}</td>
-            <td>${escapeHtml(r.branch)}</td>
-            <td>${escapeHtml(r.name)}</td>
-            <td class="num">${escapeHtml(fmtHoursNum(r.hours))}</td>
-            <td>${formatPtDetailHTML(r)}</td>
-          </tr>`).join("")
-        }</tbody>`;
-
-        const colgroupPT = `<colgroup>
-          <col style="width:var(--w-ym)">
-          <col style="width:var(--w-branch)">
-          <col style="width:var(--w-name)">
-          <col style="width:var(--w-subtotal)">
-          <col style="width:auto">
-        </colgroup>`;
-
-        html += `<div class="hint" style="margin:16px 0 8px">
-          本月（${escapeHtml(latestYM||"—")}）PT 工時彙總，共 ${ptRows.length} 筆
-          <button id="copyPTOnlyHTML" class="pill" style="margin-left:8px">複製 PT 工時彙總</button>
-        </div>
-        <div style="overflow-x:auto;overflow-y:hidden;max-width:100%">
-          <table data-kind="pt">${colgroupPT}${theadPT}${tbodyPT}</table>
-        </div>`;
-      }
-    }
-
-   
-    /* ===== 不支薪明細表（PT 不出現；移除「全勤?」欄） ===== */
-    if (latestYM){
-      const getHours = (ym, branch, name, typ) => {
-        const rec = aggMap.get(`${ym}|${branch}|${name}|${typ}`);
-        return rec ? Number(rec.totalHours||0) : 0;
-      };
-      const getLateMins = (ym, branch, name) => {
-        const rec = aggMap.get(`${ym}|${branch}|${name}|遲到(要扣)`);
-        return rec ? Number(rec.totalMins || 0) : 0;
-      };
-      const getMissCount = (ym, branch, name) => {
-        const rec = aggMap.get(`${ym}|${branch}|${name}|漏打卡`);
-        return rec ? Number(rec.count || 0) : 0;
-      };
-
-      const everyoneThisMonth = [...new Set(
-        [...allCombos].map(k=>k.split("|"))
-          .filter(([ym])=>ym===latestYM)
-          .map(([ym,branch,name])=>`${branch}|${name}`)
-      )];
-
-      const ymObj = parseYM(latestYM);
-      const monthStart = ymObj ? new Date(ymObj.y, ymObj.m-1, 1) : null;
-      const monthEnd = ymObj ? new Date(ymObj.y, ymObj.m, 0) : null;
-      const monthDays = (monthStart && monthEnd) ? (Math.round((monthEnd - monthStart)/(24*3600*1000)) + 1) : 30;
-
-      const rowsPay = [];
-      for (const key of everyoneThisMonth) {
-        const [branch, name] = key.split("|");
-        const typeInfo = personTypeMap.get(`${branch}|${name}`) || {};
-        const isPTPerson = !!typeInfo.isPT;
-        if (isPTPerson) continue;
-
-        const hLeave      = getHours(latestYM,branch,name,"事假");
-        const hCare       = getHours(latestYM,branch,name,"家庭照顧假");
-        const hSick       = getHours(latestYM,branch,name,"病假");
-        const hPaidSick   = getHours(latestYM,branch,name,"有薪病假");
-        const sickDays    = (sickDateMap.get(`${latestYM}|${branch}|${name}`)?.size || 0);
-        const hMenstrual  = getHours(latestYM,branch,name,"生理假");
-        const lateMin     = getLateMins(latestYM,branch,name);
-        const missCount   = getMissCount(latestYM,branch,name);
-
-        const parts = [];
-        if (hLeave)     parts.push(`事假 ${fmtHoursNum(hLeave)}小時`);
-        if (hCare)      parts.push(`家庭照顧假 ${fmtHoursNum(hCare)}小時`);
-        if (hSick)      parts.push(`病假 ${fmtHoursNum(hSick)}小時（半薪，影響全勤 ${sickDays} 天）`);
-        if (hPaidSick)  parts.push(`有薪病假 ${fmtHoursNum(hPaidSick)}小時（半薪）`);
-        if (hMenstrual) parts.push(`生理假 ${fmtHoursNum(hMenstrual)}小時（半薪）`);
-        if (lateMin)    parts.push(`遲到 ${lateMin}分`);
-        if (missCount)  parts.push(`漏打卡 ${missCount}次`);
-
-        const spanKey = `${latestYM}|${branch}|${name}`;
-        const sp = activeSpanMap.get(spanKey) || {first:null,last:null};
-        let statusTag = "";
-
-        if (monthStart && monthEnd){
-          if (!sp.first && !sp.last){
-          if (monthDays >= FULL_MONTH_NO_DUTY_MIN_DAYS){
-          statusTag = "本月未出勤";
-             }
-           }
-        }
-
-        const infoText = (parts.join("、") || "—") + (statusTag ? `｜${statusTag}` : "");
-
-        rowsPay.push({
-          name,
-          info: infoText,
-          hLeave,hCare,hSick,hPaidSick,hMenstrual,lateMin,
-          sickDays,
-          missCount,
-          isPT: isPTPerson
-        });
-      }
-
-      if (rowsPay.length){
-        const headerPay = [
-          "姓名","本薪","全勤金額","各種不支薪假別天數/時數(含遲到要扣)",
-          "不支薪明細 不支薪總額","特休折現（天）","特休折現（時）","特休折現明細 折現總額"
-        ];
-
-        const colPay = `<colgroup>
-          <col style="width:var(--w-nopay-name)">
-          <col style="width:var(--w-nopay-salary)">
-          <col style="width:var(--w-nopay-att)">
-          <col style="width:var(--w-nopay-info)">
-          <col style="width:var(--w-nopay-detail)">
-          <col style="width:var(--w-cash-day)">
-          <col style="width:var(--w-cash-hour)">
-          <col style="width:var(--w-cash-detail)">
-        </colgroup>`;
-
-        const theadPay = `<thead><tr>${headerPay.map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
-        const tbodyPay = `<tbody>${
-          rowsPay.map(r=>`<tr
-              data-hleave="${r.hLeave||0}"
-              data-hcare="${r.hCare||0}"
-              data-hsick="${r.hSick||0}"
-              data-hpaidsick="${r.hPaidSick||0}"
-              data-hmenstrual="${r.hMenstrual||0}"
-              data-late="${r.lateMin||0}"
-              data-sickdays="${r.sickDays||0}"
-              data-miss="${r.missCount||0}"
-              data-ispt="0">
-            <td>${escapeHtml(r.name)}</td>
-            <td contenteditable="plaintext-only" class="editable" data-col="salary" title="輸入月薪"></td>
-            <td contenteditable="plaintext-only" class="editable" data-col="attendanceBonus" title="輸入全勤金額（例如 1000 或 2000）"></td>
-            <td>${escapeHtml(r.info)}</td>
-            <td class="breakdown" data-col="nopayDetail" contenteditable="false"></td>
-            <td contenteditable="plaintext-only" class="editable" data-col="cashDay" title="輸入折現天數（可小數，例如 1.5）"></td>
-            <td contenteditable="plaintext-only" class="editable" data-col="cashHour" title="輸入折現小時（可小數，例如 3.5）"></td>
-            <td class="breakdown" data-col="cashDetail" contenteditable="false"></td>
-          </tr>`).join("")
-        }</tbody>`;
-
-        html += `
-          <div class="hint" style="margin:16px 0 8px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap">
-            <div>
-              不支薪明細表（${escapeHtml(latestYM)}）
-              <button id="copyPTNoPayHTML" class="pill" style="margin-left:8px">複製 PT 時數彙總＋不支薪表格</button>
-            </div>
-            <div class="pay-tools">
-              <span class="label">全勤金額一鍵填入：</span>
-              <button id="fillAtt1000" class="pill">1000</button>
-              <button id="fillAtt2000" class="pill">2000</button>
-            </div>
-          </div>
-          <div style="overflow-x:auto;overflow-y:hidden;max-width:100%">
-            <table id="noPayTable">${colPay}${theadPay}${tbodyPay}</table>
-          </div>`;
-      }
-    }
-
-    /* ===== 主管用：值班檢查表 ===== */
-    if (latestYM){
-      const dutyList = [...dutyAgg.values()].filter(r=>r.ym===latestYM);
-      if (dutyList.length){
-        const headerD = ["姓名","值班次數","值班日期與時數"];
-        const theadD = `<thead><tr>${headerD.map(h=>`<th>${h}</th>`).join("")}</tr></thead>`;
-
-        const colgroupD = `<colgroup>
-          <col style="width:var(--w-name)">
-          <col style="width:80px">
-          <col style="width:auto">
-        </colgroup>`;
-
-        const tbodyD = `<tbody>${
-          dutyList
-            .sort((a,b)=> a.name.localeCompare(b.name))
-            .map(r=>{
-              const entries = [...r.days.entries()];
-              entries.sort((a,b)=>{
-                const pa = parseMDKey(a[0]);
-                const pb = parseMDKey(b[0]);
-                return pa.m - pb.m || pa.d - pb.d;
-              });
-              const parts = entries.map(([md,info])=>{
-                let txt = md + weekdayLabel(info.dow);
-                if (info.hours>0) txt += ` ${fmtHoursNum(info.hours)}小時`;
-                if (info.hasMissing && info.hours===0) txt += "未成對";
-                else if (info.hasMissing && info.hours>0) txt += "（部分未成對）";
-                return txt;
-              });
-              const dutyCount = entries.length;
-
-              return `<tr>
-                <td>${escapeHtml(r.name)}</td>
-                <td class="num">${escapeHtml(String(dutyCount))}</td>
-                <td>${escapeHtml(parts.join("  "))}</td>
-              </tr>`;
-            }).join("")
-        }</tbody>`;
-
-        html += `
-          <div class="hint" style="margin:16px 0 8px">
-            值班檢查表（${escapeHtml(latestYM)}，統計週六與週日，含未成對視為有值班；PT 不列入）
-            <button id="copyDutyHTML" class="pill" style="margin-left:8px">複製值班檢查表</button>
-          </div>
-          <div style="overflow-x:auto;overflow-y:hidden;max-width:100%">
-            <table data-kind="duty">${colgroupD}${theadD}${tbodyD}</table>
-          </div>
-        `;
-      }
-    }
-
- /* ===== 特休 / 補休月底餘額結算表 ===== */
-    if (latestYM){
-  const everyoneThisMonth = [...new Set(
-    [...allCombos].map(k=>k.split("|"))
-      .filter(([ym, branch, name])=>{
-        if (ym !== latestYM) return false;
-        const info = personTypeMap.get(`${branch}|${name}`) || {};
-        return !info.isPT; // PT 不列入特休/補休月底餘額結算
-      })
-      .map(([ym,branch,name])=>`${branch}|${name}`)
-  )];
-
-  if (everyoneThisMonth.length){
-    const rowsVacation = everyoneThisMonth
-      .map(key=>{
-       const [branch, name] = key.split("|");
-       const empCode = personCodeMap.get(key) || "";
-       const hVac  = getHoursByType(aggMap, latestYM, branch, name, "特休");
-       const hComp = getHoursByType(aggMap, latestYM, branch, name, "補休");
-       const hOT   = getHoursByType(aggMap, latestYM, branch, name, "加班");
-       return { branch, name, empCode, hVac, hComp, hOT };
-        })
-      .sort((a,b)=>
-       a.empCode.localeCompare(b.empCode) ||
-       a.branch.localeCompare(b.branch) ||
-       a.name.localeCompare(b.name)
-        );
-
-    html += `
-     <div class="hint" style="margin:16px 0 8px;">
-        <div class="v-title-row" style="font-weight:700; color:#1e40af;">
-          <span>📅 ${escapeHtml(latestYM)} 特休 / 補休月底餘額結算表</span>
-           <button id="copyVacationBalanceHTML" class="pill">複製特休月底表</button>
-        </div>
-      </div>
-      <div class="hint" style="margin-bottom:8px">
-        請輸入「月初剩餘」的天數與小時，系統會用：月初剩餘 - 特休 - 補休 + 加班 = 月底剩餘
-      </div>
-      <div style="overflow-x:auto;overflow-y:hidden;max-width:100%">
-        <table id="vacationBalanceTable">
-          <colgroup>
-            <col style="width:var(--w-vac-branch)">
-            <col style="width:var(--w-vac-name)">
-            <col style="width:var(--w-vac-start)">
-            <col style="width:110px">
-            <col style="width:110px">
-            <col style="width:110px">
-            <col style="width:150px">
-            <col style="width:auto">
-          </colgroup>
-          <thead>
-            <tr>
-              <th>分校</th>
-              <th>姓名</th>
-              <th>月初剩餘（天 / 時）</th>
-              <th class="num">本月特休(-)</th>
-              <th class="num">本月補休(-)</th>
-              <th class="num">本月加班(+)</th>
-              <th>月底預估剩餘</th>
-              <th>計算公式</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsVacation.map(r=>`
-              <tr
-                data-branch="${escapeHtml(r.branch)}"
-                data-name="${escapeHtml(r.name)}"
-                data-vac="${r.hVac}"
-                data-comp="${r.hComp}"
-                data-ot="${r.hOT}">
-                <td>${escapeHtml(r.branch)}</td>
-                <td>${escapeHtml(r.name)}</td>
-                <td class="vac-start-cell">
-                  <input type="number" class="v-start-d v-input" placeholder="天" min="0" step="0.5"> 天
-                  <input type="number" class="v-start-h v-input" placeholder="時" min="0" step="0.5"> 時
-                </td>
-                <td class="num">${escapeHtml(fmtHoursNum(r.hVac).toString())}</td>
-                <td class="num">${escapeHtml(fmtHoursNum(r.hComp).toString())}</td>
-                <td class="num">${escapeHtml(fmtHoursNum(r.hOT).toString())}</td>
-                <td class="v-res num" style="font-weight:700;color:#1565c0">--</td>
-                <td class="v-formula">--</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-}
-
-function buildVacationSummaryMap(){
-  const map = new Map();
-  const table = document.querySelector("#vacationBalanceTable");
-  if (!table) return map;
-
-  table.querySelectorAll("tbody tr").forEach(tr=>{
-    const branch = tr.dataset.branch || "";
-    const name = tr.dataset.name || "";
-    if (!branch || !name) return;
-
-    const rawStartD = tr.querySelector(".v-start-d")?.value?.trim() || "";
-    const rawStartH = tr.querySelector(".v-start-h")?.value?.trim() || "";
-
-    // 兩格都沒填，就不要寫進條列文字
-    if (rawStartD === "" && rawStartH === "") return;
-
-    const startD = parseFloat(rawStartD || 0) || 0;
-    const startH = parseFloat(rawStartH || 0) || 0;
-
-    const vac = parseFloat(tr.dataset.vac || 0) || 0;
-    const comp = parseFloat(tr.dataset.comp || 0) || 0;
-    const ot = parseFloat(tr.dataset.ot || 0) || 0;
-
-    const startTotal = startD * DAY_HRS + startH;
-    const endTotal = Math.round((startTotal - vac - comp + ot) * 10) / 10;
-
-    const absTotal = Math.abs(endTotal);
-    const endD = Math.floor(absTotal / DAY_HRS);
-    const endH = Math.round((absTotal - endD * DAY_HRS) * 10) / 10;
-
-    let remainText = "";
-    if (endTotal < 0){
-      if (endD > 0 && endH > 0) remainText = `-${endD}天-${endH}小時`;
-      else if (endD > 0) remainText = `-${endD}天`;
-      else remainText = `-${endH}小時`;
-    }else{
-      if (endD > 0 && endH > 0) remainText = `${endD}天 ${endH}小時`;
-      else if (endD > 0) remainText = `${endD}天`;
-      else remainText = `${endH}小時`;
-    }
-
-    const startText = `${startD}天 ${startH}時`;
-    const line = `• 剩餘特休補休：${remainText}`;
-
-    map.set(`${branch}|${name}`, line);
-  });
-
-  return map;
-}
-
-    /* ===== 條列文字彙整區塊 ===== */
-    html += `
-      <div class="hint" style="margin:16px 0 8px">條列文字彙整（依月份分段、每人一段）</div>
-      <div class="summary-tools" style="margin-bottom:8px">
-        <div class="hint">可直接複製貼到 薪資條。</div>
-        <button id="copySummaryText" class="pill">複製條列文字</button>
-      </div>
-      <div class="summary-box">
-        <pre id="summaryText"></pre>
-      </div>
-    `;
-
-    out.innerHTML = html;
-
-    // 填入文字
-    const pre = document.getElementById("summaryText");
-    if (pre) pre.textContent = summaryText || "無異常紀錄";
-
-    /* ===== 綁定：複製 ===== */
-    document.querySelector("#out #copyCandyHTML")?.addEventListener("click", ()=>{
-      const tableEl = document.querySelector('#out table[data-kind="main"]');
-      if (!tableEl) return toast("找不到給Candy的表", 3000);
-      selectAndCopyNode(tableEl, '✅ 已複製給Candy的表（相容模式）！');
+    const esc = escapeHtml;
+    const colgroup = widths => `<colgroup>${widths.map(w=>`<col style="width:${w}">`).join("")}</colgroup>`;
+    const thead = headers => `<thead><tr>${headers.map(h=>`<th${h.num?' class="num"':''}>${esc(h.text||h)}</th>`).join("")}</tr></thead>`;
+    const section = ({title,buttonId,buttonText,lead='',actions='',body='',strong=false}) => `
+      <div class="table-section">
+        <div class="hint title-row">${strong?`<strong>${title}</strong>`:`<span>${title}</span>`}${buttonId?`<button id="${buttonId}" class="pill">${buttonText}</button>`:''}${actions}</div>
+        ${lead?`<div class="hint section-note">${lead}</div>`:''}
+        ${body}
+      </div>`;
+    const tableWrap = (attrs, widths, headers, body) => `<div class="table-wrap"><table ${attrs}>${colgroup(widths)}${thead(headers)}<tbody>${body}</tbody></table></div>`;
+    const bindCopyNode = (selector, getNode, ok, empty) => document.querySelector(selector)?.addEventListener('click', ()=>{
+      const node = getNode();
+      if (!node) return toast(empty, 3000);
+      selectAndCopyNode(node, ok);
     });
-
-    document.querySelector("#out #copyPTNoPayHTML")?.addEventListener("click", ()=>{
-      const ptTable = document.querySelector('#out table[data-kind="pt"]');
-      const npTable = document.querySelector('#noPayTable');
-      if (!ptTable && !npTable) return toast("找不到 PT 或 不支薪 表格", 3000);
-
+    const bindCopyText = (selector, getText, ok, empty) => document.querySelector(selector)?.addEventListener('click', async ()=>{
+      const txt = String(getText() || '');
+      if (!txt.trim()) return toast(empty, 2500);
+      try{
+        if (navigator.clipboard?.writeText){
+          await navigator.clipboard.writeText(txt);
+          toast(ok, 2500);
+          return;
+        }
+      }catch(_){ }
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      let copied = false;
+      try{ copied = document.execCommand('copy'); }catch(_){ }
+      document.body.removeChild(ta);
+      toast(copied ? ok : '❌ 複製失敗，請手動選取文字再複製。', 3000);
+    });
+    const cloneWithTitle = (titleText, noteText, tableEl) => {
       const tmp = document.createElement('div');
       tmp.style.cssText = 'position:fixed; left:-9999px; top:0; pointer-events:none;';
       const wrap = document.createElement('div');
-
-      if (ptTable) {
-        const title = document.createElement('div');
-        title.style.margin = '6px 0';
-        title.style.fontWeight = '700';
-        title.textContent = '【PT 工時彙總】';
-        wrap.appendChild(title);
-        wrap.appendChild(ptTable.cloneNode(true));
+      const title = document.createElement('div');
+      title.style.cssText = 'margin:6px 0;font-weight:700;';
+      title.textContent = titleText;
+      wrap.appendChild(title);
+      if (noteText){
+        const note = document.createElement('div');
+        note.style.cssText = 'margin:0 0 6px;font-size:12px;';
+        note.textContent = noteText;
+        wrap.appendChild(note);
       }
-
-      if (npTable) {
-        const spacer = document.createElement('div');
-        spacer.style.height = '12px';
-        wrap.appendChild(spacer);
-
-        const title = document.createElement('div');
-        title.style.margin = '12px 0 6px';
-        title.style.fontWeight = '700';
-        title.textContent = '【不支薪明細表】';
-        wrap.appendChild(title);
-        wrap.appendChild(npTable.cloneNode(true));
-      }
-
+      wrap.appendChild(tableEl);
       tmp.appendChild(wrap);
       document.body.appendChild(tmp);
-      selectAndCopyNode(wrap, '✅ 已複製 PT 時數彙總＋不支薪表格（相容模式）！');
+      return { tmp, wrap };
+    };
+
+    const mainRowsBody = (() => {
+      let last = '';
+      let alt = false;
+      return rowsOut.map(r=>{
+        if (r[2] !== last){ alt = !alt; last = r[2]; }
+        const bg = alt ? '#fafafa' : '#ffffff';
+        const tds = r.map((c,i)=>{
+          const cls = [i===3 && /^(早退|曠職)$/.test(String(c)) ? 'danger' : '', i===4 ? 'num' : ''].filter(Boolean).join(' ');
+          const cell = i===5 && r[3]==='漏打卡' && c ? esc(c).replace(/\(未補單\)/g,'<span style="color:#dc2626;font-weight:700">(未補單)</span>') : esc(c);
+          return `<td${cls?` class="${cls}"`:''}>${cell}</td>`;
+        }).join('');
+        return `<tr style="background:${bg}">${tds}</tr>`;
+      }).join('');
+    })();
+    html += section({
+      title:`共 ${rowsOut.length} 列，可貼回 Google Sheet。`,
+      buttonId:'copyCandyHTML',
+      buttonText:'複製給 CANDY 表格',
+      body:tableWrap('data-kind="main"', ['var(--w-ym)','var(--w-branch)','var(--w-name)','var(--w-type)','var(--w-subtotal)','auto'], [
+        '年月','分校','姓名','假別/類型',{text:'小計',num:true},'備註'
+      ], mainRowsBody)
+    });
+
+    if (latestYM){
+      const list = [...workAgg.values()].filter(r=>r.ym===latestYM);
+      const baseList = list.filter(r => (personTypeMap.get(`${r.branch}|${r.name}`) || {}).isPT);
+      const missByPerson = new Map();
+      missingPairs.filter(m=>m.ym===latestYM).forEach(m=>{
+        const k = `${m.branch}|${m.name}`;
+        const arr = missByPerson.get(k) || [];
+        arr.push(`${m.md} ${m.which}`);
+        missByPerson.set(k, arr);
+      });
+      baseList.forEach(x=>{
+        const warns = missByPerson.get(`${x.branch}|${x.name}`) || [];
+        if (warns.length) x.detail.push(`⚠️ 缺成對 ${warns.length} 筆：${warns.join('、')}`);
+      });
+      if (baseList.length){
+        const ptRows = [...baseList].sort((a,b)=>compareByEmpCode(a.branch,a.name,b.branch,b.name));
+        const ptDetail = rec => {
+          const rich = Array.isArray(rec.detailRich) ? rec.detailRich : [];
+          if (!rich.length) return esc(rec.detail.join('、'));
+          const parts = rich.map(d=>{
+            const tags = [];
+            if (Number(d.lateMin||0) > 0) tags.push(`遲到${d.lateMin}分鐘`);
+            if (Number(d.earlyMin||0) > 0) tags.push(`早退${d.earlyMin}分鐘`);
+            const text = `${d.md} ${fmtHoursNum(d.hours)} 小時${tags.length?`（${tags.join('、')}）`:''}`;
+            return Number(d.hours) > 10 ? `<span class="pt-over10">${esc(text)}</span>` : esc(text);
+          });
+          const extras = (rec.detail || []).filter(s=>/^⚠️/.test(String(s)));
+          return extras.length ? parts.join('、') + '、' + extras.map(esc).join('、') : parts.join('、');
+        };
+        html += section({
+          title:`本月（${esc(latestYM||'—')}）PT 工時彙總，共 ${ptRows.length} 筆`,
+          buttonId:'copyPTOnlyHTML',
+          buttonText:'複製 PT 工時彙總',
+          body:tableWrap('data-kind="pt"', ['var(--w-ym)','var(--w-branch)','var(--w-name)','var(--w-subtotal)','auto'], [
+            '年月','分校','姓名',{text:'本月工時',num:true},'每日明細'
+          ], ptRows.map(r=>`<tr><td>${esc(r.ym)}</td><td>${esc(r.branch)}</td><td>${esc(r.name)}</td><td class="num">${esc(fmtHoursNum(r.hours))}</td><td>${ptDetail(r)}</td></tr>`).join(''))
+        });
+      }
+    }
+
+    if (latestYM){
+      const getHours = (ym, branch, name, typ) => Number((aggMap.get(`${ym}|${branch}|${name}|${typ}`)?.totalHours) || 0);
+      const getLateMins = (ym, branch, name) => Number((aggMap.get(`${ym}|${branch}|${name}|遲到(要扣)` )?.totalMins) || 0);
+      const getMissCount = (ym, branch, name) => Number((aggMap.get(`${ym}|${branch}|${name}|漏打卡`)?.count) || 0);
+      const people = [...new Set([...allCombos].map(k=>k.split('|')).filter(([ym])=>ym===latestYM).map(([,branch,name])=>`${branch}|${name}`))];
+      const ymObj = parseYM(latestYM);
+      const monthStart = ymObj ? new Date(ymObj.y, ymObj.m-1, 1) : null;
+      const monthEnd = ymObj ? new Date(ymObj.y, ymObj.m, 0) : null;
+      const monthDays = monthStart && monthEnd ? Math.round((monthEnd - monthStart)/(24*3600*1000)) + 1 : 30;
+      const rowsPay = people.map(key=>{
+        const [branch,name] = key.split('|');
+        const info = personTypeMap.get(key) || {};
+        if (info.isPT) return null;
+        const hLeave = getHours(latestYM,branch,name,'事假');
+        const hCare = getHours(latestYM,branch,name,'家庭照顧假');
+        const hSick = getHours(latestYM,branch,name,'病假');
+        const hPaidSick = getHours(latestYM,branch,name,'有薪病假');
+        const hMenstrual = getHours(latestYM,branch,name,'生理假');
+        const lateMin = getLateMins(latestYM,branch,name);
+        const missCount = getMissCount(latestYM,branch,name);
+        const sickDays = sickDateMap.get(`${latestYM}|${branch}|${name}`)?.size || 0;
+        const parts = [];
+        if (hLeave) parts.push(`事假 ${fmtHoursNum(hLeave)}小時`);
+        if (hCare) parts.push(`家庭照顧假 ${fmtHoursNum(hCare)}小時`);
+        if (hSick) parts.push(`病假 ${fmtHoursNum(hSick)}小時（半薪，影響全勤 ${sickDays} 天）`);
+        if (hPaidSick) parts.push(`有薪病假 ${fmtHoursNum(hPaidSick)}小時（半薪）`);
+        if (hMenstrual) parts.push(`生理假 ${fmtHoursNum(hMenstrual)}小時（半薪）`);
+        if (lateMin) parts.push(`遲到 ${lateMin}分`);
+        if (missCount) parts.push(`漏打卡 ${missCount}次`);
+        const span = activeSpanMap.get(`${latestYM}|${branch}|${name}`) || {first:null,last:null};
+        const status = monthStart && monthEnd && !span.first && !span.last && monthDays >= FULL_MONTH_NO_DUTY_MIN_DAYS ? '｜本月未出勤' : '';
+        return {branch,name,empCode:getEmpCode(branch,name),info:(parts.join('、')||'—') + status,hLeave,hCare,hSick,hPaidSick,hMenstrual,lateMin,sickDays,missCount};
+      }).filter(Boolean).sort((a,b)=>a.empCode.localeCompare(b.empCode,undefined,{numeric:true,sensitivity:'base'}) || a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+      if (rowsPay.length){
+        const actions = `<div class="pay-tools"><span class="hint">全勤金額一鍵填入：</span><button id="fillAtt1000" class="pill">1000</button><button id="fillAtt2000" class="pill">2000</button></div>`;
+        html += section({
+          title:`不支薪明細表（${esc(latestYM)}）`,
+          buttonId:'copyPTNoPayHTML',
+          buttonText:'複製 PT 時數彙總＋不支薪表格',
+          actions,
+          body:tableWrap('id="noPayTable"', ['var(--w-nopay-name)','var(--w-nopay-salary)','var(--w-nopay-att)','var(--w-nopay-info)','var(--w-nopay-detail)','var(--w-cash-day)','var(--w-cash-hour)','var(--w-cash-detail)'], [
+            '姓名','本薪','全勤金額','各種不支薪假別天數/時數(含遲到要扣)','不支薪明細 不支薪總額','特休折現（天）','特休折現（時）','特休折現明細 折現總額'
+          ], rowsPay.map(r=>`<tr data-hleave="${r.hLeave||0}" data-hcare="${r.hCare||0}" data-hsick="${r.hSick||0}" data-hpaidsick="${r.hPaidSick||0}" data-hmenstrual="${r.hMenstrual||0}" data-late="${r.lateMin||0}" data-sickdays="${r.sickDays||0}" data-miss="${r.missCount||0}" data-ispt="0"><td>${esc(r.name)}</td><td contenteditable="plaintext-only" class="editable" data-col="salary" title="輸入月薪"></td><td contenteditable="plaintext-only" class="editable" data-col="attendanceBonus" title="輸入全勤金額（例如 1000 或 2000）"></td><td>${esc(r.info)}</td><td class="breakdown" data-col="nopayDetail"></td><td contenteditable="plaintext-only" class="editable" data-col="cashDay" title="輸入折現天數（可小數，例如 1.5）"></td><td contenteditable="plaintext-only" class="editable" data-col="cashHour" title="輸入折現小時（可小數，例如 3.5）"></td><td class="breakdown" data-col="cashDetail"></td></tr>`).join(''))
+        });
+      }
+    }
+
+    if (latestYM){
+      const dutyList = [...dutyAgg.values()].filter(r=>r.ym===latestYM);
+      if (dutyList.length){
+        const dutyBody = dutyList.sort((a,b)=>getEmpCodeByName(a.name).localeCompare(getEmpCodeByName(b.name),undefined,{numeric:true,sensitivity:'base'}) || a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'})).map(r=>{
+          const entries = [...r.days.entries()].sort((a,b)=>{ const pa=parseMDKey(a[0]), pb=parseMDKey(b[0]); return pa.m-pb.m || pa.d-pb.d; });
+          const parts = entries.map(([md,info])=>{
+            let text = md + weekdayLabel(info.dow);
+            if (info.hours>0) text += ` ${fmtHoursNum(info.hours)}小時`;
+            if (info.hasMissing && info.hours===0) text += '未成對';
+            else if (info.hasMissing && info.hours>0) text += '（部分未成對）';
+            return text;
+          });
+          return `<tr><td>${esc(r.name)}</td><td class="num">${entries.length}</td><td>${esc(parts.join('  '))}</td></tr>`;
+        }).join('');
+        html += section({
+          title:`值班檢查表（${esc(latestYM)}，統計週六與週日，含未成對視為有值班；PT 不列入）`,
+          buttonId:'copyDutyHTML',
+          buttonText:'複製值班檢查表',
+          body:tableWrap('data-kind="duty"', ['var(--w-name)','80px','auto'], ['姓名',{text:'值班次數',num:true},'值班日期與時數'], dutyBody)
+        });
+      }
+    }
+
+    const buildVacationSummaryMap = () => {
+      const map = new Map();
+      const table = document.querySelector('#vacationBalanceTable');
+      if (!table) return map;
+      table.querySelectorAll('tbody tr').forEach(tr=>{
+        const branch = tr.dataset.branch || '';
+        const name = tr.dataset.name || '';
+        if (!branch || !name) return;
+        const rawStartD = tr.querySelector('.v-start-d')?.value?.trim() || '';
+        const rawStartH = tr.querySelector('.v-start-h')?.value?.trim() || '';
+        if (rawStartD === '' && rawStartH === '') return;
+        const startD = parseFloat(rawStartD || 0) || 0;
+        const startH = parseFloat(rawStartH || 0) || 0;
+        const vac = parseFloat(tr.dataset.vac || 0) || 0;
+        const comp = parseFloat(tr.dataset.comp || 0) || 0;
+        const ot = parseFloat(tr.dataset.ot || 0) || 0;
+        const endTotal = Math.round(((startD * DAY_HRS + startH) - vac - comp + ot) * 10) / 10;
+        const abs = Math.abs(endTotal);
+        const endD = Math.floor(abs / DAY_HRS);
+        const endH = Math.round((abs - endD * DAY_HRS) * 10) / 10;
+        const remain = endTotal < 0 ? (endD>0 && endH>0 ? `-${endD}天-${endH}小時` : endD>0 ? `-${endD}天` : `-${endH}小時`) : (endD>0 && endH>0 ? `${endD}天 ${endH}小時` : endD>0 ? `${endD}天` : `${endH}小時`);
+        map.set(`${branch}|${name}`, `• 剩餘特休補休：${remain}`);
+      });
+      return map;
+    };
+
+    if (latestYM){
+      const people = [...new Set([...allCombos].map(k=>k.split('|')).filter(([ym,branch,name])=> ym===latestYM && !(personTypeMap.get(`${branch}|${name}`) || {}).isPT).map(([,branch,name])=>`${branch}|${name}`))];
+      if (people.length){
+        const rowsVacation = people.map(key=>{
+          const [branch,name] = key.split('|');
+          return {branch,name,empCode:personCodeMap.get(key)||'',hVac:getHoursByType(aggMap, latestYM, branch, name, '特休'),hComp:getHoursByType(aggMap, latestYM, branch, name, '補休'),hOT:getHoursByType(aggMap, latestYM, branch, name, '加班')};
+        }).sort((a,b)=>a.empCode.localeCompare(b.empCode,undefined,{numeric:true,sensitivity:'base'}) || a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+        html += section({
+          title:`📅 ${esc(latestYM)} 特休 / 補休月底餘額結算表`,
+          buttonId:'copyVacationBalanceHTML',
+          buttonText:'複製特休月底表',
+          strong:true,
+          lead:'請輸入「月初剩餘」的天數與小時，系統會用：月初剩餘 - 特休 - 補休 + 加班 = 月底剩餘',
+          body:tableWrap('id="vacationBalanceTable"', ['var(--w-vac-branch)','var(--w-vac-name)','var(--w-vac-start)','110px','110px','110px','150px','auto'], ['分校','姓名','月初剩餘（天 / 時）',{text:'本月特休(-)',num:true},{text:'本月補休(-)',num:true},{text:'本月加班(+)',num:true},'月底預估剩餘','計算公式'], rowsVacation.map(r=>`<tr data-branch="${esc(r.branch)}" data-name="${esc(r.name)}" data-vac="${r.hVac}" data-comp="${r.hComp}" data-ot="${r.hOT}"><td>${esc(r.branch)}</td><td>${esc(r.name)}</td><td class="v-start-cell"><input type="number" class="v-start-d v-input" placeholder="天" min="0" step="0.5"> 天 <input type="number" class="v-start-h v-input" placeholder="時" min="0" step="0.5"> 時</td><td class="num">${esc(fmtHoursNum(r.hVac))}</td><td class="num">${esc(fmtHoursNum(r.hComp))}</td><td class="num">${esc(fmtHoursNum(r.hOT))}</td><td class="v-res">--</td><td class="v-formula">--</td></tr>`).join(''))
+        });
+      }
+    }
+
+    html += section({
+      title:'條列文字彙整（依月份分段、每人一段）',
+      buttonId:'copySummaryText',
+      buttonText:'複製條列文字',
+      lead:'可直接複製貼到 薪資條。',
+      body:'<div class="summary-box"><pre id="summaryText"></pre></div>'
+    });
+    out.innerHTML = html;
+    const pre = document.getElementById('summaryText');
+    if (pre) pre.textContent = summaryText || '無異常紀錄';
+
+    bindCopyNode('#out #copyCandyHTML', ()=>document.querySelector('#out table[data-kind="main"]'), '✅ 已複製給Candy的表（相容模式）！', '找不到給Candy的表');
+    bindCopyNode('#out #copyPTOnlyHTML', ()=>document.querySelector('#out table[data-kind="pt"]'), '✅ 已複製 PT 工時彙總表！', '找不到 PT 工時彙總表');
+    bindCopyNode('#out #copyDutyHTML', ()=>document.querySelector('#out table[data-kind="duty"]'), '✅ 已複製值班檢查表！', '找不到值班檢查表');
+    bindCopyText('#out #copySummaryText', ()=>document.getElementById('summaryText')?.textContent || '', '✅ 已複製條列文字！', '沒有可複製的文字');
+    document.querySelector('#out #copyPTNoPayHTML')?.addEventListener('click', ()=>{
+      const ptTable = document.querySelector('#out table[data-kind="pt"]');
+      const npTable = document.querySelector('#noPayTable');
+      if (!ptTable && !npTable) return toast('找不到 PT 或 不支薪 表格', 3000);
+      const tmp = document.createElement('div');
+      tmp.style.cssText = 'position:fixed; left:-9999px; top:0; pointer-events:none;';
+      const wrap = document.createElement('div');
+      const addTitle = (text, margin='6px 0') => { const el = document.createElement('div'); el.style.cssText = `margin:${margin};font-weight:700;`; el.textContent = text; wrap.appendChild(el); };
+      if (ptTable){ addTitle('【PT 工時彙總】'); wrap.appendChild(ptTable.cloneNode(true)); }
+      if (npTable){ const spacer=document.createElement('div'); spacer.style.height='12px'; wrap.appendChild(spacer); addTitle('【不支薪明細表】','12px 0 6px'); wrap.appendChild(npTable.cloneNode(true)); }
+      tmp.appendChild(wrap); document.body.appendChild(tmp); selectAndCopyNode(wrap, '✅ 已複製 PT 時數彙總＋不支薪表格（相容模式）！'); document.body.removeChild(tmp);
+    });
+    document.querySelector('#out #copyVacationBalanceHTML')?.addEventListener('click', ()=>{
+      const tableEl = document.querySelector('#out #vacationBalanceTable');
+      if (!tableEl) return toast('找不到特休月底表', 3000);
+      const { tmp, wrap } = cloneWithTitle(`【${latestYM} 特休 / 補休月底餘額結算表】`, '月初剩餘 - 特休 - 補休 + 加班 = 月底剩餘', cloneVacationTableForCopy(tableEl));
+      selectAndCopyNode(wrap, '✅ 已複製特休月底表！');
       document.body.removeChild(tmp);
     });
-
-    document.querySelector("#out #copyPTOnlyHTML")?.addEventListener("click", ()=>{
-      const ptTable = document.querySelector('#out table[data-kind="pt"]');
-      if (!ptTable) return toast("找不到 PT 工時彙總表", 3000);
-      selectAndCopyNode(ptTable, '✅ 已複製 PT 工時彙總表！');
-    });
-
-    document.querySelector("#out #copyDutyHTML")?.addEventListener("click", ()=>{
-      const tableEl = document.querySelector('#out table[data-kind="duty"]');
-      if (!tableEl) return toast("找不到值班檢查表", 3000);
-      selectAndCopyNode(tableEl, '✅ 已複製值班檢查表！');
-    });
-
-    document.querySelector("#out #copyVacationBalanceHTML")?.addEventListener("click", ()=>{
-  const tableEl = document.querySelector('#out #vacationBalanceTable');
-  if (!tableEl) return toast("找不到特休月底表", 3000);
-
-  const tmp = document.createElement('div');
-  tmp.style.cssText = 'position:fixed; left:-9999px; top:0; pointer-events:none;';
-
-  const wrap = document.createElement('div');
-
-  const title = document.createElement('div');
-  title.style.margin = '6px 0';
-  title.style.fontWeight = '700';
-  title.textContent = `【${latestYM} 特休 / 補休月底餘額結算表】`;
-  wrap.appendChild(title);
-
-  const note = document.createElement('div');
-  note.style.margin = '0 0 6px';
-  note.style.fontSize = '12px';
-  note.textContent = '月初剩餘 - 特休 - 補休 + 加班 = 月底剩餘';
-  wrap.appendChild(note);
-
-  const clonedTable = cloneVacationTableForCopy(tableEl);
-  wrap.appendChild(clonedTable);
-
-  tmp.appendChild(wrap);
-  document.body.appendChild(tmp);
-  selectAndCopyNode(wrap, '✅ 已複製特休月底表！');
-  document.body.removeChild(tmp);
-});
-    
-    document.querySelector("#out #copySummaryText")?.addEventListener("click", async ()=>{
-      const txt = document.getElementById("summaryText")?.textContent || "";
-      if (!txt.trim()) return toast("沒有可複製的文字", 2500);
-
-      try{
-        if (navigator.clipboard && navigator.clipboard.writeText){
-          await navigator.clipboard.writeText(txt);
-          toast("✅ 已複製條列文字！", 2500);
-          return;
-        }
-      }catch(_){}
-
-      const ta = document.createElement("textarea");
-      ta.value = txt;
-      ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0;";
-      document.body.appendChild(ta);
-      ta.focus(); ta.select();
-      let ok=false;
-      try{ ok=document.execCommand("copy"); }catch(_){}
-      document.body.removeChild(ta);
-      toast(ok ? "✅ 已複製條列文字！" : "❌ 複製失敗，請手動選取文字再複製。", 3000);
-    });
-
-    /* ===== 特休 / 補休月底餘額結算：即時計算 ===== */
-    document.querySelector("#vacationBalanceTable")?.addEventListener("input", (e)=>{
-      const tr = e.target.closest("tr");
+    document.querySelector('#vacationBalanceTable')?.addEventListener('input', e=>{
+      const tr = e.target.closest('tr');
       if (!tr) return;
-
-      const startD = parseFloat(tr.querySelector(".v-start-d")?.value || 0) || 0;
-      const startH = parseFloat(tr.querySelector(".v-start-h")?.value || 0) || 0;
-
-      const startTotal = startD * DAY_HRS + startH;
+      const startD = parseFloat(tr.querySelector('.v-start-d')?.value || 0) || 0;
+      const startH = parseFloat(tr.querySelector('.v-start-h')?.value || 0) || 0;
       const vac = parseFloat(tr.dataset.vac || 0) || 0;
       const comp = parseFloat(tr.dataset.comp || 0) || 0;
       const ot = parseFloat(tr.dataset.ot || 0) || 0;
-
-      const endTotal = Math.round((startTotal - vac - comp + ot) * 10) / 10;
-      const absTotal = Math.abs(endTotal);
-      const endD = Math.floor(absTotal / DAY_HRS);
-      const endH = Math.round((absTotal - endD * DAY_HRS) * 10) / 10;
-
-      const resCell = tr.querySelector(".v-res");
-      if (!resCell) return;
-
-      let endText = "";
-      if (endTotal < 0){
-      if (endD > 0 && endH > 0) endText = `-${endD}天-${endH}小時`;
-      else if (endD > 0) endText = `-${endD}天`;
-      else endText = `-${endH}小時`;
-      }else{
-      if (endD > 0 && endH > 0) endText = `${endD}天 ${endH}小時`;
-      else if (endD > 0) endText = `${endD}天`;
-      else endText = `${endH}小時`;
-      }
-
-      resCell.innerHTML = `${endText}<br><small style="font-weight:400">(共 ${fmtHoursNum(endTotal)}h)</small>`;
-      resCell.style.color = endTotal < 0 ? "#dc2626" : "#1565c0";
-
-      const formulaCell = tr.querySelector(".v-formula");
-      if (formulaCell){
-      formulaCell.textContent = `${fmtHoursNum(startTotal)} - ${fmtHoursNum(vac)} - ${fmtHoursNum(comp)} + ${fmtHoursNum(ot)} = ${fmtHoursNum(endTotal)}`;
-      }
-
-      const vacationSummaryMap = buildVacationSummaryMap();
-      const pre = document.getElementById("summaryText");
-      if (pre){
-      pre.textContent = buildPeopleSummaryText({
-          allCombos,
-          aggMap,
-          workAgg,
-          personTypeMap,
-          missingPairs,
-          vacationSummaryMap
-          }) || "無異常紀錄";
-       }
+      const endTotal = Math.round(((startD * DAY_HRS + startH) - vac - comp + ot) * 10) / 10;
+      const abs = Math.abs(endTotal);
+      const endD = Math.floor(abs / DAY_HRS);
+      const endH = Math.round((abs - endD * DAY_HRS) * 10) / 10;
+      const text = endTotal < 0 ? (endD>0 && endH>0 ? `-${endD}天-${endH}小時` : endD>0 ? `-${endD}天` : `-${endH}小時`) : (endD>0 && endH>0 ? `${endD}天 ${endH}小時` : endD>0 ? `${endD}天` : `${endH}小時`);
+      const resCell = tr.querySelector('.v-res');
+      if (resCell){ resCell.innerHTML = `${text}<br><small style="font-weight:400">(共 ${fmtHoursNum(endTotal)}h)</small>`; resCell.style.color = endTotal < 0 ? '#dc2626' : '#1565c0'; }
+      const formulaCell = tr.querySelector('.v-formula');
+      if (formulaCell) formulaCell.textContent = `${fmtHoursNum(startD * DAY_HRS + startH)} - ${fmtHoursNum(vac)} - ${fmtHoursNum(comp)} + ${fmtHoursNum(ot)} = ${fmtHoursNum(endTotal)}`;
+      const pre = document.getElementById('summaryText');
+      if (pre) pre.textContent = buildPeopleSummaryText({ allCombos, aggMap, workAgg, personTypeMap, missingPairs, vacationSummaryMap: buildVacationSummaryMap(), personCodeMap }) || '無異常紀錄';
     });
-
-    /* ===== 一鍵填入全勤金額 ===== */
-    document.querySelector("#fillAtt1000")?.addEventListener("click", ()=> fillAttendanceAll(1000));
-    document.querySelector("#fillAtt2000")?.addEventListener("click", ()=> fillAttendanceAll(2000));
-
+    document.querySelector('#fillAtt1000')?.addEventListener('click', ()=>fillAttendanceAll(1000));
+    document.querySelector('#fillAtt2000')?.addEventListener('click', ()=>fillAttendanceAll(2000));
     function fillAttendanceAll(val){
-      const table = document.querySelector("#noPayTable");
+      const table = document.querySelector('#noPayTable');
       if (!table) return;
-
       let filled = 0;
       table.querySelectorAll('tr').forEach(tr=>{
         const td = tr.querySelector('[data-col="attendanceBonus"]');
         if (!td) return;
         td.innerText = String(val);
-        td.dispatchEvent(new Event('input', {bubbles:true}));
+        td.dispatchEvent(new Event('input', { bubbles:true }));
         filled++;
       });
-
       toast(`✅ 已一鍵填入全勤金額 ${val}（套用 ${filled} 筆）`, 3000);
     }
 
@@ -1273,8 +912,7 @@ function buildVacationSummaryMap(){
       });
     }
 
-    /* ===== 條列文字彙整：主函式（依你示意順序）===== */
-    function buildPeopleSummaryText({allCombos, aggMap, workAgg, personTypeMap, missingPairs, vacationSummaryMap}){
+    function buildPeopleSummaryText({allCombos, aggMap, workAgg, personTypeMap, missingPairs, vacationSummaryMap, personCodeMap}){
           const DAY_HRS = 8;
 
       // 多月份分段（通常只有一個月也 OK）
@@ -1363,7 +1001,10 @@ function buildVacationSummaryMap(){
             .map(([kym, branch, name]) => `${branch}|${name}`)
         )].sort((a,b)=>{
           const [ba,na]=a.split("|"), [bb,nb]=b.split("|");
-          return ba.localeCompare(bb) || na.localeCompare(nb);
+          const codeA = String((personCodeMap.get(`${ba}|${na}`) || personCodeMap.get(na) || '')).trim().toUpperCase();
+          const codeB = String((personCodeMap.get(`${bb}|${nb}`) || personCodeMap.get(nb) || '')).trim().toUpperCase();
+          return codeA.localeCompare(codeB, undefined, { numeric:true, sensitivity:'base' })
+            || na.localeCompare(nb, undefined, { numeric:true, sensitivity:'base' });
         });
 
         for (const key of people){
@@ -1507,12 +1148,10 @@ function buildVacationSummaryMap(){
   }
 
   function sortMainRows(a,b){
-   return a[0].localeCompare(b[0])
-       || a[1].localeCompare(b[1])
-       || a[2].localeCompare(b[2])
-       || a[3].localeCompare(b[3]);
+    return a[0].localeCompare(b[0], undefined, { numeric:true, sensitivity:'base' })
+      || a[2].localeCompare(b[2], undefined, { numeric:true, sensitivity:'base' })
+      || a[3].localeCompare(b[3], undefined, { numeric:true, sensitivity:'base' });
   }
-
 
   function toNumber(v){ const s=String(v??""); if (/[~:]/.test(s)) return 0; const m=s.match(/-?\d+(?:\.\d+)?/); return m?Number(m[0]):0; }
   function hhmmToHours(v){
@@ -1635,7 +1274,6 @@ function cloneVacationTableForCopy(tableEl){
   return clone;
 }
 
-
 function selectAndCopyNode(node, okMsg='✅ 已複製！', errMsg='❌ 複製失敗，請手動選取表格再複製。'){
   const range = document.createRange();
   range.selectNode(node);
@@ -1648,7 +1286,6 @@ function selectAndCopyNode(node, okMsg='✅ 已複製！', errMsg='❌ 複製失
   toast(ok ? okMsg : errMsg);
 }
 
-/* ===== Toast ===== */
 function toast(msg, ms=3000){
   const wrap=document.getElementById("toast"); if(!wrap) return;
   const el=document.createElement("div"); el.className="toast"; el.innerHTML=msg;
