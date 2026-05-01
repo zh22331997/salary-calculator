@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -124,8 +126,6 @@ td.num,th.num{text-align:right}
   <div class="card mt-12">
     <div class="row">
       <div class="field">
-        <label for="names">PT 姓名（可留空，在員工編號加上 PT，就會被判斷為 PT）</label>
-        <input id="names" type="text" placeholder="此欄目前可留空" />
       </div>
     </div>
     <div class="mt-12">
@@ -181,14 +181,32 @@ window.addEventListener('unhandledrejection', e => {
   else toast('找不到 id="run" 的按鈕', 6000);
 
   $("#clear").addEventListener("click", ()=>{
-    $("#names").value=""; $("#raw").value=""; $("#out").innerHTML='<div class="hint">尚未輸出。</div>';
+  $("#raw").value="";
+  $("#out").innerHTML='<div class="hint">尚未輸出。</div>';
   });
-  $("#names").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); run(); } });
+
+  function calcPtHoursByRule(inMin, outMin, isFixedShiftPT){
+  let diffMin = outMin - inMin;
+  if (diffMin < 0) diffMin += 24 * 60;
+
+  // ✅ 防呆：避免負數
+  if (diffMin <= 0) return 0;
+
+  if (isFixedShiftPT){
+    return Math.floor(diffMin / 30) * 0.5;
+  }
+
+  const inAdj = Math.ceil(inMin / 30) * 30;
+  const outAdj = Math.floor(outMin / 30) * 30;
+
+  let diffAdj = outAdj - inAdj;
+  if (diffAdj < 0) diffAdj += 24 * 60;
+
+  return Math.max(0, diffAdj) / 60;
+}
 
   /* ===== 主程序 ===== */
   function run(){
-    const wantedNames = ($("#names").value||"").trim().split(/[,\s、，]+/).map(s=>s.trim()).filter(Boolean);
-
     const text = ($("#raw").value||"").trim();
     const out = $("#out");
     if(!text){ out.innerHTML = '<div class="hint">（請先貼上打卡資料）</div>'; return; }
@@ -257,7 +275,12 @@ window.addEventListener('unhandledrejection', e => {
 
       if(!ym || !name) return;
 
-      const isPT = /PT/i.test(empCode) || wantedNames.includes(name);
+      const isPT = empCode.includes("PT");
+      const isFixedShiftPT =
+        isPT &&
+        payBaseRaw &&
+        payBaseRaw !== "--" &&
+        payBaseRaw !== "19:59:00";
       const personKey = `${branch}|${name}`;
       const existing = personTypeMap.get(personKey);
       if (existing) existing.isPT = existing.isPT || isPT;
@@ -277,32 +300,33 @@ window.addEventListener('unhandledrejection', e => {
 
       // === 成對打卡 ===
       if (inMin!=null && outMin!=null){
-        const inAdj  = Math.ceil(inMin/30)*30;
-        const outAdj = Math.floor(outMin/30)*30;
+       let workHrs = 0;
+       let workDetail = "";
+       let workDetailRich = null;
 
-        let diff = outAdj - inAdj;
-        if (diff < 0) diff += 24*60;
+      // 一般 PT 與 固定班表 PT 分開算
+      if (isPT){
+      workHrs = calcPtHoursByRule(inMin, outMin, isFixedShiftPT);
+      } else {
+      // 非 PT 維持你原本的半小時進退位邏輯
+      const inAdj  = Math.ceil(inMin / 30) * 30;
+      const outAdj = Math.floor(outMin / 30) * 30;
 
-        const durMins = Math.max(0, diff);
-        const durHrs  = durMins/60;
+      let diff = outAdj - inAdj;
+      if (diff < 0) diff += 24 * 60;
 
-        let workHrs = 0;
-        let workDetail = "";
-        let workDetailRich = null;
+      workHrs = Math.max(0, diff) / 60;
+      }
 
-        if (isPT && payBaseRaw && payBaseRaw !== "19:59:00"){
-          const baseHrs = hhmmToHours(payBaseRaw);
-          if (baseHrs > 0){
-            workHrs = baseHrs;
-            workDetail = `${md} ${fmtHours(baseHrs)}`;
-            workDetailRich = { md, hours: baseHrs, lateMin: rowLateMin, earlyMin: rowEarlyMin };
-          }
-        }else if (durHrs > 0){
-          workHrs = durHrs;
-          workDetail = `${md} ${fmtHours(durHrs)}`;
-          workDetailRich = { md, hours: durHrs, lateMin: rowLateMin, earlyMin: rowEarlyMin };
-        }
-
+      if (workHrs > 0){
+        workDetail = `${md} ${fmtHours(workHrs)}`;
+        workDetailRich = {
+        md,
+        hours: workHrs,
+        lateMin: isPT ? 0 : rowLateMin,
+        earlyMin: isPT ? 0 : rowEarlyMin
+    };
+      }
         if (workHrs > 0){
           const k = `${ym}|${branch}|${name}`;
           const rec = workAgg.get(k) || {ym, branch, name, hours:0, detail:[], detailRich:[] };
@@ -319,8 +343,8 @@ window.addEventListener('unhandledrejection', e => {
           }
         }
 
-        if (durHrs > 0 && (dow===6 || dow===0) && otFromHoursCol===0 && !isPT){
-          addDutyDay(dutyAgg, ym, name, md, dow, {hours:durHrs});
+        if (workHrs > 0 && (dow===6 || dow===0) && otFromHoursCol===0 && !isPT){
+          addDutyDay(dutyAgg, ym, name, md, dow, {hours:workHrs});
         }
 
       // === 未成對打卡 ===
@@ -368,6 +392,7 @@ window.addEventListener('unhandledrejection', e => {
       if (abn && abn!=="--"){
         const parts = String(abn).split(/、/).map(s=>s.trim()).filter(Boolean);
         parts.forEach(p=>{
+          if (isPT && /^(遲到|早退|曠職)/.test(p)) return;
           let m = p.match(/遲到\s*(\d+)\s*分/);
           if (m){
             const mins=+m[1];
