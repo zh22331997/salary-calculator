@@ -176,6 +176,13 @@ td.noteCol label{
 }
 td.noteCol input.note{ width: var(--w-note-input); text-align:left; }
 td.noteCol input[type="number"]{ width: var(--w-note-number); }
+.allowance-reminder{
+  margin:10px 0; padding:10px 12px; border:1px solid #eac875;
+  border-radius:8px; background:#fff6dc; color:#674708;
+}
+td.noteCol .allowance-check{
+  padding:3px 6px; border-radius:5px; background:#fff6dc; color:#674708;
+}
 
 /***** =========================================================
  *  7) 算式小字
@@ -317,6 +324,10 @@ button{
   <button type="button" id="toggleSub" class="btn-sub">↕ 摺疊/展開：代課欄</button>
   <button type="button" id="toggleSum" class="btn-sum">↕ 摺疊/展開：寒暑欄</button>
 </div>
+
+<p class="allowance-reminder">
+  複核津貼時，請逐列確認備註欄的<strong>高年級加給、簽約金、留班獎金</strong>是否適用，並核對金額。
+</p>
 
 <div class="table-wrap">
   <table id="dataTable" role="grid" aria-label="教師津貼計算表">
@@ -508,10 +519,10 @@ function addRow(){
 
     <td class="thead-group-monthly noteCol">
       <div class="note-wrap">
-        <label>高年級加給 $ <input type="number" class="seniorBonus" min="0" step="1000" value="0" oninput="recalcAll()"/></label>
+        <label class="allowance-check">高年級加給 $ <input type="number" class="seniorBonus" min="0" step="1000" value="0" oninput="recalcAll()"/></label>
         <label>特色課 <input type="number" class="specialCourse" min="0" value="0" oninput="recalcAll()"/> × $<input type="number" class="specialCoursePrice" min="0" step="1" placeholder="預設" oninput="recalcAll()"/></label>
-        <label>簽約金 $ <input type="number" class="signBonus"   min="0" step="1000" value="0" oninput="recalcAll()"/></label>
-        <label>留班獎金 <input type="number" class="repeatBonus" min="0" value="0" oninput="recalcAll()"/></label>
+        <label class="allowance-check">簽約金 $ <input type="number" class="signBonus"   min="0" step="1000" value="0" oninput="recalcAll()"/></label>
+        <label class="allowance-check">留班獎金 <input type="number" class="repeatBonus" min="0" value="0" oninput="recalcAll()"/></label>
         <input type="text" class="note" placeholder="備註"/>
       </div>
     </td>`;
